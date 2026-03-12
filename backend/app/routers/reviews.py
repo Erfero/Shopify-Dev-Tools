@@ -33,6 +33,8 @@ async def generation_stream(
     image_urls: List[str],
     product_images_data: List[bytes],
     product_images_mime: List[str],
+    female_image_urls: Optional[List[str]] = None,
+    male_image_urls: Optional[List[str]] = None,
 ) -> AsyncGenerator[str, None]:
     all_reviews = []
     existing_authors: List[str] = []
@@ -116,8 +118,8 @@ async def generation_stream(
     yield sse_event({"type": "progress", "message": "Génération des fichiers CSV...", "progress": 90, "count": len(all_reviews)})
 
     try:
-        full_csv = generate_loox_full_csv(all_reviews, product_handle, image_urls)
-        import_csv = generate_loox_import_csv(all_reviews, product_handle, image_urls)
+        full_csv = generate_loox_full_csv(all_reviews, product_handle, image_urls, female_image_urls, male_image_urls)
+        import_csv = generate_loox_import_csv(all_reviews, product_handle, image_urls, female_image_urls, male_image_urls)
 
         await database.save_session(session_id, full_csv, import_csv, len(all_reviews))
 
@@ -304,10 +306,13 @@ async def generate_reviews(
     review_count: int = Form(100),
     session_id: str = Form(...),
     image_urls: str = Form("[]"),
+    female_image_urls: str = Form("[]"),
+    male_image_urls: str = Form("[]"),
     product_images: List[UploadFile] = File(default=[]),
 ):
-    urls: List[str] = json.loads(image_urls) if image_urls else []
-    urls = [u for u in urls if u and u.strip()]
+    urls: List[str] = [u for u in json.loads(image_urls) if u and u.strip()]
+    female_urls: Optional[List[str]] = [u for u in json.loads(female_image_urls) if u and u.strip()] or None
+    male_urls: Optional[List[str]] = [u for u in json.loads(male_image_urls) if u and u.strip()] or None
 
     images_data: List[bytes] = []
     images_mime: List[str] = []
@@ -330,6 +335,8 @@ async def generate_reviews(
             image_urls=urls,
             product_images_data=images_data,
             product_images_mime=images_mime,
+            female_image_urls=female_urls,
+            male_image_urls=male_urls,
         ),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"},

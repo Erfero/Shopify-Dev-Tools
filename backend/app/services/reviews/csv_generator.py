@@ -4,7 +4,7 @@ import random
 import string
 import unicodedata
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 
 def generate_id(length: int = 9) -> str:
@@ -67,10 +67,35 @@ def generate_fake_email(author: str) -> str:
     return f"{first_name}{suffix}@{domain}"
 
 
+def _pick_image(
+    review_data: Dict,
+    i: int,
+    image_urls: List[str],
+    female_image_urls: Optional[List[str]],
+    male_image_urls: Optional[List[str]],
+    gender_counters: Dict[str, int],
+) -> str:
+    """Pick the right image URL based on review gender if gendered pools are provided."""
+    if female_image_urls is not None and male_image_urls is not None:
+        gender = review_data.get("gender", "")
+        if gender == "F" and female_image_urls:
+            idx = gender_counters["F"] % len(female_image_urls)
+            gender_counters["F"] += 1
+            return female_image_urls[idx]
+        elif gender == "M" and male_image_urls:
+            idx = gender_counters["M"] % len(male_image_urls)
+            gender_counters["M"] += 1
+            return male_image_urls[idx]
+        return ""
+    return image_urls[i] if i < len(image_urls) else ""
+
+
 def generate_loox_full_csv(
     reviews: List[Dict],
     product_handle: str,
     image_urls: List[str],
+    female_image_urls: Optional[List[str]] = None,
+    male_image_urls: Optional[List[str]] = None,
 ) -> str:
     """
     Generate full Loox export-format CSV (18 columns, includes replies).
@@ -101,13 +126,15 @@ def generate_loox_full_csv(
     writer = csv.DictWriter(output, fieldnames=headers, quoting=csv.QUOTE_ALL)
     writer.writeheader()
 
+    gender_counters: Dict[str, int] = {"F": 0, "M": 0}
+
     for i, review_data in enumerate(reviews):
         review_id = generate_id()
         review_date = generate_random_date(90)
         reply_text = review_data.get("reply", "")
         reply_date = generate_reply_date(review_date) if reply_text else ""
 
-        img_url = image_urls[i] if i < len(image_urls) else ""
+        img_url = _pick_image(review_data, i, image_urls, female_image_urls, male_image_urls, gender_counters)
         author = review_data.get("author", "Client")
         email = generate_fake_email(author)
 
@@ -212,6 +239,8 @@ def generate_loox_import_csv(
     reviews: List[Dict],
     product_handle: str,
     image_urls: List[str],
+    female_image_urls: Optional[List[str]] = None,
+    male_image_urls: Optional[List[str]] = None,
 ) -> str:
     """
     Generate simple Loox import-format CSV (8 columns).
@@ -232,9 +261,11 @@ def generate_loox_import_csv(
     writer = csv.DictWriter(output, fieldnames=headers, quoting=csv.QUOTE_ALL)
     writer.writeheader()
 
+    gender_counters: Dict[str, int] = {"F": 0, "M": 0}
+
     for i, review_data in enumerate(reviews):
         review_date = generate_random_date(90)
-        img_url = image_urls[i] if i < len(image_urls) else ""
+        img_url = _pick_image(review_data, i, image_urls, female_image_urls, male_image_urls, gender_counters)
         author = review_data.get("author", "Client")
         email = generate_fake_email(author)
 

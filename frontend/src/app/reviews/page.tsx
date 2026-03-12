@@ -13,6 +13,7 @@ import { DownloadSection } from "@/components/reviews/DownloadSection";
 import { CSVHistoryPanel } from "@/components/reviews/CSVHistoryPanel";
 import { MultiProductForm, MultiProductConfig } from "@/components/reviews/MultiProductForm";
 import { MultiImageUpload } from "@/components/reviews/MultiImageUpload";
+import { GenderedImageUpload } from "@/components/reviews/GenderedImageUpload";
 import { deleteSession, SSEEvent } from "@/lib/api-reviews";
 import { addPendingEntry, getEntries, CSVEntry } from "@/lib/csvHistory";
 import { API } from "@/lib/config";
@@ -26,6 +27,8 @@ interface FormState {
   language: string;
   reviewCount: number;
   imageUrls: string[];
+  femaleImageUrls: string[];
+  maleImageUrls: string[];
   productImages: File[];
 }
 
@@ -38,6 +41,8 @@ const INITIAL: FormState = {
   language: "Français",
   reviewCount: 100,
   imageUrls: [],
+  femaleImageUrls: [],
+  maleImageUrls: [],
   productImages: [],
 };
 
@@ -119,6 +124,8 @@ export default function ReviewsPage() {
     formData.append("review_count", form.reviewCount.toString());
     formData.append("session_id", sid);
     formData.append("image_urls", JSON.stringify(form.imageUrls.filter(Boolean)));
+    formData.append("female_image_urls", JSON.stringify(form.femaleImageUrls.filter(Boolean)));
+    formData.append("male_image_urls", JSON.stringify(form.maleImageUrls.filter(Boolean)));
     form.productImages.forEach((img) => formData.append("product_images", img));
 
     const controller = new AbortController();
@@ -442,7 +449,16 @@ export default function ReviewsPage() {
             )}
             {step === 3 && mode === "single" && (
               <motion.div key="s3" {...sv}>
-                <ImageUpload imageUrls={form.imageUrls} onUrlsChange={(urls) => setForm((p) => ({ ...p, imageUrls: urls }))} />
+                {form.targetGender === "mixte" ? (
+                  <GenderedImageUpload
+                    femaleImageUrls={form.femaleImageUrls}
+                    maleImageUrls={form.maleImageUrls}
+                    onFemaleUrlsChange={(urls) => setForm((p) => ({ ...p, femaleImageUrls: urls }))}
+                    onMaleUrlsChange={(urls) => setForm((p) => ({ ...p, maleImageUrls: urls }))}
+                  />
+                ) : (
+                  <ImageUpload imageUrls={form.imageUrls} onUrlsChange={(urls) => setForm((p) => ({ ...p, imageUrls: urls }))} />
+                )}
               </motion.div>
             )}
             {step === 4 && (

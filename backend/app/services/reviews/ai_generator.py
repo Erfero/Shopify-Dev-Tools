@@ -115,6 +115,17 @@ def build_prompt(
     if visual_analysis:
         visual_section = f"\n- Visual analysis from product photos: {visual_analysis}"
 
+    is_mixte = target_gender == "mixte"
+    gender_field_rule = ""
+    json_example_field = ""
+    if is_mixte:
+        gender_field_rule = (
+            '\n6. GENDER FIELD: Since the audience is mixed, each review object MUST include a "gender" field: '
+            '"F" for female reviewers, "M" for male reviewers. '
+            'Strictly alternate starting with F: F, M, F, M, F, M, ...'
+        )
+        json_example_field = ', "gender": "F"'
+
     return f"""Generate exactly {batch_size} authentic customer reviews for this product. This is batch number {batch_number}.
 
 PRODUCT DETAILS:
@@ -135,11 +146,11 @@ STRICT RULES:
    - Price/value for money
    - How the product looks/feels in real life
 4. REPLIES: Owner reply per review, MAXIMUM 2 sentences. Warm, grateful, professional. Address reviewer by first name. Written in {language}.
-5. DIVERSITY: Each review must be completely unique in style and content. Vary sentence structure, length, and vocabulary.{avoid_names}
+5. DIVERSITY: Each review must be completely unique in style and content. Vary sentence structure, length, and vocabulary.{gender_field_rule}{avoid_names}
 
 Return ONLY a valid JSON array with exactly {batch_size} objects. No markdown, no code blocks, no explanation:
 [
-  {{"author": "Prénom L. - XX ans", "review": "Review text here...", "reply": "Owner reply here..."}},
+  {{"author": "Prénom L. - XX ans"{json_example_field}, "review": "Review text here...", "reply": "Owner reply here..."}},
   ...
 ]"""
 

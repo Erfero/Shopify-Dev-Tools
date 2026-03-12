@@ -88,9 +88,11 @@ function RichTextField({
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showSource, setShowSource] = useState(false);
-  const isFocused = useRef(false);
+  const [fmt, setFmt] = useState({ bold: false, italic: false, underline: false });
+  // Flag to sync innerHTML after switching back from source mode
+  const pendingSync = useRef(false);
 
-  // Init once on mount
+  // Init on mount
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.innerHTML = value;
@@ -98,15 +100,46 @@ function RichTextField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // After every render: apply pending sync (source → rich transition)
+  useEffect(() => {
+    if (pendingSync.current && editorRef.current) {
+      editorRef.current.innerHTML = value;
+      pendingSync.current = false;
+    }
+  });
+
+  const updateFmt = () => {
+    setFmt({
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      bold: document.queryCommandState("bold"),
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      italic: document.queryCommandState("italic"),
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      underline: document.queryCommandState("underline"),
+    });
+  };
+
   const exec = (command: string) => {
     editorRef.current?.focus();
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     document.execCommand(command, false);
     if (editorRef.current) onChange(editorRef.current.innerHTML);
+    updateFmt();
   };
 
-  const toolbarBtn =
-    "px-2 py-0.5 rounded text-xs font-semibold hover:bg-muted transition-colors border border-transparent hover:border-border";
+  const toggleSource = () => {
+    if (!showSource) {
+      // Going TO source — save current innerHTML
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+    } else {
+      // Coming BACK to rich — schedule sync after re-render
+      pendingSync.current = true;
+    }
+    setShowSource((s) => !s);
+  };
+
+  const activeBtn = "bg-foreground/10 border-foreground/30 text-foreground";
+  const baseBtn = "px-2 py-0.5 rounded text-xs hover:bg-muted transition-colors border border-transparent hover:border-border";
 
   return (
     <div className="space-y-1">
@@ -114,53 +147,24 @@ function RichTextField({
       <div className="rounded-md border overflow-hidden focus-within:ring-1 focus-within:ring-ring">
         {/* Toolbar */}
         <div className="flex items-center gap-0.5 border-b bg-muted/40 px-2 py-1">
-          <button
-            type="button"
-            className={toolbarBtn}
-            style={{ fontWeight: 700 }}
-            onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}
-            title="Gras"
-          >G</button>
-          <button
-            type="button"
-            className={toolbarBtn}
-            style={{ fontStyle: "italic" }}
-            onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}
-            title="Italique"
-          >I</button>
-          <button
-            type="button"
-            className={toolbarBtn}
-            style={{ textDecoration: "underline" }}
-            onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}
-            title="Souligné"
-          >S</button>
+          <button type="button" className={`${baseBtn} font-bold ${fmt.bold ? activeBtn : ""}`}
+            onMouseDown={(e) => { e.preventDefault(); exec("bold"); }} title="Gras (Ctrl+B)">B</button>
+          <button type="button" className={`${baseBtn} italic ${fmt.italic ? activeBtn : ""}`}
+            onMouseDown={(e) => { e.preventDefault(); exec("italic"); }} title="Italique (Ctrl+I)">I</button>
+          <button type="button" className={`${baseBtn} underline ${fmt.underline ? activeBtn : ""}`}
+            onMouseDown={(e) => { e.preventDefault(); exec("underline"); }} title="Souligné (Ctrl+U)">S</button>
           <div className="mx-1 h-4 w-px bg-border" />
-          <button
-            type="button"
-            className={`${toolbarBtn} text-muted-foreground`}
-            onClick={() => {
-              if (!showSource && editorRef.current) {
-                onChange(editorRef.current.innerHTML);
-              }
-              setShowSource((s) => !s);
-            }}
-            title="Afficher/modifier le HTML source"
-          >
-            &lt;/&gt;
-          </button>
+          <button type="button"
+            className={`${baseBtn} text-muted-foreground ${showSource ? activeBtn : ""}`}
+            onClick={toggleSource} title="HTML source"
+          >&lt;/&gt;</button>
         </div>
 
-        {/* Source view */}
+        {/* Source mode */}
         {showSource ? (
           <Textarea
             value={value}
-            onChange={(e) => {
-              onChange(e.target.value);
-              if (editorRef.current && !isFocused.current) {
-                editorRef.current.innerHTML = e.target.value;
-              }
-            }}
+            onChange={(e) => onChange(e.target.value)}
             className="rounded-none border-0 font-mono text-xs min-h-[80px] focus-visible:ring-0"
             rows={4}
           />
@@ -169,14 +173,11 @@ function RichTextField({
             ref={editorRef}
             contentEditable
             suppressContentEditableWarning
-            onFocus={() => { isFocused.current = true; }}
-            onBlur={() => {
-              isFocused.current = false;
-              if (editorRef.current) onChange(editorRef.current.innerHTML);
-            }}
-            onInput={() => {
-              if (editorRef.current) onChange(editorRef.current.innerHTML);
-            }}
+            onKeyUp={updateFmt}
+            onMouseUp={updateFmt}
+            onSelect={updateFmt}
+            onBlur={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
+            onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
             className="min-h-[80px] p-2 text-sm outline-none [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_p]:mb-1 [&_p:last-child]:mb-0"
           />
         )}

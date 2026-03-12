@@ -167,8 +167,8 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
         <div>
           <p className="font-semibold mb-1">Ces images seront attribuées à vos avis</p>
           <ul className="space-y-0.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-            <li>• Image 1 → Avis 1, Image 2 → Avis 2, etc.</li>
-            <li>• Les avis sans image auront le champ photo vide</li>
+            <li>• Image 1 → Avis 1, Image 2 → Avis 2, etc. — chaque image utilisée une seule fois</li>
+            <li>• Les avis au-delà du nombre d'images n'auront pas de photo</li>
             <li>• Ajoutez une clé <strong>imgbb</strong> dans .env pour des URLs publiques</li>
           </ul>
         </div>

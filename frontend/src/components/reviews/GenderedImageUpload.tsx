@@ -210,7 +210,7 @@ export function GenderedImageUpload({
         <ul className="space-y-0.5">
           <li>• Les images femmes sont attribuées uniquement aux avis avec des prénoms féminins</li>
           <li>• Les images hommes sont attribuées uniquement aux avis avec des prénoms masculins</li>
-          <li>• Si vous avez moins d'images que d'avis, elles sont réutilisées en cycle</li>
+          <li>• Chaque image est utilisée une seule fois — les avis restants n'auront pas de photo</li>
         </ul>
       </div>
     </div>

@@ -79,13 +79,13 @@ def _pick_image(
     if female_image_urls is not None and male_image_urls is not None:
         gender = review_data.get("gender", "")
         if gender == "F" and female_image_urls:
-            idx = gender_counters["F"] % len(female_image_urls)
+            idx = gender_counters["F"]
             gender_counters["F"] += 1
-            return female_image_urls[idx]
+            return female_image_urls[idx] if idx < len(female_image_urls) else ""
         elif gender == "M" and male_image_urls:
-            idx = gender_counters["M"] % len(male_image_urls)
+            idx = gender_counters["M"]
             gender_counters["M"] += 1
-            return male_image_urls[idx]
+            return male_image_urls[idx] if idx < len(male_image_urls) else ""
         return ""
     return image_urls[i] if i < len(image_urls) else ""
 

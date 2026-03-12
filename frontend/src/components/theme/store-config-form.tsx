@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LANGUAGES } from "@/lib/languages";
-import { Store, Mail, Package, Image, Globe, Scale, Sparkles, Users } from "lucide-react";
+import { Store, Mail, Package, Image, Globe, Scale, Sparkles, Users, Upload } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ImageLightbox } from "@/components/shared/ImageLightbox";
 
 export interface StoreConfig {
   store_name: string;
@@ -39,6 +41,8 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
   const [productDescription, setProductDescription] = useState("");
   const [productImages, setProductImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isDraggingImg, setIsDraggingImg] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [language, setLanguage] = useState("fr");
   const [langSearch, setLangSearch] = useState("");
   const [langOpen, setLangOpen] = useState(false);
@@ -241,14 +245,30 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
           <Label className="text-sm font-medium flex items-center gap-1.5">
             <Image className="h-3.5 w-3.5 text-muted-foreground" />
             Images du produit{" "}
-            <span className="font-normal text-muted-foreground">(recommande pour des textes precis)</span>
+            <span className="font-normal text-muted-foreground">(recommandé pour des textes précis)</span>
           </Label>
 
           <div
-            className="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-5 transition-colors hover:border-foreground/20 hover:bg-foreground/[0.01]"
-            onClick={() => {
-              if (!isGenerating) document.getElementById("product-images-input")?.click();
+            style={{
+              border: `2px dashed ${isDraggingImg ? "var(--primary)" : "oklch(0.85 0 0)"}`,
+              borderRadius: 14,
+              padding: "32px 20px",
+              textAlign: "center",
+              cursor: isGenerating ? "default" : "pointer",
+              background: isDraggingImg ? "oklch(0.97 0.01 260)" : "oklch(0.99 0 0)",
+              transition: "all 0.15s",
             }}
+            onDragOver={(e) => { e.preventDefault(); if (!isGenerating) setIsDraggingImg(true); }}
+            onDragLeave={() => setIsDraggingImg(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDraggingImg(false);
+              if (!isGenerating) {
+                const fakeEvent = { target: { files: e.dataTransfer.files, value: "" } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                handleImageAdd(fakeEvent);
+              }
+            }}
+            onClick={() => { if (!isGenerating) document.getElementById("product-images-input")?.click(); }}
           >
             <input
               id="product-images-input"
@@ -259,56 +279,76 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
               onChange={handleImageAdd}
               disabled={isGenerating}
             />
-            <div className="flex flex-col items-center gap-2 text-center">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-muted-foreground"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <p className="text-xs text-muted-foreground">
-                Cliquez pour ajouter des images (JPG, PNG, WebP)
-              </p>
+            <div className="flex flex-col items-center gap-3">
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: "oklch(0.95 0.01 260)", border: "1px solid oklch(0.88 0.02 260)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Upload size={22} style={{ color: "var(--primary)" }} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  Glissez vos images ici
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  ou{" "}
+                  <span style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "underline" }}>
+                    parcourez vos fichiers
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>JPG, PNG, WebP — plusieurs fichiers acceptés</p>
             </div>
           </div>
 
           {imagePreviews.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {imagePreviews.map((preview, i) => (
-                <div
-                  key={i}
-                  className="group relative h-16 w-16 overflow-hidden rounded-lg border border-border/60"
-                >
-                  <img
-                    src={preview}
-                    alt={`Produit ${i + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                  {!isGenerating && (
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              ))}
+            <div>
+              <div className="flex items-center justify-between mb-2 pt-1">
+                <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                  {imagePreviews.length} image{imagePreviews.length > 1 ? "s" : ""} sélectionnée{imagePreviews.length > 1 ? "s" : ""}
+                </p>
+                {!isGenerating && (
+                  <button type="button" className="text-xs font-medium" style={{ color: "#EF4444" }} onClick={() => { setProductImages([]); setImagePreviews([]); }}>
+                    Tout supprimer
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                {imagePreviews.map((preview, i) => (
+                  <div key={i} className="group relative aspect-square overflow-hidden rounded-xl" style={{ border: "1.5px solid oklch(0.9 0 0)" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={preview}
+                      alt={`Produit ${i + 1}`}
+                      className="h-full w-full object-cover"
+                      style={{ cursor: "zoom-in" }}
+                      onClick={() => setLightboxIdx(i)}
+                    />
+                    {!isGenerating && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeImage(i); }}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: "#EF4444" }}
+                      >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          <AnimatePresence>
+            {lightboxIdx !== null && (
+              <ImageLightbox
+                images={imagePreviews}
+                currentIndex={lightboxIdx}
+                onClose={() => setLightboxIdx(null)}
+                onNavigate={setLightboxIdx}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="space-y-2">

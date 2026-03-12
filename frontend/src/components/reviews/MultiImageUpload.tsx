@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Camera, X, Package, CheckCircle2, Upload, Users } from "lucide-react";
 import { MultiProductConfig } from "./MultiProductForm";
+import { AnimatePresence, motion } from "framer-motion";
 
-function FileThumbnail({ file, onRemove }: { file: File; onRemove: () => void }) {
+function FileThumbnail({ file, onRemove, onZoom }: { file: File; onRemove: () => void; onZoom?: (url: string) => void }) {
   const [url, setUrl] = useState("");
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file);
@@ -14,15 +15,17 @@ function FileThumbnail({ file, onRemove }: { file: File; onRemove: () => void })
   return (
     <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
       {url && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={url}
           alt={file.name}
-          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10, border: "1.5px solid oklch(0.922 0 0)", display: "block" }}
+          onClick={() => onZoom?.(url)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 10, border: "1.5px solid oklch(0.922 0 0)", display: "block", cursor: onZoom ? "zoom-in" : "default" }}
         />
       )}
       <button
         type="button"
-        onClick={onRemove}
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
         title="Supprimer"
         style={{
           position: "absolute", top: -6, right: -6,
@@ -34,6 +37,39 @@ function FileThumbnail({ file, onRemove }: { file: File; onRemove: () => void })
         }}
       >×</button>
     </div>
+  );
+}
+
+/** Simple single-image full-screen overlay (for File object previews) */
+function FileZoomOverlay({ url, onClose }: { url: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", handler); document.body.style.overflow = ""; };
+  }, [onClose]);
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+    >
+      <motion.img
+        src={url}
+        alt="Zoom"
+        initial={{ scale: 0.92 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.92 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 12 }}
+      />
+      <button
+        onClick={onClose}
+        style={{ position: "absolute", top: 20, right: 20, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.15)", border: "none", cursor: "pointer", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}
+      >×</button>
+    </motion.div>
   );
 }
 
@@ -51,6 +87,8 @@ function GenderPool({
   onRemove: (idx: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
+
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <div className="flex items-center gap-2 mb-2">
@@ -65,7 +103,7 @@ function GenderPool({
         <div className="flex flex-wrap gap-1.5 mb-2">
           {files.map((file, i) => (
             <div key={i} style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
-              <FileThumbnail file={file} onRemove={() => onRemove(i)} />
+              <FileThumbnail file={file} onRemove={() => onRemove(i)} onZoom={(url) => setZoomUrl(url)} />
             </div>
           ))}
         </div>
@@ -102,6 +140,10 @@ function GenderPool({
         <Upload size={13} />
         {files.length > 0 ? "Ajouter" : "Ajouter des photos"}
       </button>
+
+      <AnimatePresence>
+        {zoomUrl && <FileZoomOverlay url={zoomUrl} onClose={() => setZoomUrl(null)} />}
+      </AnimatePresence>
     </div>
   );
 }
@@ -113,6 +155,7 @@ interface Props {
 
 export function MultiImageUpload({ products, onChange }: Props) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
 
   const handleFileSelect = (productId: string, files: FileList | null) => {
     if (!files) return;
@@ -267,6 +310,7 @@ export function MultiImageUpload({ products, onChange }: Props) {
                             key={`${product.id}-review-${i}`}
                             file={file}
                             onRemove={() => removeFile(product.id, i)}
+                            onZoom={(url) => setZoomUrl(url)}
                           />
                         ))}
                       </div>
@@ -304,6 +348,10 @@ export function MultiImageUpload({ products, onChange }: Props) {
           );
         })}
       </div>
+
+      <AnimatePresence>
+        {zoomUrl && <FileZoomOverlay url={zoomUrl} onClose={() => setZoomUrl(null)} />}
+      </AnimatePresence>
     </div>
   );
 }

@@ -344,7 +344,7 @@
 .review-tool-root .progress-bar { height: 7px; background: oklch(0.922 0 0); border-radius: 99px; overflow: hidden; }
 .review-tool-root .progress-fill { height: 100%; background: var(--rv-gradient); border-radius: 99px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 
-.review-tool-root .drop-zone { border: 2px dashed oklch(0.85 0 0); border-radius: 16px; padding: 44px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: oklch(0.985 0 0); }
+.review-tool-root .drop-zone { border: 2px dashed oklch(0.85 0 0); border-radius: 16px; padding: 72px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: oklch(0.985 0 0); }
 .review-tool-root .drop-zone:hover { border-color: var(--rv-primary); background: oklch(0.97 0 0); }
 .review-tool-root .drop-zone.drag-over { border-color: var(--rv-primary); background: oklch(0.97 0 0); transform: scale(1.005); box-shadow: 0 0 0 4px rgba(0,0,0,0.06); }
 

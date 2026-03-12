@@ -56,7 +56,7 @@ export function UploadZone({ onFileSelected, isUploading, error }: UploadZonePro
   return (
     <div className="w-full">
       <Card
-        className={`relative flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all duration-200 ${
+        className={`relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all duration-200 ${
           isDragging
             ? "border-foreground/40 bg-foreground/[0.02]"
             : "border-border hover:border-foreground/20 hover:bg-foreground/[0.01]"

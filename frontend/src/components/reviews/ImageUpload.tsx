@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback } from "react";
 import { Upload, X, ImageIcon, Loader2, Info } from "lucide-react";
 import { uploadImages } from "@/lib/api-reviews";
+import { AnimatePresence } from "framer-motion";
+import { ImageLightbox } from "@/components/shared/ImageLightbox";
 
 interface ImageUploadProps {
   imageUrls: string[];
@@ -13,6 +15,7 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const ref = useRef<HTMLInputElement>(null);
 
   const handle = useCallback(
@@ -117,7 +120,8 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
               <div key={i} className="relative group">
                 <div
                   className="aspect-square rounded-xl overflow-hidden"
-                  style={{ border: "1.5px solid var(--border)" }}
+                  style={{ border: "1.5px solid var(--border)", cursor: "zoom-in" }}
+                  onClick={() => setLightboxIdx(i)}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover"
@@ -131,7 +135,7 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => onUrlsChange(imageUrls.filter((_, idx) => idx !== i))}
+                  onClick={(e) => { e.stopPropagation(); onUrlsChange(imageUrls.filter((_, idx) => idx !== i)); }}
                   className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{ background: "#EF4444" }}
                 >
@@ -145,6 +149,17 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {lightboxIdx !== null && (
+          <ImageLightbox
+            images={imageUrls}
+            currentIndex={lightboxIdx}
+            onClose={() => setLightboxIdx(null)}
+            onNavigate={setLightboxIdx}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Info */}
       <div className="info-box flex gap-3 mt-5">

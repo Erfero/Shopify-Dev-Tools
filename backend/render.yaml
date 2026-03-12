@@ -23,4 +23,4 @@ services:
       - key: IMGBB_API_KEY
         value: fbf73d5df50aaa2f61f11a8ae662419f
       - key: BACKEND_URL
-        value: https://shopify-dev-tools-api.onrender.com
+        value: https://shopify-dev-tools.onrender.com

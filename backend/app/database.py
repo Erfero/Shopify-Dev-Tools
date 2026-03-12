@@ -52,6 +52,8 @@ _engine: AsyncEngine = create_async_engine(
     _DATABASE_URL,
     echo=False,
     connect_args=_connect_args,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
 # ── Schema ────────────────────────────────────────────────────────────────────

@@ -19,21 +19,16 @@ def generate_rating() -> int:
 
 def generate_random_date(days_ago_max: int = 90) -> str:
     days_ago = random.randint(1, days_ago_max)
-    hours = random.randint(0, 23)
-    minutes = random.randint(0, 59)
-    seconds = random.randint(0, 59)
-    date = datetime.now() - timedelta(
-        days=days_ago, hours=hours, minutes=minutes, seconds=seconds
-    )
-    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    date = datetime.now() - timedelta(days=days_ago)
+    return date.strftime("%Y-%m-%d")
 
 
 def generate_reply_date(review_date_str: str) -> str:
     try:
-        review_date = datetime.strptime(review_date_str[:19], "%Y-%m-%dT%H:%M:%S")
-        reply_delay_hours = random.randint(2, 18)
-        reply_date = review_date + timedelta(hours=reply_delay_hours)
-        return reply_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        review_date = datetime.strptime(review_date_str[:10], "%Y-%m-%d")
+        reply_delay_days = random.randint(1, 3)
+        reply_date = review_date + timedelta(days=reply_delay_days)
+        return reply_date.strftime("%Y-%m-%d")
     except Exception:
         return generate_random_date(89)
 

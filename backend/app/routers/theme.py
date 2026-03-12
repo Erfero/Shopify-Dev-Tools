@@ -356,13 +356,16 @@ async def apply_theme(
         )
         session["zip_path"] = str(zip_path)
 
-        await theme_history_add({
-            "id": str(uuid.uuid4()),
-            "filename": zip_path.name,
-            "store_name": store_name,
-            "created_at": datetime.now().isoformat(),
-            "zip_path": str(zip_path),
-        })
+        try:
+            await theme_history_add({
+                "id": str(uuid.uuid4()),
+                "filename": zip_path.name,
+                "store_name": store_name,
+                "created_at": datetime.now().isoformat(),
+                "zip_path": str(zip_path),
+            })
+        except Exception:
+            pass  # Non-fatal: history entry is optional
 
         return {"download_url": f"/api/theme/download/{structure.session_id}"}
 

@@ -126,9 +126,11 @@ def generate_loox_full_csv(
     writer = csv.DictWriter(output, fieldnames=headers, quoting=csv.QUOTE_ALL)
     writer.writeheader()
 
+    shuffled = list(reviews)
+    random.shuffle(shuffled)
     gender_counters: Dict[str, int] = {"F": 0, "M": 0}
 
-    for i, review_data in enumerate(reviews):
+    for i, review_data in enumerate(shuffled):
         review_id = generate_id()
         review_date = generate_random_date(90)
         reply_text = review_data.get("reply", "")
@@ -184,8 +186,10 @@ def generate_loox_full_csv_multi(products: List[Dict]) -> str:
         image_urls = product.get("image_urls", [])
         female_urls = product.get("female_image_urls") or None
         male_urls = product.get("male_image_urls") or None
+        shuffled = list(reviews)
+        random.shuffle(shuffled)
         gender_counters: Dict[str, int] = {"F": 0, "M": 0}
-        for i, review_data in enumerate(reviews):
+        for i, review_data in enumerate(shuffled):
             review_id = generate_id()
             review_date = generate_random_date(90)
             reply_text = review_data.get("reply", "")
@@ -226,8 +230,10 @@ def generate_loox_import_csv_multi(products: List[Dict]) -> str:
         image_urls = product.get("image_urls", [])
         female_urls = product.get("female_image_urls") or None
         male_urls = product.get("male_image_urls") or None
+        shuffled = list(reviews)
+        random.shuffle(shuffled)
         gender_counters: Dict[str, int] = {"F": 0, "M": 0}
-        for i, review_data in enumerate(reviews):
+        for i, review_data in enumerate(shuffled):
             review_date = generate_random_date(90)
             img_url = _pick_image(review_data, i, image_urls, female_urls, male_urls, gender_counters)
             author = review_data.get("author", "Client")
@@ -269,9 +275,11 @@ def generate_loox_import_csv(
     writer = csv.DictWriter(output, fieldnames=headers, quoting=csv.QUOTE_ALL)
     writer.writeheader()
 
+    shuffled = list(reviews)
+    random.shuffle(shuffled)
     gender_counters: Dict[str, int] = {"F": 0, "M": 0}
 
-    for i, review_data in enumerate(reviews):
+    for i, review_data in enumerate(shuffled):
         review_date = generate_random_date(90)
         img_url = _pick_image(review_data, i, image_urls, female_image_urls, male_image_urls, gender_counters)
         author = review_data.get("author", "Client")

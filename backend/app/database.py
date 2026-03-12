@@ -19,26 +19,39 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 
 _DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-# Normalize Postgres URLs
-if _DATABASE_URL.startswith("postgres://"):
-    _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-elif _DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in _DATABASE_URL:
-    _DATABASE_URL = _DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+# Normalize Postgres URLs and strip unsupported query params for asyncpg
+_connect_args: dict = {}
+if _DATABASE_URL:
+    # Convert URL scheme to asyncpg
+    if _DATABASE_URL.startswith("postgres://"):
+        _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif _DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in _DATABASE_URL:
+        _DATABASE_URL = _DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    # Strip SSL/channel_binding params from URL — pass via connect_args instead
+    from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+    parsed = urlparse(_DATABASE_URL)
+    params = parse_qs(parsed.query)
+    ssl_mode = params.pop("sslmode", ["require"])[0]
+    params.pop("channel_binding", None)
+    clean_query = urlencode({k: v[0] for k, v in params.items()})
+    _DATABASE_URL = urlunparse(parsed._replace(query=clean_query))
+    if ssl_mode in ("require", "verify-ca", "verify-full"):
+        _connect_args["ssl"] = "require"
 
 if not _DATABASE_URL:
     _db_path = Path("./data/shopify_tools.db")
     _db_path.parent.mkdir(parents=True, exist_ok=True)
     _DATABASE_URL = f"sqlite+aiosqlite:///{_db_path}"
     _IS_SQLITE = True
+    _connect_args = {"check_same_thread": False}
 else:
     _IS_SQLITE = False
 
 _engine: AsyncEngine = create_async_engine(
     _DATABASE_URL,
     echo=False,
-    **({
-        "connect_args": {"check_same_thread": False},
-    } if _IS_SQLITE else {}),
+    connect_args=_connect_args,
 )
 
 # ── Schema ────────────────────────────────────────────────────────────────────

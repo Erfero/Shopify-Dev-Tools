@@ -20,17 +20,17 @@ const STEPS_MULTI = [
 export function StepIndicator({ currentStep, multi = false }: { currentStep: number; multi?: boolean }) {
   const STEPS = multi ? STEPS_MULTI : STEPS_SINGLE;
   return (
-    <div className="flex items-start justify-center gap-0 mb-10 px-2">
+    <div className="flex items-start justify-center gap-0 mb-10 px-1 w-full overflow-hidden">
       {STEPS.map((step, index) => {
         const done = step.id < currentStep;
         const active = step.id === currentStep;
         const Icon = step.icon;
 
         return (
-          <div key={step.id} className="flex items-start">
-            <div className="flex flex-col items-center" style={{ minWidth: 58 }}>
+          <div key={step.id} className="flex items-start min-w-0">
+            <div className="flex flex-col items-center" style={{ minWidth: 44, maxWidth: 64 }}>
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 shrink-0"
                 style={
                   done
                     ? { background: "var(--gradient)", color: "white" }
@@ -39,15 +39,16 @@ export function StepIndicator({ currentStep, multi = false }: { currentStep: num
                     : { background: "oklch(0.97 0 0)", color: "oklch(0.708 0 0)", border: "1.5px solid oklch(0.922 0 0)" }
                 }
               >
-                {done ? <Check size={15} strokeWidth={2.5} /> : <Icon size={14} strokeWidth={2} />}
+                {done ? <Check size={13} strokeWidth={2.5} /> : <Icon size={13} strokeWidth={2} />}
               </div>
               <span
-                className="text-center leading-tight mt-1.5"
+                className="text-center leading-tight mt-1.5 hidden sm:block"
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: active ? 600 : 500,
                   color: active ? "var(--primary)" : done ? "oklch(0.269 0 0)" : "var(--text-muted)",
-                  whiteSpace: "nowrap",
+                  wordBreak: "break-word",
+                  maxWidth: 56,
                 }}
               >
                 {step.label}

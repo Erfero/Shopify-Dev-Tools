@@ -1,0 +1,37 @@
+import { API as API_BASE } from "@/lib/config";
+
+export interface SSEEvent {
+  type: "start" | "progress" | "complete" | "error";
+  message: string;
+  progress: number;
+  count?: number;
+  session_id?: string;
+}
+
+export function getDownloadUrl(sessionId: string, format: "full" | "import"): string {
+  return `${API_BASE}/reviews/download/${sessionId}?format=${format}`;
+}
+
+export async function getPreview(
+  sessionId: string
+): Promise<{ reviews: Array<{ author: string; review: string; reply: string }>; count: number }> {
+  const response = await fetch(`${API_BASE}/reviews/preview/${sessionId}`);
+  if (!response.ok) throw new Error("Preview introuvable");
+  return response.json();
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  await fetch(`${API_BASE}/reviews/session/${sessionId}`, { method: "DELETE" });
+}
+
+export async function uploadImages(files: File[]): Promise<string[]> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+  const response = await fetch(`${API_BASE}/reviews/upload-images`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) throw new Error("Erreur lors de l'upload des images.");
+  const data = await response.json();
+  return data.urls as string[];
+}

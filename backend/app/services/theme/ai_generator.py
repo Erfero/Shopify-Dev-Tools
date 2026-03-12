@@ -1,0 +1,250 @@
+import asyncio
+import json
+import logging
+import base64
+import httpx
+from pathlib import Path
+from typing import AsyncGenerator
+
+from app.config import settings
+from app.prompts.colors import build_colors_prompt
+from app.prompts.homepage import build_homepage_prompt
+from app.prompts.product_page import build_product_page_prompt
+from app.prompts.faq import build_faq_prompt
+from app.prompts.legal_pages import build_legal_pages_prompt
+from app.prompts.story_page import build_story_page_prompt
+from app.prompts.global_texts import build_global_texts_prompt
+
+logger = logging.getLogger(__name__)
+
+# Steps that benefit from seeing the product images
+VISION_STEPS = {"homepage", "product_page", "story_page", "global_texts"}
+
+GENERATION_STEPS = [
+    ("colors", "Palette de couleurs", build_colors_prompt),
+    ("homepage", "Textes page d'accueil", build_homepage_prompt),
+    ("product_page", "Textes page produit", build_product_page_prompt),
+    ("faq", "Questions frequentes", build_faq_prompt),
+    ("legal_pages", "Pages legales", build_legal_pages_prompt),
+    ("story_page", "Page Notre Histoire", build_story_page_prompt),
+    ("global_texts", "Textes globaux", build_global_texts_prompt),
+]
+
+
+def _encode_image(image_path: Path) -> tuple[str, str]:
+    """Read an image file and return (base64_data, mime_type)."""
+    suffix = image_path.suffix.lower()
+    mime_map = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+    }
+    mime_type = mime_map.get(suffix, "image/jpeg")
+
+    with open(image_path, "rb") as f:
+        data = base64.b64encode(f.read()).decode("utf-8")
+
+    return data, mime_type
+
+
+def _is_free_model(model: str) -> bool:
+    """Check if a model is a free variant (may not support system messages or response_format)."""
+    return ":free" in model
+
+
+def _build_messages(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+    merge_system: bool = False,
+) -> list[dict]:
+    """Build the messages array, with optional images in the user message.
+
+    Args:
+        merge_system: If True, merge system prompt into user message
+                      (for models that don't support system role).
+    """
+    messages = []
+
+    # Build the combined text
+    if merge_system:
+        combined_text = f"[Instructions]\n{system_prompt}\n\n[Requete]\n{user_prompt}"
+    else:
+        messages.append({"role": "system", "content": system_prompt})
+        combined_text = user_prompt
+
+    if image_paths:
+        # Multimodal message: text + images
+        content = [{"type": "text", "text": combined_text}]
+        for img_path in image_paths:
+            if img_path.exists():
+                b64_data, mime = _encode_image(img_path)
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime};base64,{b64_data}"
+                    }
+                })
+        messages.append({"role": "user", "content": content})
+    else:
+        messages.append({"role": "user", "content": combined_text})
+
+    return messages
+
+
+async def call_openrouter(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+) -> dict:
+    """Call OpenRouter API and return parsed JSON response.
+
+    Automatically adapts to model capabilities:
+    - Free models: merges system into user prompt, no response_format
+    - Paid models: uses system message and response_format
+    """
+    use_vision = bool(image_paths)
+    model = settings.vision_model if use_vision else settings.text_model
+    is_free = _is_free_model(model)
+
+    messages = _build_messages(
+        system_prompt, user_prompt, image_paths,
+        merge_system=is_free,
+    )
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+    }
+
+    # response_format not supported by all free models
+    if not is_free:
+        payload["response_format"] = {"type": "json_object"}
+
+    logger.info(f"Calling OpenRouter: model={model}, images={len(image_paths) if image_paths else 0}")
+
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {settings.openrouter_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+
+        if response.status_code != 200:
+            error_body = response.text[:500]
+            logger.error(f"OpenRouter error {response.status_code}: {error_body}")
+            raise Exception(f"OpenRouter API erreur {response.status_code}: {error_body}")
+
+        result = response.json()
+
+    content = result["choices"][0]["message"]["content"]
+
+    # Parse JSON from the response
+    if isinstance(content, str):
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}\nContent: {content[:300]}")
+            raise Exception(f"L'IA n'a pas retourne du JSON valide: {str(e)[:100]}")
+
+    return content
+
+
+async def generate_all_texts(
+    store_name: str,
+    store_email: str,
+    product_names: list[str],
+    product_description: str | None = None,
+    language: str = "fr",
+    image_paths: list[Path] | None = None,
+    target_gender: str = "femme",
+    product_price: str | None = None,
+    store_address: str | None = None,
+    siret: str | None = None,
+    delivery_delay: str = "3-5 jours ouvrés",
+    return_policy_days: str = "30",
+    marketing_angles: str | None = None,
+) -> AsyncGenerator[tuple[str, str, dict | None], None]:
+    """Generate all theme texts step by step.
+
+    Yields tuples of (step_name, status, data) for SSE streaming.
+    """
+    context = {
+        "store_name": store_name,
+        "store_email": store_email,
+        "product_names": product_names,
+        "product_description": product_description or "",
+        "language": language,
+        "has_images": bool(image_paths),
+        # Champs additionnels utilisés par les prompts legal_pages, product_page, global_texts
+        "target_gender": target_gender,
+        "product_price": product_price,
+        "store_address": store_address,
+        "siret": siret,
+        "delivery_delay": delivery_delay,
+        "return_policy_days": return_policy_days,
+        "marketing_angles": marketing_angles or "",
+    }
+
+    all_results = {}
+
+    for step_id, step_label, prompt_builder in GENERATION_STEPS:
+        yield (step_id, "generating", None)
+
+        try:
+            system_prompt, user_prompt = prompt_builder(context)
+
+            # Inject marketing angles into the system prompt if provided
+            if context.get("marketing_angles"):
+                system_prompt += (
+                    "\n\n---\nDIRECTIONS MARKETING (à appliquer impérativement dans tous les textes générés) :\n"
+                    + context["marketing_angles"]
+                )
+
+            # Send images only for steps that benefit from visual context
+            step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
+
+            result = await _call_with_retry(system_prompt, user_prompt, step_images)
+            all_results[step_id] = result
+            yield (step_id, "done", result)
+        except Exception as e:
+            logger.error(f"Step {step_id} failed: {e}")
+            yield (step_id, "error", {"error": str(e)})
+
+    yield ("complete", "done", all_results)
+
+
+async def _call_with_retry(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+    max_retries: int = 2,
+) -> dict:
+    """Call OpenRouter with retry logic and exponential back-off on 429."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            return await call_openrouter(system_prompt, user_prompt, image_paths)
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                # Back-off longer on rate-limit errors (429)
+                delay = 15 if "429" in str(e) else 3
+                logger.warning(f"Retry {attempt + 1}/{max_retries} in {delay}s: {e}")
+                await asyncio.sleep(delay)
+    raise last_error

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background rounded square -->
+  <rect width="64" height="64" rx="14" fill="#111111"/>
+
+  <!-- Letter S as a thick stroked path with smooth curves -->
+  <path
+    d="M 46 18 C 46 18 20 18 18 18 C 13 18 12 22 12 25 C 12 28 13 32 18 32 L 46 32 C 51 32 52 36 52 39 C 52 42 51 46 46 46 C 44 46 18 46 18 46"
+    stroke="white"
+    stroke-width="8.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

@@ -48,7 +48,11 @@ app = FastAPI(
 import re as _re
 
 def _build_origins() -> list[str]:
-    origins = {"http://localhost:3000", "http://localhost:3001"}
+    origins = {
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://shopify-dev-tools.vercel.app",
+    }
     if settings.frontend_url:
         origins.add(settings.frontend_url)
     # Support CORS_ORIGINS env var: comma-separated list of extra allowed origins

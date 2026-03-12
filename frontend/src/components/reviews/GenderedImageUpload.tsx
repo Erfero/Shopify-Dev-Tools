@@ -85,7 +85,7 @@ function ImagePool({
         onClick={() => !isUploading && ref.current?.click()}
       >
         <input ref={ref} type="file" multiple accept="image/*" className="hidden"
-          onChange={(e) => handle(e.target.files)} />
+          onChange={(e) => { handle(e.target.files); e.target.value = ""; }} />
         {isUploading ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 size={20} className="animate-spin" style={{ color: accentColor }} />

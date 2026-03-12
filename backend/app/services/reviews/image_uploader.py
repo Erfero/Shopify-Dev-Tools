@@ -36,9 +36,7 @@ async def upload_to_imgbb(image_data: bytes, filename: str) -> Optional[str]:
 
 async def save_image_locally(image_data: bytes, filename: str) -> str:
     """Save image to the uploads directory and return local URL."""
-    uploads_dir = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "..", "uploads"
-    )
+    uploads_dir = os.path.join(os.getcwd(), "uploads")
     os.makedirs(uploads_dir, exist_ok=True)
 
     ext = os.path.splitext(filename)[1] or ".jpg"

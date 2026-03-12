@@ -62,7 +62,7 @@ export function ImageUpload({ imageUrls, onUrlsChange }: ImageUploadProps) {
         onClick={() => !isUploading && ref.current?.click()}
       >
         <input ref={ref} type="file" multiple accept="image/*" className="hidden"
-          onChange={(e) => handle(e.target.files)} />
+          onChange={(e) => { handle(e.target.files); e.target.value = ""; }} />
         {isUploading ? (
           <div className="flex flex-col items-center gap-3">
             <Loader2 size={32} className="animate-spin" style={{ color: "var(--primary)" }} />

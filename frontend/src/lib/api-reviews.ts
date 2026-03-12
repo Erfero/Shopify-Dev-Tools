@@ -33,5 +33,13 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   });
   if (!response.ok) throw new Error("Erreur lors de l'upload des images.");
   const data = await response.json();
-  return data.urls as string[];
+  const urls = data.urls as string[];
+  // Rewrite localhost URLs to use the actual API base (handles misconfigured BACKEND_URL)
+  return urls.map((url) => {
+    if (/https?:\/\/localhost(:\d+)?\//.test(url) && !API_BASE.includes("localhost")) {
+      const path = url.replace(/^https?:\/\/[^/]+/, "");
+      return `${API_BASE}${path}`;
+    }
+    return url;
+  });
 }

@@ -21,6 +21,6 @@ services:
       - key: SESSION_TTL_SECONDS
         value: 14400
       - key: IMGBB_API_KEY
-        sync: false
+        value: fbf73d5df50aaa2f61f11a8ae662419f
       - key: BACKEND_URL
-        sync: false
+        value: https://shopify-dev-tools-api.onrender.com

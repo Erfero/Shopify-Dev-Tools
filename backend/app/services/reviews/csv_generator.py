@@ -22,11 +22,10 @@ def generate_random_date(days_ago_max: int = 90) -> str:
     hours = random.randint(0, 23)
     minutes = random.randint(0, 59)
     seconds = random.randint(0, 59)
-    ms = random.randint(0, 999)
     date = datetime.now() - timedelta(
         days=days_ago, hours=hours, minutes=minutes, seconds=seconds
     )
-    return date.strftime(f"%Y-%m-%dT%H:%M:%S.{ms:03d}Z")
+    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def generate_reply_date(review_date_str: str) -> str:
@@ -34,8 +33,7 @@ def generate_reply_date(review_date_str: str) -> str:
         review_date = datetime.strptime(review_date_str[:19], "%Y-%m-%dT%H:%M:%S")
         reply_delay_hours = random.randint(2, 18)
         reply_date = review_date + timedelta(hours=reply_delay_hours)
-        ms = random.randint(0, 999)
-        return reply_date.strftime(f"%Y-%m-%dT%H:%M:%S.{ms:03d}Z")
+        return reply_date.strftime("%Y-%m-%dT%H:%M:%SZ")
     except Exception:
         return generate_random_date(89)
 
@@ -142,7 +140,7 @@ def generate_loox_full_csv(
 
         row = {
             "id": review_id,
-            "status": "Active",
+            "status": "published",
             "rating": generate_rating(),
             "email": email,
             "img": img_url,
@@ -153,7 +151,7 @@ def generate_loox_full_csv(
             "productId": "",
             "handle": product_handle,
             "variant": "",
-            "verified_purchase": "",
+            "verified_purchase": "false",
             "orderId": "",
             "reply": reply_text,
             "replied_at": reply_date,
@@ -198,11 +196,11 @@ def generate_loox_full_csv_multi(products: List[Dict]) -> str:
             author = review_data.get("author", "Client")
             email = generate_fake_email(author)
             writer.writerow({
-                "id": review_id, "status": "Active", "rating": generate_rating(),
+                "id": review_id, "status": "published", "rating": generate_rating(),
                 "email": email, "img": img_url, "nickname": author,
                 "full_name": author, "review": review_data.get("review", ""),
                 "date": review_date, "productId": "", "handle": product_handle,
-                "variant": "", "verified_purchase": "", "orderId": "",
+                "variant": "", "verified_purchase": "false", "orderId": "",
                 "reply": reply_text, "replied_at": reply_date,
                 "metaobject_handle": "", "incentivized": "",
             })
@@ -243,7 +241,7 @@ def generate_loox_import_csv_multi(products: List[Dict]) -> str:
                 "author": author, "email": email,
                 "body": review_data.get("review", ""),
                 "created_at": review_date, "photo_url": img_url,
-                "verified_purchase": "TRUE",
+                "verified_purchase": "true",
             })
 
     return output.getvalue()
@@ -293,7 +291,7 @@ def generate_loox_import_csv(
             "body": review_data.get("review", ""),
             "created_at": review_date,
             "photo_url": img_url,
-            "verified_purchase": "TRUE",
+            "verified_purchase": "true",
         }
         writer.writerow(row)
 

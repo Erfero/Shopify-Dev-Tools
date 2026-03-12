@@ -61,50 +61,10 @@ export function DownloadSection({
       {/* Download buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {/* Import simple */}
+        {/* Import simple — RECOMMENDED for Loox import */}
         <button
           type="button"
           onClick={() => triggerDownload(getDownloadUrl(sessionId, "import"), buildFilename(brandName, reviewCount, ""), () => { markAsDownloaded(sessionId); onDownloaded(); })}
-          className="block p-5 rounded-2xl transition-all hover:shadow-lg group"
-          style={{
-            background: "white",
-            border: "1.5px solid var(--border)",
-            boxShadow: "var(--shadow-sm)",
-            textAlign: "left",
-            width: "100%",
-          }}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "oklch(0.97 0 0)" }}
-            >
-              <FileText size={18} style={{ color: "var(--primary)" }} />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>CSV Import Loox</p>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>8 colonnes — format officiel</p>
-            </div>
-            <Download size={16} className="opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: "var(--primary)" }} />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {["handle", "rating", "author", "body", "photo_url"].map((f) => (
-              <span key={f}
-                className="text-xs px-2 py-0.5 rounded-lg font-medium"
-                style={{ background: "oklch(0.97 0 0)", color: "var(--primary)" }}>
-                {f}
-              </span>
-            ))}
-          </div>
-          <p className="text-xs mt-2.5" style={{ color: "#D97706" }}>
-            ⚠ Sans réponses boutique
-          </p>
-        </button>
-
-        {/* Full format */}
-        <button
-          type="button"
-          onClick={() => triggerDownload(getDownloadUrl(sessionId, "full"), buildFilename(brandName, reviewCount, "_complet"), () => { markAsDownloaded(sessionId); onDownloaded(); })}
           className="block p-5 rounded-2xl transition-all hover:shadow-lg group"
           style={{
             background: "white",
@@ -119,11 +79,11 @@ export function DownloadSection({
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "#F0FDF4" }}
             >
-              <FileSpreadsheet size={18} style={{ color: "#15803D" }} />
+              <FileText size={18} style={{ color: "#15803D" }} />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>CSV Complet</p>
+                <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>CSV Import Loox</p>
                 <span
                   className="text-xs px-2 py-0.5 rounded-lg font-semibold"
                   style={{ background: "#DCFCE7", color: "#15803D" }}
@@ -131,13 +91,13 @@ export function DownloadSection({
                   Recommandé
                 </span>
               </div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>18 colonnes — avec réponses</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>8 colonnes — format officiel Loox</p>
             </div>
             <Download size={16} className="opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ color: "#15803D" }} />
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {["reply", "replied_at", "nickname", "img"].map((f) => (
+            {["handle", "rating", "author", "body", "photo_url"].map((f) => (
               <span key={f}
                 className="text-xs px-2 py-0.5 rounded-lg font-medium"
                 style={{ background: "#DCFCE7", color: "#15803D" }}>
@@ -146,7 +106,48 @@ export function DownloadSection({
             ))}
           </div>
           <p className="text-xs mt-2.5" style={{ color: "#15803D" }}>
-            ✓ Inclut les réponses de la boutique
+            ✓ Compatible avec l&apos;import Loox
+          </p>
+        </button>
+
+        {/* Full format */}
+        <button
+          type="button"
+          onClick={() => triggerDownload(getDownloadUrl(sessionId, "full"), buildFilename(brandName, reviewCount, "_complet"), () => { markAsDownloaded(sessionId); onDownloaded(); })}
+          className="block p-5 rounded-2xl transition-all hover:shadow-lg group"
+          style={{
+            background: "white",
+            border: "1.5px solid var(--border)",
+            boxShadow: "var(--shadow-sm)",
+            textAlign: "left",
+            width: "100%",
+          }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "oklch(0.97 0 0)" }}
+            >
+              <FileSpreadsheet size={18} style={{ color: "var(--primary)" }} />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>CSV Complet</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>18 colonnes — avec réponses</p>
+            </div>
+            <Download size={16} className="opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: "var(--primary)" }} />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {["reply", "replied_at", "nickname", "img"].map((f) => (
+              <span key={f}
+                className="text-xs px-2 py-0.5 rounded-lg font-medium"
+                style={{ background: "oklch(0.97 0 0)", color: "var(--primary)" }}>
+                {f}
+              </span>
+            ))}
+          </div>
+          <p className="text-xs mt-2.5" style={{ color: "var(--text-muted)" }}>
+            Sauvegarde complète — inclut les réponses boutique
           </p>
         </button>
       </div>
@@ -161,7 +162,7 @@ export function DownloadSection({
           <li>Vérifiez les avis importés dans votre tableau de bord</li>
         </ol>
         <p className="text-xs mt-2 opacity-75">
-          💡 Essayez d&apos;abord le &quot;CSV Complet&quot; — sinon utilisez &quot;CSV Import Loox&quot;
+          💡 Utilisez toujours le &quot;CSV Import Loox&quot; pour importer dans Loox
         </p>
       </div>
 

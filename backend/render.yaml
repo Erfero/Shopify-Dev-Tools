@@ -11,7 +11,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: FRONTEND_URL
-        sync: false
+        value: https://shopify-dev-tools.vercel.app
       - key: AI_PRESET
         value: best
       - key: USE_MOCK

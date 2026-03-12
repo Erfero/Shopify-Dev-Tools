@@ -209,7 +209,7 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     line-height: 1.6;
-    font-size: 16px;
+    font-size: 14.5px;
     overflow-x: hidden;
   }
   html {
@@ -257,12 +257,12 @@
 
 .rv-input {
   width: 100%;
-  padding: 13px 18px;
+  padding: 11px 16px;
   border: 1.5px solid var(--rv-border);
   border-radius: 12px;
   background: var(--rv-bg-card);
   color: var(--rv-text);
-  font-size: 16px;
+  font-size: 14.5px;
   font-family: 'Lufga', 'Poppins', sans-serif;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
@@ -278,7 +278,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--rv-text);
   margin-bottom: 8px;
@@ -288,9 +288,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 13px 28px;
+  padding: 11px 24px;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 600;
   font-family: 'Lufga', 'Poppins', sans-serif;
   cursor: pointer;
@@ -311,9 +311,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 13px 26px;
+  padding: 11px 22px;
   border-radius: 12px;
-  font-size: 15.5px;
+  font-size: 14px;
   font-weight: 500;
   font-family: 'Lufga', 'Poppins', sans-serif;
   cursor: pointer;

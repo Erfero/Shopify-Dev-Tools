@@ -17,13 +17,15 @@ export default function Home() {
         {/* Header */}
         <motion.div className="mb-12 text-center" variants={fadeUp} custom={0}>
           <div className="mb-5 flex justify-center">
-            <motion.div
-              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground/[0.05] border border-border/60"
-              variants={float}
-              animate="animate"
-            >
-              <Layers className="h-7 w-7 text-foreground/70" />
-            </motion.div>
+            <Link href="/">
+              <motion.div
+                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground/[0.05] border border-border/60 cursor-pointer"
+                variants={float}
+                animate="animate"
+              >
+                <Layers className="h-7 w-7 text-foreground/70" />
+              </motion.div>
+            </Link>
           </div>
           <motion.h1
             className="text-3xl font-semibold tracking-tight sm:text-4xl"

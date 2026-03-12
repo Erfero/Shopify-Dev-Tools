@@ -166,7 +166,8 @@ def generate_loox_full_csv(
 def generate_loox_full_csv_multi(products: List[Dict]) -> str:
     """
     Generate combined full CSV for multiple products.
-    products: [{"reviews": List[Dict], "product_handle": str, "image_urls": List[str]}]
+    products: [{"reviews": List[Dict], "product_handle": str, "image_urls": List[str],
+                "female_image_urls": Optional[List[str]], "male_image_urls": Optional[List[str]]}]
     """
     headers = [
         "id", "status", "rating", "email", "img", "nickname", "full_name",
@@ -181,12 +182,15 @@ def generate_loox_full_csv_multi(products: List[Dict]) -> str:
         reviews = product["reviews"]
         product_handle = product["product_handle"]
         image_urls = product.get("image_urls", [])
+        female_urls = product.get("female_image_urls") or None
+        male_urls = product.get("male_image_urls") or None
+        gender_counters: Dict[str, int] = {"F": 0, "M": 0}
         for i, review_data in enumerate(reviews):
             review_id = generate_id()
             review_date = generate_random_date(90)
             reply_text = review_data.get("reply", "")
             reply_date = generate_reply_date(review_date) if reply_text else ""
-            img_url = image_urls[i] if i < len(image_urls) else ""
+            img_url = _pick_image(review_data, i, image_urls, female_urls, male_urls, gender_counters)
             author = review_data.get("author", "Client")
             email = generate_fake_email(author)
             writer.writerow({
@@ -205,7 +209,8 @@ def generate_loox_full_csv_multi(products: List[Dict]) -> str:
 def generate_loox_import_csv_multi(products: List[Dict]) -> str:
     """
     Generate combined simple import CSV for multiple products.
-    products: [{"reviews": List[Dict], "product_handle": str, "image_urls": List[str]}]
+    products: [{"reviews": List[Dict], "product_handle": str, "image_urls": List[str],
+                "female_image_urls": Optional[List[str]], "male_image_urls": Optional[List[str]]}]
     """
     headers = [
         "product_handle", "rating", "author", "email", "body",
@@ -219,9 +224,12 @@ def generate_loox_import_csv_multi(products: List[Dict]) -> str:
         reviews = product["reviews"]
         product_handle = product["product_handle"]
         image_urls = product.get("image_urls", [])
+        female_urls = product.get("female_image_urls") or None
+        male_urls = product.get("male_image_urls") or None
+        gender_counters: Dict[str, int] = {"F": 0, "M": 0}
         for i, review_data in enumerate(reviews):
             review_date = generate_random_date(90)
-            img_url = image_urls[i] if i < len(image_urls) else ""
+            img_url = _pick_image(review_data, i, image_urls, female_urls, male_urls, gender_counters)
             author = review_data.get("author", "Client")
             email = generate_fake_email(author)
             writer.writerow({

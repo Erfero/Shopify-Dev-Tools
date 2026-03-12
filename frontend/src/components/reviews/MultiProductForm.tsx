@@ -55,9 +55,11 @@ export interface MultiProductConfig {
   targetGender: string;
   language: string;
   reviewCount: number;
-  imageUrls: string[];       // user review photo URLs → CSV (computed from reviewImageFiles)
-  reviewImageFiles: File[];  // user review photo files → uploaded → URLs → CSV
-  productImages: File[];     // product photos → AI vision analysis
+  imageUrls: string[];              // user review photo URLs → CSV (for non-mixte)
+  reviewImageFiles: File[];         // review photos (non-mixte) → uploaded → URLs → CSV
+  femaleReviewImageFiles: File[];   // review photos for female reviewers (mixte only)
+  maleReviewImageFiles: File[];     // review photos for male reviewers (mixte only)
+  productImages: File[];            // product photos → AI vision analysis
 }
 
 function toHandle(name: string): string {
@@ -85,6 +87,8 @@ function newProduct(): MultiProductConfig {
     reviewCount: 50,
     imageUrls: [],
     reviewImageFiles: [],
+    femaleReviewImageFiles: [],
+    maleReviewImageFiles: [],
     productImages: [],
   };
 }

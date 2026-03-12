@@ -65,7 +65,8 @@ export default function ReviewsPage() {
     id: crypto.randomUUID(),
     productName: "", brandName: "", productDescription: "",
     productHandle: "", targetGender: "femmes", language: "Français",
-    reviewCount: 50, imageUrls: [], reviewImageFiles: [], productImages: [],
+    reviewCount: 50, imageUrls: [], reviewImageFiles: [],
+    femaleReviewImageFiles: [], maleReviewImageFiles: [], productImages: [],
   }]);
 
   const refreshEntries = useCallback(async () => {
@@ -198,19 +199,34 @@ export default function ReviewsPage() {
 
     (async () => {
       try {
-        const reviewUrlsPerProduct: string[][] = await Promise.all(
+        async function uploadFiles(files: File[]): Promise<string[]> {
+          if (files.length === 0) return [];
+          const uploadForm = new FormData();
+          files.forEach((f) => uploadForm.append("files", f));
+          const resp = await fetch(`${API}/reviews/upload-images`, {
+            method: "POST", body: uploadForm, signal: controller.signal,
+          });
+          if (!resp.ok) return [];
+          const data = await resp.json();
+          return data.urls ?? [];
+        }
+
+        const perProductUrls = await Promise.all(
           multiProducts.map(async (p) => {
-            if (p.reviewImageFiles.length === 0) return p.imageUrls.filter(Boolean);
-            const uploadForm = new FormData();
-            p.reviewImageFiles.forEach((f) => uploadForm.append("files", f));
-            const uploadResp = await fetch(`${API}/reviews/upload-images`, {
-              method: "POST",
-              body: uploadForm,
-              signal: controller.signal,
-            });
-            if (!uploadResp.ok) return p.imageUrls.filter(Boolean);
-            const uploadData = await uploadResp.json();
-            return [...p.imageUrls.filter(Boolean), ...(uploadData.urls ?? [])];
+            if (p.targetGender === "mixte") {
+              const [femaleUrls, maleUrls] = await Promise.all([
+                uploadFiles(p.femaleReviewImageFiles),
+                uploadFiles(p.maleReviewImageFiles),
+              ]);
+              return { image_urls: [], female_image_urls: femaleUrls, male_image_urls: maleUrls };
+            } else {
+              const uploadedUrls = await uploadFiles(p.reviewImageFiles);
+              return {
+                image_urls: [...p.imageUrls.filter(Boolean), ...uploadedUrls],
+                female_image_urls: [],
+                male_image_urls: [],
+              };
+            }
           })
         );
 
@@ -227,7 +243,9 @@ export default function ReviewsPage() {
               target_gender: p.targetGender,
               language: p.language,
               review_count: p.reviewCount,
-              image_urls: reviewUrlsPerProduct[idx],
+              image_urls: perProductUrls[idx].image_urls,
+              female_image_urls: perProductUrls[idx].female_image_urls,
+              male_image_urls: perProductUrls[idx].male_image_urls,
             }))
           )
         );
@@ -311,7 +329,8 @@ export default function ReviewsPage() {
       id: crypto.randomUUID(),
       productName: "", brandName: "", productDescription: "",
       productHandle: "", targetGender: "femmes", language: "Français",
-      reviewCount: 50, imageUrls: [], reviewImageFiles: [], productImages: [],
+      reviewCount: 50, imageUrls: [], reviewImageFiles: [],
+      femaleReviewImageFiles: [], maleReviewImageFiles: [], productImages: [],
     }]);
     setEvents([]); setProgress(0); setCount(0);
     setError(null); setSessionId(""); setDone(false); setIsGenerating(false);

@@ -166,6 +166,14 @@ async def multi_generation_stream(
         batch_size = 10
         num_batches = (review_count + batch_size - 1) // batch_size
 
+        female_image_urls_prod: Optional[List[str]] = product.get("female_image_urls") or None
+        male_image_urls_prod: Optional[List[str]] = product.get("male_image_urls") or None
+        # Normalize empty lists to None so CSV generator uses fallback
+        if female_image_urls_prod is not None and len(female_image_urls_prod) == 0:
+            female_image_urls_prod = None
+        if male_image_urls_prod is not None and len(male_image_urls_prod) == 0:
+            male_image_urls_prod = None
+
         images_for_product = product_images.get(prod_idx, [])
         if images_for_product:
             yield sse_event({
@@ -240,6 +248,8 @@ async def multi_generation_stream(
             "reviews": all_reviews,
             "product_handle": product_handle,
             "image_urls": image_urls,
+            "female_image_urls": female_image_urls_prod,
+            "male_image_urls": male_image_urls_prod,
         })
 
     yield sse_event({"type": "progress", "message": "Génération du fichier CSV combiné...", "progress": 92, "count": generated_total})

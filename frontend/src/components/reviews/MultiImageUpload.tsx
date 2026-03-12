@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, Package, CheckCircle2, Upload } from "lucide-react";
+import { Camera, X, Package, CheckCircle2, Upload, Users } from "lucide-react";
 import { MultiProductConfig } from "./MultiProductForm";
 
 function FileThumbnail({ file, onRemove }: { file: File; onRemove: () => void }) {
@@ -37,6 +37,75 @@ function FileThumbnail({ file, onRemove }: { file: File; onRemove: () => void })
   );
 }
 
+function GenderPool({
+  label,
+  accentColor,
+  files,
+  onAdd,
+  onRemove,
+}: {
+  label: string;
+  accentColor: string;
+  files: File[];
+  onAdd: (newFiles: File[]) => void;
+  onRemove: (idx: number) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="flex items-center gap-2 mb-2">
+        <div style={{ width: 10, height: 10, borderRadius: "50%", background: accentColor, flexShrink: 0 }} />
+        <p style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{label}</p>
+        <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: "auto" }}>
+          {files.length > 0 ? `${files.length} photo${files.length > 1 ? "s" : ""}` : "Aucune"}
+        </span>
+      </div>
+
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {files.map((file, i) => (
+            <div key={i} style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+              <FileThumbnail file={file} onRemove={() => onRemove(i)} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display: "none" }}
+        onChange={(e) => {
+          if (!e.target.files) return;
+          const newFiles = Array.from(e.target.files).filter((f) => f.type.startsWith("image/"));
+          if (newFiles.length) onAdd(newFiles);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all"
+        style={{
+          border: `2px dashed ${accentColor}50`,
+          background: accentColor + "08",
+          color: accentColor,
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = accentColor; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = accentColor + "50"; }}
+      >
+        <Upload size={13} />
+        {files.length > 0 ? "Ajouter" : "Ajouter des photos"}
+      </button>
+    </div>
+  );
+}
+
 interface Props {
   products: MultiProductConfig[];
   onChange: (products: MultiProductConfig[]) => void;
@@ -66,7 +135,12 @@ export function MultiImageUpload({ products, onChange }: Props) {
     ));
   };
 
-  const totalImages = products.reduce((s, p) => s + p.reviewImageFiles.length, 0);
+  const totalImages = products.reduce((s, p) => {
+    if (p.targetGender === "mixte") {
+      return s + p.femaleReviewImageFiles.length + p.maleReviewImageFiles.length;
+    }
+    return s + p.reviewImageFiles.length;
+  }, 0);
 
   return (
     <div>
@@ -92,15 +166,18 @@ export function MultiImageUpload({ products, onChange }: Props) {
       <div className="info-box mb-6">
         <p className="font-semibold text-xs mb-1">📸 Photos d&apos;utilisateurs</p>
         <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-          Ajoutez autant de photos que vous voulez pour chaque produit. Elles seront
-          intégrées dans le CSV comme photos partagées par vos clients.
+          Pour les produits <strong>Mixte</strong>, ajoutez des photos séparément pour les femmes et les hommes.
+          Elles seront attribuées automatiquement selon le genre de chaque avis.
         </p>
       </div>
 
       {/* Per-product cards */}
       <div className="space-y-4">
         {products.map((product, idx) => {
-          const hasImages = product.reviewImageFiles.length > 0;
+          const isMixte = product.targetGender === "mixte";
+          const hasImages = isMixte
+            ? product.femaleReviewImageFiles.length > 0 || product.maleReviewImageFiles.length > 0
+            : product.reviewImageFiles.length > 0;
 
           return (
             <div
@@ -126,61 +203,102 @@ export function MultiImageUpload({ products, onChange }: Props) {
                   className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: hasImages ? "#DCFCE7" : "oklch(0.97 0 0)", color: hasImages ? "#15803D" : "var(--primary)" }}
                 >
-                  {hasImages ? <CheckCircle2 size={15} /> : <Package size={15} />}
+                  {hasImages ? <CheckCircle2 size={15} /> : isMixte ? <Users size={15} /> : <Package size={15} />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm truncate" style={{ color: "var(--text)" }}>
                     {product.productName || `Produit ${idx + 1}`}
                   </p>
                   <p className="text-xs" style={{ color: hasImages ? "#15803D" : "var(--text-muted)", fontWeight: hasImages ? 600 : 400 }}>
-                    {hasImages
-                      ? `${product.reviewImageFiles.length} photo(s) ajoutée(s)`
-                      : "Aucune photo — optionnel"}
+                    {isMixte
+                      ? hasImages
+                        ? `${product.femaleReviewImageFiles.length}♀ + ${product.maleReviewImageFiles.length}♂ photo(s)`
+                        : "Mixte — photos femmes & hommes séparées"
+                      : hasImages
+                        ? `${product.reviewImageFiles.length} photo(s) ajoutée(s)`
+                        : "Aucune photo — optionnel"}
                   </p>
                 </div>
               </div>
 
               <div style={{ padding: "16px" }}>
-                {/* Thumbnails */}
-                {hasImages && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {product.reviewImageFiles.map((file, i) => (
-                      <FileThumbnail
-                        key={`${product.id}-review-${i}`}
-                        file={file}
-                        onRemove={() => removeFile(product.id, i)}
-                      />
-                    ))}
+                {isMixte ? (
+                  /* Mixte: two gender pools side by side */
+                  <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <GenderPool
+                      label="Femmes"
+                      accentColor="#EC4899"
+                      files={product.femaleReviewImageFiles}
+                      onAdd={(newFiles) => onChange(products.map((p) =>
+                        p.id === product.id
+                          ? { ...p, femaleReviewImageFiles: [...p.femaleReviewImageFiles, ...newFiles] }
+                          : p
+                      ))}
+                      onRemove={(i) => onChange(products.map((p) =>
+                        p.id === product.id
+                          ? { ...p, femaleReviewImageFiles: p.femaleReviewImageFiles.filter((_, idx2) => idx2 !== i) }
+                          : p
+                      ))}
+                    />
+                    <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch", flexShrink: 0 }} />
+                    <GenderPool
+                      label="Hommes"
+                      accentColor="#3B82F6"
+                      files={product.maleReviewImageFiles}
+                      onAdd={(newFiles) => onChange(products.map((p) =>
+                        p.id === product.id
+                          ? { ...p, maleReviewImageFiles: [...p.maleReviewImageFiles, ...newFiles] }
+                          : p
+                      ))}
+                      onRemove={(i) => onChange(products.map((p) =>
+                        p.id === product.id
+                          ? { ...p, maleReviewImageFiles: p.maleReviewImageFiles.filter((_, idx2) => idx2 !== i) }
+                          : p
+                      ))}
+                    />
                   </div>
+                ) : (
+                  /* Non-mixte: single pool */
+                  <>
+                    {hasImages && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {product.reviewImageFiles.map((file, i) => (
+                          <FileThumbnail
+                            key={`${product.id}-review-${i}`}
+                            file={file}
+                            onRemove={() => removeFile(product.id, i)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      style={{ display: "none" }}
+                      ref={(el) => { fileInputRefs.current[product.id] = el; }}
+                      onChange={(e) => handleFileSelect(product.id, e.target.files)}
+                      onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRefs.current[product.id]?.click()}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all"
+                      style={{
+                        border: "2px dashed oklch(0.85 0 0)",
+                        background: "oklch(0.97 0 0)",
+                        color: "var(--primary)",
+                        fontSize: 13,
+                        fontWeight: 600,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "oklch(0.85 0 0)"; }}
+                    >
+                      <Upload size={15} />
+                      {hasImages ? "Ajouter d'autres photos" : "Ajouter des photos"}
+                    </button>
+                  </>
                 )}
-
-                {/* Upload area */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  style={{ display: "none" }}
-                  ref={(el) => { fileInputRefs.current[product.id] = el; }}
-                  onChange={(e) => handleFileSelect(product.id, e.target.files)}
-                  onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRefs.current[product.id]?.click()}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-all"
-                  style={{
-                    border: "2px dashed oklch(0.85 0 0)",
-                    background: "oklch(0.97 0 0)",
-                    color: "var(--primary)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "oklch(0.85 0 0)"; e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
-                >
-                  <Upload size={15} />
-                  {hasImages ? "Ajouter d'autres photos" : "Ajouter des photos"}
-                </button>
               </div>
             </div>
           );

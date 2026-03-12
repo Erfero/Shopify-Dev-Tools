@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { UploadZone } from "@/components/theme/upload-zone";
 import { StoreConfigForm, type StoreConfig } from "@/components/theme/store-config-form";
@@ -17,6 +18,7 @@ import {
   type GenerationStep,
 } from "@/lib/api-theme";
 import Link from "next/link";
+import { fadeUp, scalePop } from "@/lib/motion";
 
 type AppStep = "upload" | "configure" | "generating" | "preview" | "done";
 
@@ -130,10 +132,26 @@ export default function ThemePage() {
 
   const currentStepIdx = APP_STEPS.indexOf(appStep);
 
+  const stepVariants = {
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+    exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: "easeIn" } },
+  };
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background px-4 py-12 sm:py-20">
+    <motion.div
+      className="flex min-h-screen flex-col items-center bg-background px-4 py-12 sm:py-20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       {/* Header */}
-      <header className="mb-12 text-center sm:mb-16">
+      <motion.header
+        className="mb-12 text-center sm:mb-16"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="mb-4">
           <Link
             href="/"
@@ -148,13 +166,18 @@ export default function ThemePage() {
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">
           Personnalisez automatiquement votre theme avec l&apos;IA
         </p>
-      </header>
+      </motion.header>
 
       {/* Steps indicator */}
-      <div className="mb-10 flex items-center gap-2">
+      <motion.div
+        className="mb-10 flex items-center gap-2"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
+      >
         {APP_STEPS.map((step, i) => (
           <div key={step} className="flex items-center gap-2">
-            <div
+            <motion.div
               className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-all ${
                 appStep === step
                   ? "bg-foreground text-background"
@@ -162,6 +185,8 @@ export default function ThemePage() {
                     ? "bg-foreground/10 text-foreground"
                     : "bg-foreground/4 text-muted-foreground/50"
               }`}
+              animate={appStep === step ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+              transition={{ duration: 0.3 }}
             >
               {currentStepIdx > i ? (
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -170,134 +195,140 @@ export default function ThemePage() {
               ) : (
                 i + 1
               )}
-            </div>
+            </motion.div>
             {i < APP_STEPS.length - 1 && (
-              <div
-                className={`h-px w-8 transition-colors sm:w-10 ${
-                  currentStepIdx > i
-                    ? "bg-foreground/20"
-                    : "bg-foreground/6"
-                }`}
+              <motion.div
+                className="h-px sm:w-10"
+                style={{ width: 32 }}
+                initial={{ backgroundColor: "rgb(0,0,0,0.06)" }}
+                animate={{ backgroundColor: currentStepIdx > i ? "rgb(0,0,0,0.2)" : "rgb(0,0,0,0.06)" }}
+                transition={{ duration: 0.4 }}
               />
             )}
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Main content */}
       <main className={`w-full ${appStep === "preview" ? "max-w-2xl" : "max-w-lg"}`}>
-        {/* Upload */}
-        {appStep === "upload" && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">Importer votre theme</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Uploadez le fichier ZIP de votre theme Shopify
-              </p>
-            </div>
-            <UploadZone
-              onFileSelected={handleFileSelected}
-              isUploading={isUploading}
-              error={uploadError}
-            />
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {/* Upload */}
+          {appStep === "upload" && (
+            <motion.div key="upload" className="space-y-6" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Importer votre theme</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Uploadez le fichier ZIP de votre theme Shopify
+                </p>
+              </div>
+              <UploadZone
+                onFileSelected={handleFileSelected}
+                isUploading={isUploading}
+                error={uploadError}
+              />
+            </motion.div>
+          )}
 
-        {/* Configure */}
-        {appStep === "configure" && uploadData && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">Configurer votre boutique</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Ces informations serviront a generer des textes personnalises
-              </p>
-            </div>
-            <StoreConfigForm
-              themeName={uploadData.theme_name}
-              onSubmit={handleGenerate}
-              isGenerating={false}
-            />
-          </div>
-        )}
+          {/* Configure */}
+          {appStep === "configure" && uploadData && (
+            <motion.div key="configure" className="space-y-6" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Configurer votre boutique</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ces informations serviront a generer des textes personnalises
+                </p>
+              </div>
+              <StoreConfigForm
+                themeName={uploadData.theme_name}
+                onSubmit={handleGenerate}
+                isGenerating={false}
+              />
+            </motion.div>
+          )}
 
-        {/* Generating */}
-        {appStep === "generating" && (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">Generation en cours</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                L&apos;IA personnalise votre theme...
-              </p>
-            </div>
-            <GenerationProgress steps={generationSteps} error={generationError} />
-            <TextPreview steps={generationSteps} />
-            {/* Show retry when generation fails entirely */}
-            {generationSteps.some((s) => s.step === "preview" && s.status === "error") && (
-              <div className="flex justify-center gap-3 pt-2">
-                <Button variant="outline" onClick={() => setAppStep("configure")}>
-                  Modifier la configuration
-                </Button>
-                <Button onClick={() => {
-                  setGenerationSteps([]);
-                  setGenerationError(null);
-                  handleGenerate(lastConfigRef.current!);
-                }}>
-                  Reessayer
+          {/* Generating */}
+          {appStep === "generating" && (
+            <motion.div key="generating" className="space-y-8" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Generation en cours</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  L&apos;IA personnalise votre theme...
+                </p>
+              </div>
+              <GenerationProgress steps={generationSteps} error={generationError} />
+              <TextPreview steps={generationSteps} />
+              {generationSteps.some((s) => s.step === "preview" && s.status === "error") && (
+                <div className="flex justify-center gap-3 pt-2">
+                  <Button variant="outline" onClick={() => setAppStep("configure")}>
+                    Modifier la configuration
+                  </Button>
+                  <Button onClick={() => {
+                    setGenerationSteps([]);
+                    setGenerationError(null);
+                    handleGenerate(lastConfigRef.current!);
+                  }}>
+                    Reessayer
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Preview / Edit */}
+          {appStep === "preview" && previewData && (
+            <motion.div key="preview" className="space-y-6" variants={stepVariants} initial="initial" animate="animate" exit="exit">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Prévisualisation et édition</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Vérifiez et ajustez les textes générés, puis validez pour créer votre thème.
+                </p>
+              </div>
+              <GeneratedDataEditor
+                data={previewData}
+                onValidate={handleValidate}
+                isApplying={isApplying}
+                applyError={applyError}
+              />
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setAppStep("configure")}
+                >
+                  ← Modifier la configuration
                 </Button>
               </div>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Preview / Edit */}
-        {appStep === "preview" && previewData && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">Prévisualisation et édition</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Vérifiez et ajustez les textes générés, puis validez pour créer votre thème.
-              </p>
-            </div>
-            <GeneratedDataEditor
-              data={previewData}
-              onValidate={handleValidate}
-              isApplying={isApplying}
-              applyError={applyError}
-            />
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => setAppStep("configure")}
-              >
-                ← Modifier la configuration
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Done */}
-        {appStep === "done" && uploadData && (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-lg font-medium">Votre theme est pret</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Telechargez-le et importez-le dans votre boutique Shopify
-              </p>
-            </div>
-            <DownloadSection
-              sessionId={uploadData.session_id}
-              onReset={handleReset}
-            />
-          </div>
-        )}
+          {/* Done */}
+          {appStep === "done" && uploadData && (
+            <motion.div key="done" className="space-y-8" variants={scalePop} initial="hidden" animate="visible">
+              <div className="text-center">
+                <h2 className="text-lg font-medium">Votre theme est pret</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Telechargez-le et importez-le dans votre boutique Shopify
+                </p>
+              </div>
+              <DownloadSection
+                sessionId={uploadData.session_id}
+                onReset={handleReset}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* History */}
-      <div className="mt-16 flex flex-col items-center">
+      <motion.div
+        className="mt-16 flex flex-col items-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+      >
         <ThemeHistory key={appStep === "done" ? "refresh" : "idle"} />
-      </div>
+      </motion.div>
 
       {/* Footer */}
       <footer className="mt-8 pt-4">
@@ -305,6 +336,6 @@ export default function ThemePage() {
           Shopify Theme Customizer v1.0
         </p>
       </footer>
-    </div>
+    </motion.div>
   );
 }

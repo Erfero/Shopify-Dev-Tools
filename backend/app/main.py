@@ -45,9 +45,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+import re as _re
+
+def _build_origins() -> list[str]:
+    origins = {"http://localhost:3000", "http://localhost:3001"}
+    if settings.frontend_url:
+        origins.add(settings.frontend_url)
+    # Support CORS_ORIGINS env var: comma-separated list of extra allowed origins
+    import os
+    extra = os.getenv("CORS_ORIGINS", "")
+    for o in extra.split(","):
+        o = o.strip()
+        if o:
+            origins.add(o)
+    return list(origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:3000"],
+    allow_origins=_build_origins(),
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

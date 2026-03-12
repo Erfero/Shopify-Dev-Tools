@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Header, UploadFile, File, Form, HTTPExce
 from fastapi.responses import FileResponse, StreamingResponse
 
 from app.config import settings
-from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear
+from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
 from app.services.theme.text_mapper import extract_text_slots
@@ -62,20 +62,48 @@ def _save_session_meta(session_id: str, session: dict) -> None:
         json.dump(meta, f, ensure_ascii=False)
 
 
-def _restore_session(session_id: str) -> dict | None:
-    """Tente de restaurer une session depuis le disque après redémarrage du serveur."""
+async def _restore_session(session_id: str) -> dict | None:
+    """Tente de restaurer une session depuis le disque, puis depuis la DB si besoin."""
     path = _meta_path(session_id)
-    if not path.exists():
-        return None
-    try:
-        with open(path, encoding="utf-8") as f:
-            meta = json.load(f)
-    except Exception:
-        return None
+    meta: dict = {}
 
-    extract_dir = Path(meta.get("extract_dir", ""))
+    if path.exists():
+        try:
+            with open(path, encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            pass
+
+    extract_dir = Path(meta.get("extract_dir", "")) if meta else Path("")
+
+    # Disk files missing → rebuild from DB ZIP cache (survives Render restarts)
     if not extract_dir.exists():
-        return None
+        result = await get_theme_zip(session_id)
+        if result is None:
+            return None
+        filename, zip_bytes = result
+        tmp_zip = settings.temp_path / f"_restore_{session_id}.zip"
+        settings.temp_path.mkdir(parents=True, exist_ok=True)
+        try:
+            tmp_zip.write_bytes(zip_bytes)
+            structure = extract_theme(tmp_zip)
+        except Exception:
+            return None
+        finally:
+            tmp_zip.unlink(missing_ok=True)
+        session = {
+            "structure": structure,
+            "text_slots": extract_text_slots(structure.parsed_files),
+            "generated_texts": meta.get("generated_texts"),
+            "modified_files": None,
+            "language": meta.get("language", "fr"),
+            "target_gender": meta.get("target_gender", "femme"),
+            "store_name": meta.get("store_name", ""),
+            "zip_path": meta.get("zip_path"),
+            "created_at": meta.get("created_at", datetime.now().isoformat()),
+        }
+        _save_session_meta(session_id, session)
+        return session
 
     structure = ThemeStructure(session_id=session_id, extract_dir=extract_dir)
     structure.theme_name = meta.get("theme_name", "")
@@ -100,12 +128,12 @@ def _restore_session(session_id: str) -> dict | None:
     }
 
 
-def _get_session(session_id: str) -> dict | None:
-    """Récupère une session avec vérification TTL et fallback disque."""
+async def _get_session(session_id: str) -> dict | None:
+    """Récupère une session avec vérification TTL et fallback disque/DB."""
     session = _sessions.get(session_id)
 
     if session is None:
-        session = _restore_session(session_id)
+        session = await _restore_session(session_id)
         if session:
             _sessions[session_id] = session
 
@@ -131,9 +159,11 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     if not theme_file.filename or not theme_file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Le fichier doit etre un ZIP")
 
+    content = await theme_file.read()
+
     temp_zip = settings.temp_path / f"upload_{theme_file.filename}"
+    settings.temp_path.mkdir(parents=True, exist_ok=True)
     with open(temp_zip, "wb") as f:
-        content = await theme_file.read()
         f.write(content)
 
     try:
@@ -156,6 +186,12 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     }
     _sessions[structure.session_id] = session
     _save_session_meta(structure.session_id, session)
+
+    # Save ZIP to DB so the session can be rebuilt after a server restart
+    try:
+        await save_theme_zip(structure.session_id, theme_file.filename, content)
+    except Exception:
+        pass  # Non-fatal: session will still work if server doesn't restart
 
     return UploadResponse(
         session_id=structure.session_id,
@@ -183,7 +219,7 @@ async def generate_theme(
     marketing_angles: Optional[str] = Form(None),
 ):
     """Generate all texts via AI. Returns SSE stream with generation progress."""
-    session = _get_session(session_id)
+    session = await _get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session non trouvee. Veuillez re-uploader le theme.")
 
@@ -288,7 +324,7 @@ async def apply_theme(
     generated_data: str = Form(...),
 ):
     """Apply generated texts to the theme and export a ZIP."""
-    session = _get_session(session_id)
+    session = await _get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session non trouvee. Veuillez re-uploader le theme.")
 
@@ -337,7 +373,7 @@ async def apply_theme(
 @router.get("/download/{session_id}")
 async def download_theme(session_id: str):
     """Download the modified theme ZIP."""
-    session = _get_session(session_id)
+    session = await _get_session(session_id)
     if not session or not session.get("zip_path"):
         raise HTTPException(status_code=404, detail="Theme non trouve. Veuillez regenerer.")
 
@@ -355,7 +391,7 @@ async def download_theme(session_id: str):
 @router.get("/preview/{session_id}")
 async def preview_texts(session_id: str):
     """Get a preview of the current text slots in the uploaded theme."""
-    session = _get_session(session_id)
+    session = await _get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session non trouvee.")
 
@@ -376,6 +412,10 @@ async def delete_session(session_id: str):
     if session_id in _sessions:
         del _sessions[session_id]
     cleanup_session(session_id)
+    try:
+        await delete_theme_zip(session_id)
+    except Exception:
+        pass
     return {"status": "deleted"}
 
 

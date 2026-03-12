@@ -83,6 +83,13 @@ CREATE TABLE IF NOT EXISTS theme_history (
     created_at TEXT NOT NULL,
     zip_path   TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS theme_upload_cache (
+    session_id TEXT PRIMARY KEY,
+    filename   TEXT NOT NULL,
+    zip_data   TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 _CREATE_TABLES_PG = """
@@ -111,6 +118,13 @@ CREATE TABLE IF NOT EXISTS theme_history (
     store_name TEXT NOT NULL,
     created_at TEXT NOT NULL,
     zip_path   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS theme_upload_cache (
+    session_id TEXT PRIMARY KEY,
+    filename   TEXT NOT NULL,
+    zip_data   TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 """
 
@@ -276,3 +290,52 @@ async def theme_history_delete(history_id: str) -> None:
 async def theme_history_clear() -> None:
     async with _engine.begin() as conn:
         await conn.execute(text("DELETE FROM theme_history"))
+
+
+# ── Theme upload cache (survive server restarts on Render) ────────────────────
+
+async def save_theme_zip(session_id: str, filename: str, zip_bytes: bytes) -> None:
+    """Store the original ZIP in the DB so sessions can be rebuilt after restart."""
+    import base64
+    zip_b64 = base64.b64encode(zip_bytes).decode("ascii")
+    async with _engine.begin() as conn:
+        if _IS_SQLITE:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_upload_cache (session_id, filename, zip_data)
+                VALUES (:sid, :fn, :data)
+                ON CONFLICT(session_id) DO UPDATE SET filename=excluded.filename, zip_data=excluded.zip_data
+                """),
+                {"sid": session_id, "fn": filename, "data": zip_b64},
+            )
+        else:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_upload_cache (session_id, filename, zip_data)
+                VALUES (:sid, :fn, :data)
+                ON CONFLICT(session_id) DO UPDATE SET filename=EXCLUDED.filename, zip_data=EXCLUDED.zip_data
+                """),
+                {"sid": session_id, "fn": filename, "data": zip_b64},
+            )
+
+
+async def get_theme_zip(session_id: str) -> tuple[str, bytes] | None:
+    """Retrieve ZIP bytes from the DB cache. Returns (filename, zip_bytes) or None."""
+    import base64
+    async with _engine.connect() as conn:
+        result = await conn.execute(
+            text("SELECT filename, zip_data FROM theme_upload_cache WHERE session_id = :sid"),
+            {"sid": session_id},
+        )
+        row = result.fetchone()
+    if row is None:
+        return None
+    return row[0], base64.b64decode(row[1])
+
+
+async def delete_theme_zip(session_id: str) -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(
+            text("DELETE FROM theme_upload_cache WHERE session_id = :sid"),
+            {"sid": session_id},
+        )

@@ -22,21 +22,21 @@ export default function Home() {
 
         {/* Tool cards */}
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Loox Review Generator */}
+          {/* Shopify Theme Customizer — en premier */}
           <Link
-            href="/reviews"
+            href="/theme"
             className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm"
           >
             <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05]">
-              <Star className="h-5 w-5 text-foreground/70" />
+              <Paintbrush className="h-5 w-5 text-foreground/70" />
             </div>
-            <h2 className="text-base font-semibold">Loox Review Generator</h2>
+            <h2 className="text-base font-semibold">Shopify Theme Customizer</h2>
             <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-              Générez des centaines d&apos;avis clients authentiques avec réponses boutique.
-              Export CSV prêt à importer dans Loox.
+              Personnalisez automatiquement votre thème Shopify avec l&apos;IA.
+              Textes, couleurs, pages légales — tout en quelques minutes.
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
-              {["100 langues", "Vision IA", "Format Loox"].map((tag) => (
+              {["Multi-langue", "Pages légales", "Export ZIP"].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full bg-foreground/[0.04] px-2.5 py-0.5 text-xs text-foreground/60 border border-border/40"
@@ -51,21 +51,21 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Theme Customizer */}
+          {/* Loox Review Generator — en second */}
           <Link
-            href="/theme"
+            href="/reviews"
             className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm"
           >
             <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05]">
-              <Paintbrush className="h-5 w-5 text-foreground/70" />
+              <Star className="h-5 w-5 text-foreground/70" />
             </div>
-            <h2 className="text-base font-semibold">Theme Customizer</h2>
+            <h2 className="text-base font-semibold">Loox Review Generator</h2>
             <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-              Personnalisez automatiquement votre thème Shopify avec l&apos;IA.
-              Textes, couleurs, pages légales — tout en quelques minutes.
+              Générez des centaines d&apos;avis clients authentiques avec réponses boutique.
+              Export CSV prêt à importer dans Loox.
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
-              {["Multi-langue", "Pages légales", "Export ZIP"].map((tag) => (
+              {["100 langues", "Vision IA", "Format Loox"].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full bg-foreground/[0.04] px-2.5 py-0.5 text-xs text-foreground/60 border border-border/40"

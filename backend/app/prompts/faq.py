@@ -26,18 +26,13 @@ REGLE GRAS OBLIGATOIRE : Dans chaque reponse HTML, tu DOIS placer en <strong>...
     else:
         lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Do NOT write any French. Every single word must be in that language."
 
-    marketing = context.get("marketing_angles", "").strip()
-    marketing_note = f"\nAngles marketing prioritaires (intègre-les dans les questions ET les réponses) :\n{marketing}" if marketing else ""
-
     user = f"""Boutique : {context['store_name']}
 Produit(s) : {products}
 {f"Description : {context['product_description']}" if context.get('product_description') else ""}
 {lang_note}
-{marketing_note}
 
 Genere 5 questions frequentes et leurs reponses pour ce produit.
 RAPPEL CRITIQUE : chaque question = 8 mots MAXIMUM. Questions courtes et directes comme un vrai client les poserait.
-{f"Les angles marketing ci-dessus DOIVENT transparaitre dans au moins 3 questions et leurs reponses." if marketing else ""}
 
 Reponds en JSON avec ce schema EXACT :
 

@@ -209,11 +209,20 @@ async def generate_all_texts(
         try:
             system_prompt, user_prompt = prompt_builder(context)
 
-            # Inject marketing angles into the system prompt if provided
+            # Inject marketing angles strongly into BOTH system and user prompts
             if context.get("marketing_angles"):
+                angles = context["marketing_angles"].strip()
+                # System prompt: sets the rule as a core constraint
                 system_prompt += (
-                    "\n\n---\nDIRECTIONS MARKETING (à appliquer impérativement dans tous les textes générés) :\n"
-                    + context["marketing_angles"]
+                    "\n\n---\nANGLES MARKETING OBLIGATOIRES :\n"
+                    + angles
+                    + "\n\nCes angles sont le coeur du message. Chaque texte genere DOIT reflechir ces angles directement — dans le choix des mots, des promesses, des benefices et des accroches."
+                )
+                # User prompt: placed at the very top so the AI sees it first
+                user_prompt = (
+                    f"ANGLES MARKETING A APPLIQUER (prioritaire sur tout le reste) :\n{angles}\n\n"
+                    "Tous les textes que tu generes ci-dessous DOIVENT integrer ces angles comme message central.\n\n"
+                    + user_prompt
                 )
 
             # Send images only for steps that benefit from visual context

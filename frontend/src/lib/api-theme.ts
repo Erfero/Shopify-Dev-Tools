@@ -44,14 +44,29 @@ export async function uploadTheme(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("theme_file", file);
 
-  const res = await apiFetch(`${API_BASE}/api/theme/upload`, {
-    method: "POST",
-    body: formData,
-  });
+  // AbortController timeout: 120 seconds for large theme ZIPs
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
+  let res: Response;
+  try {
+    res = await apiFetch(`${API_BASE}/api/theme/upload`, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("L'upload a pris trop de temps. Veuillez réessayer.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Erreur lors de l'upload" }));
-    throw new Error(err.detail || "Erreur lors de l'upload");
+    const errBody = await res.json().catch(() => ({ detail: "Erreur lors de l'upload" }));
+    throw new Error(errBody.detail || "Erreur lors de l'upload");
   }
 
   return res.json();

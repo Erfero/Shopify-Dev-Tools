@@ -16,8 +16,10 @@ Tu reponds UNIQUEMENT en JSON valide, sans texte autour."""
         lang_note = "Generate ALL texts in ENGLISH. Use English first names."
     elif lang.lower().startswith("de"):
         lang_note = "Generate ALL texts in GERMAN. Use German first names."
-    else:
+    elif lang.lower().startswith("fr"):
         lang_note = "Genere TOUS les textes en FRANCAIS. Utilise des prenoms francais."
+    else:
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use first names typical for that language/culture. Do NOT write any French text."
 
     if gender.lower() == "homme":
         gender_note = "Public masculin. Utilise majoritairement des prenoms masculins."

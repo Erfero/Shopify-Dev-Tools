@@ -26,8 +26,10 @@ REGLE LONGUEUR STRICTE : Tous les champs "text" et "description" (sauf les titre
         lang_note = "Generate ALL texts in ENGLISH."
     elif lang.lower().startswith("de"):
         lang_note = "Generate ALL texts in GERMAN."
-    else:
+    elif lang.lower().startswith("fr"):
         lang_note = "Genere TOUS les textes en FRANCAIS."
+    else:
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Do NOT write any French. Every single word must be in that language."
 
     image_note = """
 IMPORTANT : Des images du produit sont jointes. Observe-les attentivement :

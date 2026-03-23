@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     # ── Theme customizer specific ──────────────────────────────────────────
     temp_dir: str = "./temp"
-    session_ttl_seconds: int = 14400   # 4 hours
+    session_ttl_seconds: int = 172800  # 48 hours — long enough for any work session
     api_token: str = ""               # If set, all requests must include X-API-Token
 
     # ── Computed properties ─────────────────────────────────────────────────

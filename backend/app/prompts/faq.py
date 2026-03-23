@@ -19,8 +19,10 @@ REGLE GRAS OBLIGATOIRE : Dans chaque reponse HTML, tu DOIS placer en <strong>...
         lang_note = "Generate ALL texts in ENGLISH."
     elif lang.lower().startswith("de"):
         lang_note = "Generate ALL texts in GERMAN."
-    else:
+    elif lang.lower().startswith("fr"):
         lang_note = "Genere TOUS les textes en FRANCAIS."
+    else:
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Do NOT write any French. Every single word must be in that language."
 
     user = f"""Boutique : {context['store_name']}
 Produit(s) : {products}

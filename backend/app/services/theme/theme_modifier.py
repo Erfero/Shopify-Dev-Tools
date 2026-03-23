@@ -270,8 +270,14 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
 
     reps: list[tuple[str, str, str]] = []
 
-    _cta_map = {"en": "Discover", "de": "Entdecken"}
-    cta = _cta_map.get(language[:2].lower(), "Découvrir")
+    _cta_map = {
+        "fr": "Découvrir", "en": "Discover", "de": "Entdecken",
+        "es": "Descubrir", "pt": "Descobrir", "it": "Scopri",
+        "nl": "Ontdekken", "pl": "Odkryj", "ru": "Открыть",
+    }
+    # Use AI-generated CTA if available, otherwise fall back to map (English if unknown)
+    _lang2 = language[:2].lower()
+    cta = hp.get("cta_button_text") or _cta_map.get(_lang2, _cta_map["en"])
 
     # A — Bannière(s): slogan (inline_richtext) + CTA button text
     banner = _section_by_type(data, "banner")
@@ -290,13 +296,18 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
                     _rep(reps, "button_text", _s(blk, "button_text"), cta)
 
     # B — Texte enrichi 1: welcome (heading=inline_richtext, description=richtext)
-    _lang2 = language[:2].lower()
     _welcome_titles = {
         "fr": f"Bienvenue chez {store_name} !",
         "en": f"Welcome to {store_name}!",
         "de": f"Willkommen bei {store_name}!",
+        "es": f"Bienvenido a {store_name}!",
+        "pt": f"Bem-vindo à {store_name}!",
+        "it": f"Benvenuto su {store_name}!",
+        "nl": f"Welkom bij {store_name}!",
+        "pl": f"Witamy w {store_name}!",
+        "ru": f"Добро пожаловать в {store_name}!",
     }
-    _welcome_title = _welcome_titles.get(_lang2, _welcome_titles["fr"])
+    _welcome_title = _welcome_titles.get(_lang2, _welcome_titles["en"])
     rich = _sections_by_type(data, "rich-text")
     if rich:
         _, sec = rich[0]
@@ -456,16 +467,20 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
 
     _lang2 = language[:2].lower()
     _gender_plural = {
-        "homme": {"fr": "hommes", "en": "men", "de": "Männer"},
-        "mixte": {"fr": "personnes", "en": "people", "de": "Personen"},
-    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen"})
-    _plural = _gender_plural.get(_lang2, _gender_plural["fr"])
+        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen"},
+        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen"},
+    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen"})
+    _plural = _gender_plural.get(_lang2, _gender_plural["en"])
     _fixed = {
         "fr": ("Description", "Comment ça marche ?", f"+9860 {_plural} l'ont déjà adopté !"),
         "en": ("Description", "How does it work?", f"+9860 {_plural} have already adopted it!"),
         "de": ("Beschreibung", "Wie funktioniert es?", f"+9860 {_plural} haben es bereits übernommen!"),
+        "es": ("Descripción", "¿Cómo funciona?", f"+9860 {_plural} ya lo han adoptado!"),
+        "pt": ("Descrição", "Como funciona?", f"+9860 {_plural} já adotaram!"),
+        "it": ("Descrizione", "Come funziona?", f"+9860 {_plural} lo hanno già adottato!"),
+        "nl": ("Beschrijving", "Hoe werkt het?", f"+9860 {_plural} hebben het al overgenomen!"),
     }
-    h1, h2, h3 = _fixed.get(_lang2, _fixed["fr"])
+    h1, h2, h3 = _fixed.get(_lang2, _fixed["en"])
 
     main = _section_by_type(data, "main-product")
     if not main:
@@ -528,16 +543,21 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
 
     # Fixed accordion headings by language
     _lang = language[:2].lower()
-    _gender_plural = {"homme": {"fr": "hommes", "en": "men", "de": "Männer"},
-                      "mixte": {"fr": "personnes", "en": "people", "de": "Personen"}}.get(
-                          target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen"})
-    _plural = _gender_plural.get(_lang, _gender_plural["fr"])
+    _gender_plural = {
+        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen"},
+        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen"},
+    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen"})
+    _plural = _gender_plural.get(_lang, _gender_plural["en"])
     _fixed_headings = {
         "fr": ("Description", "Comment ça marche ?", f"+9860 {_plural} l'ont déjà adopté !"),
         "en": ("Description", "How does it work?", f"+9860 {_plural} have already adopted it!"),
         "de": ("Beschreibung", "Wie funktioniert es?", f"+9860 {_plural} haben es bereits übernommen!"),
+        "es": ("Descripción", "¿Cómo funciona?", f"+9860 {_plural} ya lo han adoptado!"),
+        "pt": ("Descrição", "Como funciona?", f"+9860 {_plural} já adotaram!"),
+        "it": ("Descrizione", "Come funziona?", f"+9860 {_plural} lo hanno già adottato!"),
+        "nl": ("Beschrijving", "Hoe werkt het?", f"+9860 {_plural} hebben het al overgenomen!"),
     }
-    h1, h2, h3 = _fixed_headings.get(_lang, _fixed_headings["fr"])
+    h1, h2, h3 = _fixed_headings.get(_lang, _fixed_headings["en"])
 
     # C/D/E — Bloc description-faq: product_description, how_it_works, adoption
     for _, blk in _blocks_by_type(msec, "description-faq"):
@@ -746,8 +766,12 @@ def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "fr": ("Suivre ma commande", "Entrez le numéro de votre commande pour connaître sa position actuelle.", "Suivre", "Numéro de suivi de commande"),
         "en": ("Track my order", "Enter your order number to find out its current location.", "Track", "Order tracking number"),
         "de": ("Meine Bestellung verfolgen", "Geben Sie Ihre Bestellnummer ein, um den aktuellen Status zu sehen.", "Verfolgen", "Sendungsverfolgungsnummer"),
+        "es": ("Seguir mi pedido", "Introduce el número de tu pedido para conocer su ubicación actual.", "Seguir", "Número de seguimiento del pedido"),
+        "pt": ("Rastrear meu pedido", "Insira o número do seu pedido para saber a sua localização atual.", "Rastrear", "Número de rastreamento do pedido"),
+        "it": ("Traccia il mio ordine", "Inserisci il numero del tuo ordine per conoscere la sua posizione attuale.", "Traccia", "Numero di tracciamento dell'ordine"),
+        "nl": ("Volg mijn bestelling", "Voer uw bestelnummer in om de huidige locatie te weten.", "Volgen", "Bestelling trackingnummer"),
     }
-    heading, description, button, track = _texts.get(_lang2, _texts["fr"])
+    heading, description, button, track = _texts.get(_lang2, _texts["en"])
 
     reps: list[tuple[str, str, str]] = []
 
@@ -781,8 +805,12 @@ def _apply_contact_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "fr": ("Numéro de Commande", "Envoyez"),
         "en": ("Order Number", "Send"),
         "de": ("Bestellnummer", "Senden"),
+        "es": ("Número de Pedido", "Enviar"),
+        "pt": ("Número do Pedido", "Enviar"),
+        "it": ("Numero Ordine", "Invia"),
+        "nl": ("Bestelnummer", "Versturen"),
     }
-    order_number, button_text = _texts.get(_lang2, _texts["fr"])
+    order_number, button_text = _texts.get(_lang2, _texts["en"])
 
     reps: list[tuple[str, str, str]] = []
 
@@ -816,8 +844,12 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
         "fr": "NOTRE OFFRE : 1 ACHETÉ, LE 2ᵉ À -50 % PENDANT",
         "en": "OUR OFFER: BUY 1, GET THE 2ND AT -50% FOR",
         "de": "UNSER ANGEBOT: 1 GEKAUFT, DAS 2. FÜR -50 % FÜR",
+        "es": "NUESTRA OFERTA: COMPRA 1, EL 2º AL -50% DURANTE",
+        "pt": "NOSSA OFERTA: COMPRE 1, O 2º A -50% POR",
+        "it": "LA NOSTRA OFFERTA: ACQUISTA 1, IL 2° A -50% PER",
+        "nl": "ONS AANBOD: KOOP 1, DE 2E VOOR -50% GEDURENDE",
     }
-    _timer_text = _timer_texts.get(_lang2, _timer_texts["fr"])
+    _timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
 
     for _, sec in data.get("sections", {}).items():
         if sec.get("type") != "announcement-bar":
@@ -831,9 +863,13 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
                     "fr": "PLUS DE 9860 PERSONNES NOUS RECOMMANDENT",
                     "en": "MORE THAN 9860 PEOPLE RECOMMEND US",
                     "de": "MEHR ALS 9860 PERSONEN EMPFEHLEN UNS",
+                    "es": "MÁS DE 9860 PERSONAS NOS RECOMIENDAN",
+                    "pt": "MAIS DE 9860 PESSOAS NOS RECOMENDAM",
+                    "it": "PIÙ DI 9860 PERSONE CI RACCOMANDANO",
+                    "nl": "MEER DAN 9860 MENSEN BEVELEN ONS AAN",
                 }
                 _rep(reps, "text", _s(blk, "text"),
-                     _inline(_marquee_texts.get(_lang2, _marquee_texts["fr"])))
+                     _inline(_marquee_texts.get(_lang2, _marquee_texts["en"])))
 
     return apply_replacements(ed / rel, reps) > 0
 
@@ -857,8 +893,12 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
         "fr": f"REJOIGNEZ L'ÉQUIPE {_store_upper} !",
         "en": f"JOIN THE {_store_upper} TEAM!",
         "de": f"WERDEN SIE TEIL DES TEAMS {_store_upper}!",
+        "es": f"¡ÚNETE AL EQUIPO {_store_upper}!",
+        "pt": f"JUNTE-SE À EQUIPE {_store_upper}!",
+        "it": f"UNISCITI AL TEAM {_store_upper}!",
+        "nl": f"WORD LID VAN HET TEAM {_store_upper}!",
     }
-    _newsletter_heading = _newsletter_headings.get(_lang2, _newsletter_headings["fr"])
+    _newsletter_heading = _newsletter_headings.get(_lang2, _newsletter_headings["en"])
 
     reps: list[tuple[str, str, str]] = []
     footer = gt.get("footer", {})
@@ -929,60 +969,104 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "fr": "Bénéficiez d'une réduction supplémentaire de 10 % pendant $time",
         "en": "Enjoy an extra 10% discount for $time",
         "de": "Genießen Sie 10% zusätzlichen Rabatt für $time",
+        "es": "Disfruta de un 10% de descuento adicional durante $time",
+        "pt": "Aproveite 10% de desconto adicional por $time",
+        "it": "Approfitta di uno sconto extra del 10% per $time",
+        "nl": "Geniet van 10% extra korting gedurende $time",
     }
     _delivery_labels = {
         "fr": ("Commande", "Commande Prête", "Livraison"),
         "en": ("Order", "Order Ready", "Delivery"),
         "de": ("Bestellung", "Bestellung Bereit", "Lieferung"),
+        "es": ("Pedido", "Pedido Listo", "Entrega"),
+        "pt": ("Pedido", "Pedido Pronto", "Entrega"),
+        "it": ("Ordine", "Ordine Pronto", "Consegna"),
+        "nl": ("Bestelling", "Bestelling Klaar", "Levering"),
     }
     _upsell_titles = {
         "fr": "Vous allez adorer cet article",
         "en": "You'll love this item",
         "de": "Das werden Sie lieben",
+        "es": "Te encantará este artículo",
+        "pt": "Você vai adorar este item",
+        "it": "Amerai questo articolo",
+        "nl": "Je zult dit artikel geweldig vinden",
     }
     _savings = {
         "fr": "Vous économisez",
         "en": "You save",
         "de": "Sie sparen",
+        "es": "Ahorras",
+        "pt": "Você economiza",
+        "it": "Risparmi",
+        "nl": "U bespaart",
     }
     _subtotal = {
         "fr": "Sous-Total",
         "en": "Subtotal",
         "de": "Zwischensumme",
+        "es": "Subtotal",
+        "pt": "Subtotal",
+        "it": "Subtotale",
+        "nl": "Subtotaal",
     }
     _total = {
         "fr": "Total",
         "en": "Total",
         "de": "Gesamt",
+        "es": "Total",
+        "pt": "Total",
+        "it": "Totale",
+        "nl": "Totaal",
     }
     _upsell_btn = {
         "fr": "Ajouter",
         "en": "Add",
         "de": "Hinzufügen",
+        "es": "Agregar",
+        "pt": "Adicionar",
+        "it": "Aggiungi",
+        "nl": "Toevoegen",
     }
     _protection = {
         "fr": "Protégez votre commande contre les dommages, la perte ou le vol.",
         "en": "Protect your order against damage, loss or theft.",
         "de": "Schützen Sie Ihre Bestellung gegen Beschädigung, Verlust oder Diebstahl.",
+        "es": "Proteja su pedido contra daños, pérdida o robo.",
+        "pt": "Proteja seu pedido contra danos, perda ou roubo.",
+        "it": "Proteggi il tuo ordine da danni, perdita o furto.",
+        "nl": "Bescherm uw bestelling tegen schade, verlies of diefstal.",
     }
     _cart_footer = {
         "fr": "<strong>⭐4.8/5 Trustpilot | 🔐 Paiement Sécurisé</strong>",
         "en": "<strong>⭐4.8/5 Trustpilot | 🔐 Secure Payment</strong>",
         "de": "<strong>⭐4.8/5 Trustpilot | 🔐 Sichere Zahlung</strong>",
+        "es": "<strong>⭐4.8/5 Trustpilot | 🔐 Pago Seguro</strong>",
+        "pt": "<strong>⭐4.8/5 Trustpilot | 🔐 Pagamento Seguro</strong>",
+        "it": "<strong>⭐4.8/5 Trustpilot | 🔐 Pagamento Sicuro</strong>",
+        "nl": "<strong>⭐4.8/5 Trustpilot | 🔐 Veilige Betaling</strong>",
     }
     _timeout = {
         "fr": "Offre expirée",
         "en": "Offer expired",
         "de": "Angebot abgelaufen",
+        "es": "Oferta expirada",
+        "pt": "Oferta expirada",
+        "it": "Offerta scaduta",
+        "nl": "Aanbieding verlopen",
     }
     _product_card_btn = {
         "fr": "Ajouter au panier",
         "en": "Add to cart",
         "de": "In den Warenkorb",
+        "es": "Agregar al carrito",
+        "pt": "Adicionar ao carrinho",
+        "it": "Aggiungi al carrello",
+        "nl": "In winkelwagen",
     }
 
-    timer_text = _timer_texts.get(_lang2, _timer_texts["fr"])
-    today, ready, delivered = _delivery_labels.get(_lang2, _delivery_labels["fr"])
+    timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
+    today, ready, delivered = _delivery_labels.get(_lang2, _delivery_labels["en"])
 
     reps: list[tuple[str, str, str]] = []
     cart = gt.get("cart", {})
@@ -992,10 +1076,10 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
     # Top-level settings (fixed translations, AI override if present)
     _rep(reps, "product_card_button_text",
          str(cur.get("product_card_button_text", "")),
-         settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2, _product_card_btn["fr"]))
+         settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2, _product_card_btn["en"]))
     _rep(reps, "timer_timeout_text",
          str(cur.get("timer_timeout_text", "")),
-         settings_txt.get("timer_timeout_text") or _timeout.get(_lang2, _timeout["fr"]))
+         settings_txt.get("timer_timeout_text") or _timeout.get(_lang2, _timeout["en"]))
 
     # Cart-drawer section
     for _, sec in cur.get("sections", {}).items():
@@ -1005,19 +1089,19 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
 
         # Cart settings: use AI data if available, else fixed translation
         _rep(reps, "cart_upsell_title",      str(s.get("cart_upsell_title", "")),
-             cart.get("upsell_title") or _upsell_titles.get(_lang2, _upsell_titles["fr"]))
+             cart.get("upsell_title") or _upsell_titles.get(_lang2, _upsell_titles["en"]))
         _rep(reps, "cart_upsell_button_text", str(s.get("cart_upsell_button_text", "")),
-             cart.get("upsell_button_text") or _upsell_btn.get(_lang2, _upsell_btn["fr"]))
+             cart.get("upsell_button_text") or _upsell_btn.get(_lang2, _upsell_btn["en"]))
         _rep(reps, "cart_protection_text",    str(s.get("cart_protection_text", "")),
-             cart.get("protection_text") or _protection.get(_lang2, _protection["fr"]))
+             cart.get("protection_text") or _protection.get(_lang2, _protection["en"]))
         _rep(reps, "cart_savings_text",       str(s.get("cart_savings_text", "")),
-             cart.get("savings_text") or _savings.get(_lang2, _savings["fr"]))
+             cart.get("savings_text") or _savings.get(_lang2, _savings["en"]))
         _rep(reps, "cart_subtotal_text",      str(s.get("cart_subtotal_text", "")),
-             cart.get("subtotal_text") or _subtotal.get(_lang2, _subtotal["fr"]))
+             cart.get("subtotal_text") or _subtotal.get(_lang2, _subtotal["en"]))
         _rep(reps, "cart_total_text",         str(s.get("cart_total_text", "")),
-             cart.get("total_text") or _total.get(_lang2, _total["fr"]))
+             cart.get("total_text") or _total.get(_lang2, _total["en"]))
         _rep(reps, "cart_footer_text",        str(s.get("cart_footer_text", "")),
-             cart.get("cart_footer_text") or _cart_footer.get(_lang2, _cart_footer["fr"]))
+             cart.get("cart_footer_text") or _cart_footer.get(_lang2, _cart_footer["en"]))
         if cart.get("button_text"):
             _rep(reps, "cart_button_text", str(s.get("cart_button_text", "")), cart["button_text"])
 
@@ -1040,13 +1124,17 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
 # ── Locale file switching ─────────────────────────────────────────────────────
 
 def _switch_locale_files(ed: Path, language: str) -> None:
-    """Switch the theme's default locale so all UI text uses the chosen language.
+    """Switch the theme's default storefront locale to the chosen language.
 
-    Shopify themes use `{lang}.default.json` as the primary locale file.
+    Only switches the storefront locale files (*.json), NOT the schema locale
+    files (*.schema.json). Schema files control the theme EDITOR admin labels
+    (like "Image ratio", "Color scheme", etc.) and must remain in English to
+    avoid "missing translation" errors in the Shopify theme editor.
+
+    Shopify themes use `{lang}.default.json` as the primary storefront locale.
     For non-English stores:
       1. Demote en.default.json → en.json
-      2. Promote {lang}.json → {lang}.default.json  (same for .schema.json)
-    This makes built-in strings (Add to cart, Sold out, etc.) appear in the right language.
+      2. Promote {lang}.json → {lang}.default.json
     No-op for English or if the target locale file doesn't exist in the theme.
     """
     lang = language.lower()
@@ -1067,24 +1155,14 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if not target_code:
         return
 
-    # Demote English default
+    # Demote English storefront default (storefront only — NOT schema files)
     en_def = locales_dir / "en.default.json"
     en_dem = locales_dir / "en.json"
     if en_def.exists() and not en_dem.exists():
         en_def.rename(en_dem)
 
-    en_def_s = locales_dir / "en.default.schema.json"
-    en_dem_s = locales_dir / "en.schema.json"
-    if en_def_s.exists() and not en_dem_s.exists():
-        en_def_s.rename(en_dem_s)
-
-    # Promote target locale to default
+    # Promote target storefront locale to default (storefront only — NOT schema files)
     t_json = locales_dir / f"{target_code}.json"
     t_def  = locales_dir / f"{target_code}.default.json"
     if t_json.exists() and not t_def.exists():
         t_json.rename(t_def)
-
-    t_schema = locales_dir / f"{target_code}.schema.json"
-    t_def_s  = locales_dir / f"{target_code}.default.schema.json"
-    if t_schema.exists() and not t_def_s.exists():
-        t_schema.rename(t_def_s)

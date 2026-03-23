@@ -1,7 +1,9 @@
+import asyncio
 import json
 import shutil
 import uuid
 from datetime import datetime
+from functools import partial
 from pathlib import Path
 from typing import Optional
 
@@ -167,7 +169,9 @@ async def upload_theme(theme_file: UploadFile = File(...)):
         f.write(content)
 
     try:
-        structure = extract_theme(temp_zip)
+        # Run blocking ZIP extraction in a thread to avoid blocking the async event loop
+        loop = asyncio.get_event_loop()
+        structure = await loop.run_in_executor(None, extract_theme, temp_zip)
     except Exception as e:
         temp_zip.unlink(missing_ok=True)
         raise HTTPException(status_code=400, detail=f"Erreur lors de l'extraction du theme: {str(e)}")

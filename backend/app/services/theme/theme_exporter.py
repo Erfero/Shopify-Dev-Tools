@@ -1,9 +1,12 @@
+import logging
 import zipfile
 import json
 from pathlib import Path
 
 from app.config import settings
 from app.utils.json_handler import write_theme_json
+
+logger = logging.getLogger(__name__)
 
 
 # Directories to exclude from the output ZIP (internal temp files)
@@ -105,14 +108,31 @@ def create_legal_page_template(theme_root: Path, page_handle: str, title: str, c
 
 def _create_zip(source_dir: Path, zip_path: Path):
     """Create a ZIP file from a directory, excluding internal temp directories."""
+    # Verify layout/theme.liquid exists before starting — Shopify requires it
+    theme_liquid = source_dir / "layout" / "theme.liquid"
+    if not theme_liquid.exists():
+        raise FileNotFoundError(
+            f"layout/theme.liquid manquant dans le répertoire theme: {source_dir}"
+        )
+
+    # Collect all files first so we can detect issues before writing the ZIP
+    files_to_add: list[tuple[Path, str]] = []
+    for file_path in sorted(source_dir.rglob("*")):
+        if not file_path.is_file():
+            continue
+        rel = file_path.relative_to(source_dir)
+        if rel.parts and rel.parts[0] in EXCLUDED_DIRS:
+            continue
+        if rel.name in EXCLUDED_FILES:
+            continue
+        # Use POSIX separators (forward slashes) in the archive — required for Shopify
+        files_to_add.append((file_path, rel.as_posix()))
+
+    logger.info(f"_create_zip: {len(files_to_add)} files → {zip_path.name}")
+
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        for file_path in sorted(source_dir.rglob("*")):
-            if file_path.is_file():
-                rel = file_path.relative_to(source_dir)
-                # Skip excluded directories (e.g., _product_images)
-                if rel.parts and rel.parts[0] in EXCLUDED_DIRS:
-                    continue
-                # Skip excluded files (e.g., _session_meta.json)
-                if rel.name in EXCLUDED_FILES:
-                    continue
-                zf.write(file_path, rel)
+        for file_path, arcname in files_to_add:
+            try:
+                zf.write(file_path, arcname)
+            except Exception as e:
+                logger.warning(f"_create_zip: skipping {arcname} ({e})")

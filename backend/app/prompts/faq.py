@@ -9,7 +9,7 @@ Les reponses utilisent du HTML richtext (<p>, <strong>).
 Les questions sont du texte simple, sans HTML.
 Tu reponds UNIQUEMENT en JSON valide, sans texte autour.
 
-REGLE LONGUEUR QUESTIONS (OBLIGATOIRE) : Chaque question doit etre COURTE — maximum 8 mots. Exemples corrects : "Ca marche vraiment ?", "Combien de temps pour voir des resultats ?", "C'est sans danger ?", "Livraison rapide ?". INTERDIT de faire des questions longues ou complexes.
+REGLE LONGUEUR QUESTIONS (OBLIGATOIRE) : Chaque question doit etre COURTE et naturelle — entre 5 et 10 mots maximum. Exemples corrects : "Est-ce que ca marche vraiment ?", "Combien de temps pour voir des resultats ?", "C'est sans danger pour la peau ?", "Comment l'utiliser au quotidien ?". INTERDIT de faire des questions trop longues ou complexes.
 
 REGLE GRAS OBLIGATOIRE : Dans chaque reponse HTML, tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-a-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur et donnent de la puissance au texte. Chaque reponse doit contenir au moins deux <strong>."""
 
@@ -32,7 +32,7 @@ Produit(s) : {products}
 {lang_note}
 
 Genere 5 questions frequentes et leurs reponses pour ce produit.
-RAPPEL CRITIQUE : chaque question = 8 mots MAXIMUM. Questions courtes et directes comme un vrai client les poserait.
+RAPPEL CRITIQUE : chaque question = 5 a 10 mots. Questions naturelles et directes comme un vrai client les poserait.
 
 Reponds en JSON avec ce schema EXACT :
 
@@ -66,7 +66,7 @@ Reponds en JSON avec ce schema EXACT :
 
 CONTRAINTES :
 - Exactement 5 items dans faq.items
-- Questions : texte simple, PAS de HTML, 8 mots MAXIMUM chacune
+- Questions : texte simple, PAS de HTML, entre 5 et 10 mots chacune
 - Reponses : HTML avec <p> et <strong> — au moins deux <strong> par reponse
 - Specifique au produit {product}"""
 

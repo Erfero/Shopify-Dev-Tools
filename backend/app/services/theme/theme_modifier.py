@@ -1126,15 +1126,17 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
 def _switch_locale_files(ed: Path, language: str) -> None:
     """Switch the theme's default storefront locale to the chosen language.
 
-    Only switches the storefront locale files (*.json), NOT the schema locale
-    files (*.schema.json). Schema files control the theme EDITOR admin labels
-    (like "Image ratio", "Color scheme", etc.) and must remain in English to
-    avoid "missing translation" errors in the Shopify theme editor.
-
-    Shopify themes use `{lang}.default.json` as the primary storefront locale.
-    For non-English stores:
+    Storefront locale files (*.json):
       1. Demote en.default.json → en.json
       2. Promote {lang}.json → {lang}.default.json
+
+    Schema locale files (*.schema.json — theme EDITOR admin labels):
+      The target language schema file is often incomplete (not all keys translated).
+      To avoid "missing translation: t:..." errors in the Shopify theme editor,
+      we create {lang}.default.schema.json as a COPY of en.default.schema.json.
+      This guarantees every admin label key exists (in English as fallback).
+      No JSON parsing needed — raw bytes copy preserves the original format.
+
     No-op for English or if the target locale file doesn't exist in the theme.
     """
     lang = language.lower()
@@ -1155,14 +1157,24 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if not target_code:
         return
 
-    # Demote English storefront default (storefront only — NOT schema files)
+    # Demote English storefront default
     en_def = locales_dir / "en.default.json"
     en_dem = locales_dir / "en.json"
     if en_def.exists() and not en_dem.exists():
         en_def.rename(en_dem)
 
-    # Promote target storefront locale to default (storefront only — NOT schema files)
+    # Promote target storefront locale to default
     t_json = locales_dir / f"{target_code}.json"
     t_def  = locales_dir / f"{target_code}.default.json"
     if t_json.exists() and not t_def.exists():
         t_json.rename(t_def)
+
+    # Create {lang}.default.schema.json from en.default.schema.json so the
+    # Shopify admin (in any language) always finds every schema label key.
+    # The target language schema (e.g. fr.schema.json) is often incomplete;
+    # using English as the base prevents all "missing translation: t:..." errors.
+    en_schema = locales_dir / "en.default.schema.json"
+    t_def_schema = locales_dir / f"{target_code}.default.schema.json"
+    if en_schema.exists() and not t_def_schema.exists():
+        import shutil
+        shutil.copy2(en_schema, t_def_schema)

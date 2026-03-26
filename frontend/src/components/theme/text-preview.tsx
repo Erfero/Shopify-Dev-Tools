@@ -27,9 +27,9 @@ interface TextPreviewProps {
 function countFields(obj: unknown, depth = 0): number {
   if (depth > 4 || obj === null || obj === undefined) return 0;
   if (typeof obj === "string") return 1;
-  if (Array.isArray(obj)) return obj.reduce((sum, item) => sum + countFields(item, depth + 1), 0);
+  if (Array.isArray(obj)) return (obj as unknown[]).reduce<number>((sum, item) => sum + countFields(item, depth + 1), 0);
   if (typeof obj === "object") {
-    return Object.values(obj as Record<string, unknown>).reduce(
+    return Object.values(obj as Record<string, unknown>).reduce<number>(
       (sum, v) => sum + countFields(v, depth + 1),
       0,
     );

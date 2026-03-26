@@ -574,7 +574,7 @@ async def create_user(id: str, email: str, password_hash: str, is_approved: bool
     async with _engine.begin() as conn:
         await conn.execute(
             text("INSERT INTO users (id, email, password_hash, is_approved, is_admin) VALUES (:id, :email, :password_hash, :is_approved, :is_admin)"),
-            {"id": id, "email": email, "password_hash": password_hash, "is_approved": int(is_approved), "is_admin": int(is_admin)},
+            {"id": id, "email": email, "password_hash": password_hash, "is_approved": bool(is_approved), "is_admin": bool(is_admin)},
         )
 
 
@@ -613,10 +613,10 @@ async def update_user_status(id: str, is_approved: bool | None = None, is_admin:
     params: dict = {"id": id}
     if is_approved is not None:
         parts.append("is_approved = :is_approved")
-        params["is_approved"] = int(is_approved)
+        params["is_approved"] = bool(is_approved)
     if is_admin is not None:
         parts.append("is_admin = :is_admin")
-        params["is_admin"] = int(is_admin)
+        params["is_admin"] = bool(is_admin)
     if not parts:
         return
     async with _engine.begin() as conn:

@@ -93,6 +93,13 @@ CREATE TABLE IF NOT EXISTS theme_upload_cache (
     created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS theme_output_cache (
+    history_id TEXT PRIMARY KEY,
+    filename   TEXT NOT NULL,
+    zip_data   TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS theme_analytics (
     id                   INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id           TEXT,
@@ -137,6 +144,13 @@ CREATE TABLE IF NOT EXISTS theme_history (
 
 CREATE TABLE IF NOT EXISTS theme_upload_cache (
     session_id TEXT PRIMARY KEY,
+    filename   TEXT NOT NULL,
+    zip_data   TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS theme_output_cache (
+    history_id TEXT PRIMARY KEY,
     filename   TEXT NOT NULL,
     zip_data   TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
@@ -367,6 +381,79 @@ async def delete_theme_zip(session_id: str) -> None:
             text("DELETE FROM theme_upload_cache WHERE session_id = :sid"),
             {"sid": session_id},
         )
+
+
+# ── Theme output ZIP cache (survive server restarts — 5-day retention) ────────
+
+async def save_theme_output_zip(history_id: str, filename: str, zip_bytes: bytes) -> None:
+    """Store the generated output ZIP so it survives server restarts."""
+    import base64
+    zip_b64 = base64.b64encode(zip_bytes).decode("ascii")
+    async with _engine.begin() as conn:
+        if _IS_SQLITE:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_output_cache (history_id, filename, zip_data)
+                VALUES (:hid, :fn, :data)
+                ON CONFLICT(history_id) DO UPDATE SET filename=excluded.filename, zip_data=excluded.zip_data
+                """),
+                {"hid": history_id, "fn": filename, "data": zip_b64},
+            )
+        else:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_output_cache (history_id, filename, zip_data)
+                VALUES (:hid, :fn, :data)
+                ON CONFLICT(history_id) DO UPDATE SET filename=EXCLUDED.filename, zip_data=EXCLUDED.zip_data
+                """),
+                {"hid": history_id, "fn": filename, "data": zip_b64},
+            )
+
+
+async def get_theme_output_zip(history_id: str) -> tuple[str, bytes] | None:
+    """Retrieve the generated ZIP from DB. Returns (filename, zip_bytes) or None."""
+    import base64
+    async with _engine.connect() as conn:
+        result = await conn.execute(
+            text("SELECT filename, zip_data FROM theme_output_cache WHERE history_id = :hid"),
+            {"hid": history_id},
+        )
+        row = result.fetchone()
+    if row is None:
+        return None
+    return row[0], base64.b64decode(row[1])
+
+
+async def delete_theme_output_zip(history_id: str) -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(
+            text("DELETE FROM theme_output_cache WHERE history_id = :hid"),
+            {"hid": history_id},
+        )
+
+
+async def clear_all_theme_output_zips() -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(text("DELETE FROM theme_output_cache"))
+
+
+async def list_theme_output_zip_ids() -> set:
+    """Return set of history_ids that have a cached output ZIP."""
+    async with _engine.connect() as conn:
+        result = await conn.execute(text("SELECT history_id FROM theme_output_cache"))
+        return {row[0] for row in result}
+
+
+async def cleanup_old_output_zips(days: int = 5) -> int:
+    """Delete output ZIPs older than `days` days. Returns count deleted."""
+    if _IS_SQLITE:
+        cutoff_expr = f"datetime('now', '-{days} days')"
+        stmt = f"DELETE FROM theme_output_cache WHERE created_at < {cutoff_expr}"
+    else:
+        stmt = f"DELETE FROM theme_output_cache WHERE created_at < NOW() - INTERVAL '{days} days'"
+    async with _engine.begin() as conn:
+        result = await conn.execute(text(stmt))
+        return result.rowcount
 
 
 # ── Theme analytics functions ─────────────────────────────────────────────────

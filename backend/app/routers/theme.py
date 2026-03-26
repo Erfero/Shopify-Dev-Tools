@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 _MAX_ZIP_BYTES = 150 * 1024 * 1024
 # Max products per generation request
 _MAX_PRODUCTS = 50
-from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, analytics_record, analytics_increment_regen, analytics_get_summary
+from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
 from app.services.theme.text_mapper import extract_text_slots
@@ -443,9 +443,18 @@ async def apply_theme(
         )
         session["zip_path"] = str(zip_path)
 
+        history_id = str(uuid.uuid4())
+
+        # Persist output ZIP in DB so it survives server restarts (5-day retention)
+        try:
+            zip_bytes = zip_path.read_bytes()
+            await save_theme_output_zip(history_id, zip_path.name, zip_bytes)
+        except Exception as e:
+            logger.warning("Could not save output ZIP to DB for %s: %s", history_id, e)
+
         try:
             await theme_history_add({
-                "id": str(uuid.uuid4()),
+                "id": history_id,
                 "filename": zip_path.name,
                 "store_name": store_name,
                 "created_at": datetime.now().isoformat(),
@@ -515,13 +524,14 @@ async def delete_session(session_id: str):
 async def get_history():
     """Return list of all generated themes (most recent first)."""
     entries = await theme_history_list()
+    cached_ids = await list_theme_output_zip_ids()
     return [
         {
             "id": e["id"],
             "filename": e["filename"],
             "store_name": e["store_name"],
             "created_at": e["created_at"],
-            "available": Path(e["zip_path"]).exists(),
+            "available": Path(e["zip_path"]).exists() or e["id"] in cached_ids,
         }
         for e in entries
     ]
@@ -535,7 +545,13 @@ async def download_history_item(history_id: str):
         raise HTTPException(status_code=404, detail="Fichier non trouvé dans l'historique.")
     zip_path = Path(entry["zip_path"])
     if not zip_path.exists():
-        raise HTTPException(status_code=404, detail="Fichier ZIP introuvable sur le serveur.")
+        # Attempt to restore from DB cache (survives Render restarts)
+        result = await get_theme_output_zip(history_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Fichier ZIP introuvable sur le serveur.")
+        _, zip_bytes = result
+        zip_path.parent.mkdir(parents=True, exist_ok=True)
+        zip_path.write_bytes(zip_bytes)
     return FileResponse(path=zip_path, media_type="application/zip", filename=entry["filename"])
 
 
@@ -548,6 +564,10 @@ async def delete_history_item(history_id: str):
     zip_path = Path(entry["zip_path"])
     zip_path.unlink(missing_ok=True)
     await theme_history_delete(history_id)
+    try:
+        await delete_theme_output_zip(history_id)
+    except Exception:
+        pass
     return {"status": "deleted"}
 
 
@@ -558,6 +578,10 @@ async def clear_history():
     for entry in entries:
         Path(entry["zip_path"]).unlink(missing_ok=True)
     await theme_history_clear()
+    try:
+        await clear_all_theme_output_zips()
+    except Exception:
+        pass
     return {"status": "cleared"}
 
 

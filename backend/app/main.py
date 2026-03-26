@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, cleanup_old_output_zips
 from app.routers import health, reviews, theme
 
 logging.basicConfig(
@@ -43,6 +43,12 @@ async def _cleanup_temp_loop() -> None:
                     logger.warning("Cleanup: failed to delete %s: %s", path, e)
         except Exception as e:
             logger.error("Cleanup loop error: %s", e)
+        try:
+            deleted = await cleanup_old_output_zips(days=5)
+            if deleted:
+                logger.info("Cleanup: removed %d expired output ZIP(s) from DB", deleted)
+        except Exception as e:
+            logger.error("Output ZIP cleanup error: %s", e)
 
 
 @asynccontextmanager

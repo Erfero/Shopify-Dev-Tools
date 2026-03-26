@@ -56,7 +56,8 @@ export async function uploadTheme(
       const data = await new Promise<UploadResponse>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", `${API_BASE}/api/theme/upload`);
-        if (API_TOKEN) xhr.setRequestHeader("X-API-Token", API_TOKEN);
+        const token = getToken();
+        if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         xhr.timeout = 150_000;
 
         xhr.upload.onprogress = (e) => {

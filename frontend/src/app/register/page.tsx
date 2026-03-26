@@ -67,7 +67,7 @@ export default function RegisterPage() {
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-block text-sm font-medium text-foreground hover:underline"
+            className="mt-6 inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted"
           >
             Retour à la connexion
           </Link>

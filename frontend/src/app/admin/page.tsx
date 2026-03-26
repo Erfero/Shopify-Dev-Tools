@@ -177,20 +177,20 @@ export default function AdminPage() {
               onClick={fetchUsers}
               disabled={loading}
               title="Rafraîchir"
-              className="flex items-center justify-center rounded-xl border border-border/60 p-2 transition hover:bg-foreground/[0.04] disabled:opacity-40"
+              className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
             <button
               onClick={() => router.push("/")}
-              className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3.5 py-2 text-sm transition hover:bg-foreground/[0.04]"
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Retour
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3.5 py-2 text-sm transition hover:bg-foreground/[0.04]"
+              className="flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-80"
             >
               <LogOut className="h-3.5 w-3.5" />
               Déconnexion

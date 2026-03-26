@@ -144,7 +144,7 @@ export default function Home() {
             {user?.is_admin && (
               <Link
                 href="/admin"
-                className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium transition hover:bg-foreground/[0.04]"
+                className="flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-xs font-semibold text-background shadow-sm transition hover:opacity-80"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Gérer les accès
@@ -152,7 +152,7 @@ export default function Home() {
             )}
             <button
               onClick={logout}
-              className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium transition hover:bg-foreground/[0.04]"
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:bg-muted"
             >
               <LogOut className="h-3.5 w-3.5" />
               Déconnexion

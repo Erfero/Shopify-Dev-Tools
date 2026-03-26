@@ -112,6 +112,15 @@ CREATE TABLE IF NOT EXISTS theme_analytics (
     sections_regenerated INTEGER DEFAULT 0,
     created_at           TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    email         TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_approved   INTEGER DEFAULT 0,
+    is_admin      INTEGER DEFAULT 0,
+    created_at    TEXT DEFAULT (datetime('now'))
+);
 """
 
 _CREATE_TABLES_PG = """
@@ -167,6 +176,15 @@ CREATE TABLE IF NOT EXISTS theme_analytics (
     success              BOOLEAN,
     sections_regenerated INTEGER DEFAULT 0,
     created_at           TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    email         TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_approved   BOOLEAN DEFAULT FALSE,
+    is_admin      BOOLEAN DEFAULT FALSE,
+    created_at    TIMESTAMP DEFAULT NOW()
 );
 """
 
@@ -548,3 +566,63 @@ async def analytics_get_summary() -> dict:
         "by_language": by_language,
         "total_regenerations": total_regen,
     }
+
+
+# ── User auth functions ────────────────────────────────────────────────────────
+
+async def create_user(id: str, email: str, password_hash: str, is_approved: bool, is_admin: bool) -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(
+            text("INSERT INTO users (id, email, password_hash, is_approved, is_admin) VALUES (:id, :email, :password_hash, :is_approved, :is_admin)"),
+            {"id": id, "email": email, "password_hash": password_hash, "is_approved": int(is_approved), "is_admin": int(is_admin)},
+        )
+
+
+async def get_user_by_email(email: str) -> dict | None:
+    async with _engine.connect() as conn:
+        row = (await conn.execute(
+            text("SELECT id, email, password_hash, is_approved, is_admin, created_at FROM users WHERE email = :email"),
+            {"email": email},
+        )).fetchone()
+    if not row:
+        return None
+    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5])}
+
+
+async def get_user_by_id(id: str) -> dict | None:
+    async with _engine.connect() as conn:
+        row = (await conn.execute(
+            text("SELECT id, email, password_hash, is_approved, is_admin, created_at FROM users WHERE id = :id"),
+            {"id": id},
+        )).fetchone()
+    if not row:
+        return None
+    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5])}
+
+
+async def get_all_users() -> list[dict]:
+    async with _engine.connect() as conn:
+        rows = (await conn.execute(
+            text("SELECT id, email, is_approved, is_admin, created_at FROM users ORDER BY created_at DESC")
+        )).fetchall()
+    return [{"id": r[0], "email": r[1], "is_approved": bool(r[2]), "is_admin": bool(r[3]), "created_at": str(r[4])} for r in rows]
+
+
+async def update_user_status(id: str, is_approved: bool | None = None, is_admin: bool | None = None) -> None:
+    parts = []
+    params: dict = {"id": id}
+    if is_approved is not None:
+        parts.append("is_approved = :is_approved")
+        params["is_approved"] = int(is_approved)
+    if is_admin is not None:
+        parts.append("is_admin = :is_admin")
+        params["is_admin"] = int(is_admin)
+    if not parts:
+        return
+    async with _engine.begin() as conn:
+        await conn.execute(text(f"UPDATE users SET {', '.join(parts)} WHERE id = :id"), params)
+
+
+async def delete_user(id: str) -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": id})

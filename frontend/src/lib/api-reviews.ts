@@ -1,4 +1,10 @@
 import { API as API_BASE } from "@/lib/config";
+import { getToken } from "@/lib/auth";
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface SSEEvent {
   type: "start" | "progress" | "complete" | "error";
@@ -15,13 +21,13 @@ export function getDownloadUrl(sessionId: string, format: "full" | "import"): st
 export async function getPreview(
   sessionId: string
 ): Promise<{ reviews: Array<{ author: string; review: string; reply: string }>; count: number }> {
-  const response = await fetch(`${API_BASE}/reviews/preview/${sessionId}`);
+  const response = await fetch(`${API_BASE}/reviews/preview/${sessionId}`, { headers: authHeaders() });
   if (!response.ok) throw new Error("Preview introuvable");
   return response.json();
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
-  await fetch(`${API_BASE}/reviews/session/${sessionId}`, { method: "DELETE" });
+  await fetch(`${API_BASE}/reviews/session/${sessionId}`, { method: "DELETE", headers: authHeaders() });
 }
 
 export async function uploadImages(files: File[]): Promise<string[]> {
@@ -30,6 +36,7 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   const response = await fetch(`${API_BASE}/reviews/upload-images`, {
     method: "POST",
     body: formData,
+    headers: authHeaders(),
   });
   if (!response.ok) throw new Error("Erreur lors de l'upload des images.");
   const data = await response.json();

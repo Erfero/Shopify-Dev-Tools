@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db, cleanup_old_output_zips
 from app.routers import health, reviews, theme
+from app.routers.auth_users import router as auth_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,5 +109,6 @@ os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(health.router)
+app.include_router(auth_router)
 app.include_router(reviews.router, prefix="/api")
 app.include_router(theme.router)

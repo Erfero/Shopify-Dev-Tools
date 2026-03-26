@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 432000  # 5 days — matches output ZIP retention
     api_token: str = ""               # If set, all requests must include X-API-Token
 
+    # ── Auth (JWT) ──────────────────────────────────────────────────────────
+    jwt_secret: str = "change-me-in-production-use-a-long-random-string"
+    admin_email: str = ""             # This email is auto-approved as admin on registration
+
     # ── Computed properties ─────────────────────────────────────────────────
 
     @property

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthGuard from "@/components/auth-guard";
 
 export const metadata: Metadata = {
   title: "Shopify Dev Tools",
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="antialiased">
-        {children}
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   );

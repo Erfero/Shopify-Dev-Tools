@@ -1,11 +1,12 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN || "";
 
-/** Wrapper fetch qui ajoute automatiquement le header X-API-Token si configuré. */
+import { getToken } from "@/lib/auth";
+
+/** Wrapper fetch qui ajoute automatiquement le JWT Bearer token. */
 function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  if (!API_TOKEN) return fetch(url, options);
+  const token = getToken();
   const headers = new Headers(options.headers as HeadersInit | undefined);
-  headers.set("X-API-Token", API_TOKEN);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
   return fetch(url, { ...options, headers });
 }
 

@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Layers, ArrowRight, Star, Paintbrush } from "lucide-react";
+import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer, staggerItem, float } from "@/lib/motion";
+import { getUser, logout } from "@/lib/auth";
 
 export default function Home() {
+  const user = getUser();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <motion.div
@@ -131,13 +134,28 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <motion.p
-          className="mt-12 text-center text-xs text-muted-foreground/40"
+        <motion.div
+          className="mt-12 flex items-center justify-between text-xs text-muted-foreground/40"
           variants={fadeUp}
           custom={5}
         >
-          Propulsé par OpenRouter AI
-        </motion.p>
+          <span>Propulsé par OpenRouter AI</span>
+          <div className="flex items-center gap-3">
+            {user?.is_admin && (
+              <Link href="/admin" className="flex items-center gap-1 hover:text-muted-foreground transition-colors">
+                <ShieldCheck className="h-3 w-3" />
+                Admin
+              </Link>
+            )}
+            <button
+              onClick={logout}
+              className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
+            >
+              <LogOut className="h-3 w-3" />
+              Déconnexion
+            </button>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   );

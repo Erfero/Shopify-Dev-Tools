@@ -64,6 +64,48 @@ def _inline(value: str) -> str:
     return value
 
 
+def _sanitize_richtext(value: str) -> str:
+    """Sanitize for Shopify richtext: keep only valid block HTML, strip all else.
+
+    Allowed tags: <p>, <strong>, <em>, <ul>, <ol>, <li>, <br>, <a href="...">
+    Strips: <summary>, <details>, <div>, <span>, <section>, <aside>, all attrs
+    except href on <a>. Guards against AI-generated or scraped Shopify HTML.
+    Also enforces a 2000-char max to prevent bloated injections.
+    """
+    if not value:
+        return value
+
+    # Strip any tag that is NOT in the allowed set (including summary, details, div, span…)
+    # First pass: strip attributes from allowed tags (keep only href on <a>)
+    value = re.sub(r'<(strong|em|p|ul|ol|li|br)\s[^>]*>', r'<\1>', value, flags=re.IGNORECASE)
+    value = re.sub(r'<a\s[^>]*href=["\']([^"\']*)["\'][^>]*>', r'<a href="\1">', value, flags=re.IGNORECASE)
+    value = re.sub(r'<a\s(?!href)[^>]*>', '<a>', value, flags=re.IGNORECASE)
+
+    # Second pass: remove disallowed tags entirely (tag + content for block-level ones)
+    DISALLOWED_BLOCK = r'summary|details|div|span|section|aside|header|footer|nav|article|figure|figcaption|table|tr|td|th|thead|tbody|form|input|button|select|option|script|style|iframe|template'
+    value = re.sub(rf'</?(?:{DISALLOWED_BLOCK})\b[^>]*>', '', value, flags=re.IGNORECASE)
+
+    # Remove any remaining unknown/stray tags (anything not in our allowed set)
+    ALLOWED_TAGS = r'p|strong|em|ul|ol|li|br|a'
+    value = re.sub(rf'</?(?!(?:{ALLOWED_TAGS})\b)\w+[^>]*>', '', value, flags=re.IGNORECASE)
+
+    # Clean up whitespace
+    value = re.sub(r'[ \t]+', ' ', value)
+    value = re.sub(r'\n{3,}', '\n\n', value).strip()
+
+    # Enforce max length: 2000 chars to avoid gigantic injections
+    if len(value) > 2000:
+        # Truncate at last complete </p> within limit
+        truncated = value[:1996]  # leave room for closing </p>
+        last_p = truncated.rfind('</p>')
+        if last_p > 200:
+            value = truncated[:last_p + 4]
+        else:
+            value = truncated.rstrip() + '</p>'
+
+    return value
+
+
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def apply_generated_texts(
@@ -316,7 +358,7 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
             break
         for _, blk in _blocks_by_type(sec, "text"):
             _rep(reps, "description", _s(blk, "description"),
-                 hp.get("welcome", {}).get("text", ""))
+                 _sanitize_richtext(hp.get("welcome", {}).get("text", "")))
             break
 
     # C — Icônes (3 blocs): benefits
@@ -346,7 +388,7 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
             break
         for _, blk in _blocks_by_type(sec, "text"):
             _rep(reps, "description", _s(blk, "description"),
-                 advantages[i].get("text", ""))
+                 _sanitize_richtext(advantages[i].get("text", "")))
             break
 
     # E — Liste de comparaison: comparison
@@ -376,7 +418,7 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
             break
         for _, blk in _blocks_by_type(sec, "text"):
             _rep(reps, "description", _s(blk, "description"),
-                 advantages[2].get("text", ""))
+                 _sanitize_richtext(advantages[2].get("text", "")))
             break
 
     # F — Spécifications: specs
@@ -421,7 +463,7 @@ def _fix_product_image_with_text(ed: Path, pf: dict, hp: dict) -> bool:
 
     adv = advantages[4]  # avantage 5 — même que image-with-text #1
     title = _inline(adv.get("title", ""))
-    text = adv.get("text", "")
+    text = _sanitize_richtext(adv.get("text", ""))
 
     if not title and not text:
         return False
@@ -566,23 +608,23 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         _rep(reps, "heading1", str(s.get("heading1", "")), h1)
         if pp.get("product_description"):
             _rep(reps, "text1", str(s.get("text1", "")),
-                 pp["product_description"].get("text", ""))
+                 _sanitize_richtext(pp["product_description"].get("text", "")))
         # heading2 = "Comment ça marche ?" (fixe)
         _rep(reps, "heading2", str(s.get("heading2", "")), h2)
         if pp.get("how_it_works"):
             _rep(reps, "text2", str(s.get("text2", "")),
-                 pp["how_it_works"].get("text", ""))
+                 _sanitize_richtext(pp["how_it_works"].get("text", "")))
         # heading3 = "+9860 [public] l'ont déjà adopté !" (fixe)
         _rep(reps, "heading3", str(s.get("heading3", "")), h3)
         if pp.get("adoption"):
             _rep(reps, "text3", str(s.get("text3", "")),
-                 pp["adoption"].get("text", ""))
+                 _sanitize_richtext(pp["adoption"].get("text", "")))
         # D4 — Delivery accordion (heading4 / text4)
         di = pp.get("delivery_info", {})
         if di.get("heading"):
             _rep(reps, "heading4", str(s.get("heading4", "")), di["heading"])
         if di.get("text"):
-            _rep(reps, "text4", str(s.get("text4", "")), di["text"])
+            _rep(reps, "text4", str(s.get("text4", "")), _sanitize_richtext(di["text"]))
         break
 
     # D5 — Delivery estimation block labels in main-product
@@ -616,7 +658,7 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
             break
         for _, blk in _blocks_by_type(sec, "text"):
             _rep(reps, "description", _s(blk, "description"),
-                 adv.get("text", ""))
+                 _sanitize_richtext(adv.get("text", "")))
             break
 
     # G — Liste de comparaison (same as homepage)
@@ -1148,33 +1190,98 @@ def _switch_locale_files(ed: Path, language: str) -> None:
         return
 
     # Try exact code, then primary subtag (e.g. "fr" from "fr-FR")
+    # Also accept when target is already the default (e.g. fr.default.json exists)
     target_code: str | None = None
-    for code in ([lang, lang.split("-")[0]] if "-" in lang else [lang]):
-        if (locales_dir / f"{code}.json").exists():
+    codes_to_try = [lang, lang.split("-")[0]] if "-" in lang else [lang]
+    for code in codes_to_try:
+        if ((locales_dir / f"{code}.json").exists()
+                or (locales_dir / f"{code}.default.json").exists()):
             target_code = code
             break
 
     if not target_code:
         return
 
-    # Demote English storefront default
+    # Demote English storefront default (only if en is currently default)
     en_def = locales_dir / "en.default.json"
     en_dem = locales_dir / "en.json"
     if en_def.exists() and not en_dem.exists():
         en_def.rename(en_dem)
 
-    # Promote target storefront locale to default
+    # Promote target storefront locale to default (if not already done)
     t_json = locales_dir / f"{target_code}.json"
     t_def  = locales_dir / f"{target_code}.default.json"
     if t_json.exists() and not t_def.exists():
         t_json.rename(t_def)
 
-    # Create {lang}.default.schema.json from en.default.schema.json so the
-    # Shopify admin (in any language) always finds every schema label key.
-    # The target language schema (e.g. fr.schema.json) is often incomplete;
-    # using English as the base prevents all "missing translation: t:..." errors.
-    en_schema = locales_dir / "en.default.schema.json"
-    t_def_schema = locales_dir / f"{target_code}.default.schema.json"
-    if en_schema.exists() and not t_def_schema.exists():
-        import shutil
-        shutil.copy2(en_schema, t_def_schema)
+    # Ensure {lang}.default.schema.json has ALL keys from the English schema.
+    # The target language schema (e.g. fr.schema.json) is often incomplete.
+    # Strategy:
+    #   • If the file doesn't exist yet → copy EN schema directly (all keys in EN).
+    #   • If it already exists → merge: keep existing FR labels, fill missing keys
+    #     from EN so Shopify admin never shows "missing translation: t:..." errors.
+    en_schema_path  = locales_dir / "en.default.schema.json"
+    en_schema_src   = locales_dir / "en.schema.json"   # after en was demoted
+    t_def_schema    = locales_dir / f"{target_code}.default.schema.json"
+    t_schema_src    = locales_dir / f"{target_code}.schema.json"  # might exist
+
+    # Resolve which EN and target schema files to use
+    _en_src  = en_schema_path if en_schema_path.exists() else en_schema_src
+    _tgt_src = t_def_schema if t_def_schema.exists() else t_schema_src
+
+    if _en_src.exists():
+        if not t_def_schema.exists():
+            # No FR schema yet → use EN directly
+            import shutil as _shutil
+            _shutil.copy2(_en_src, t_def_schema)
+        else:
+            # FR schema exists but may be missing keys → merge EN into FR
+            _merge_schema_with_en(_tgt_src if _tgt_src.exists() else t_def_schema,
+                                  _en_src, t_def_schema)
+
+
+def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
+    """Merge EN schema keys into FR schema (in-place safe write).
+
+    Reads both FR and EN schema JSON (handles comment headers + trailing commas).
+    For every key present in EN but missing in FR, adds the EN value.
+    Writes the merged result back to out_path in compact JSON format.
+    """
+    import json as _json
+
+    def _load_shopify_schema(p: Path) -> dict | None:
+        try:
+            raw = p.read_bytes().decode("utf-8-sig", errors="replace")
+            # Strip Shopify /* ... */ comment header
+            raw = re.sub(r"^/\*.*?\*/\s*", "", raw, flags=re.DOTALL)
+            # Strip trailing commas before ] or } (Shopify non-standard JSON)
+            raw = re.sub(r",(\s*[}\]])", r"\1", raw)
+            return _json.loads(raw)
+        except Exception:
+            return None
+
+    def _deep_merge(base: dict, overlay: dict) -> dict:
+        """Return base with missing keys filled from overlay (recursively)."""
+        result = dict(base)
+        for k, v in overlay.items():
+            if k not in result:
+                result[k] = v
+            elif isinstance(v, dict) and isinstance(result.get(k), dict):
+                result[k] = _deep_merge(result[k], v)
+        return result
+
+    fr_data = _load_shopify_schema(fr_path)
+    en_data = _load_shopify_schema(en_path)
+
+    if fr_data is None or en_data is None:
+        # Fallback: just copy EN if FR can't be parsed
+        if en_data is not None:
+            import shutil as _shutil
+            _shutil.copy2(en_path, out_path)
+        return
+
+    merged = _deep_merge(fr_data, en_data)
+    out_path.write_text(
+        _json.dumps(merged, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )

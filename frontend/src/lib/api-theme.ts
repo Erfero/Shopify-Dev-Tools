@@ -41,35 +41,55 @@ export interface GenerationStep {
 }
 
 export async function uploadTheme(file: File): Promise<UploadResponse> {
-  const formData = new FormData();
-  formData.append("theme_file", file);
+  const MAX_ATTEMPTS = 3;
+  const RETRY_DELAY_MS = 3000;
 
-  // AbortController timeout: 120 seconds for large theme ZIPs
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120_000);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const formData = new FormData();
+    formData.append("theme_file", file);
 
-  let res: Response;
-  try {
-    res = await apiFetch(`${API_BASE}/api/theme/upload`, {
-      method: "POST",
-      body: formData,
-      signal: controller.signal,
-    });
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      throw new Error("L'upload a pris trop de temps. Veuillez réessayer.");
+    // AbortController timeout: 150 seconds (server cold-start can take ~30s on Render)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 150_000);
+
+    let res: Response;
+    try {
+      res = await apiFetch(`${API_BASE}/api/theme/upload`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      const isNetwork = err instanceof TypeError;
+      // Retry on network errors or timeouts (server may be waking up)
+      if ((isTimeout || isNetwork) && attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+      if (isTimeout) {
+        throw new Error("Le serveur met trop de temps à répondre. Veuillez réessayer dans quelques secondes.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({ detail: "Erreur lors de l'upload" }));
+      // Retry on server errors (5xx) but not client errors (4xx)
+      if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+      throw new Error(errBody.detail || "Erreur lors de l'upload");
+    }
+
+    return res.json();
   }
 
-  if (!res.ok) {
-    const errBody = await res.json().catch(() => ({ detail: "Erreur lors de l'upload" }));
-    throw new Error(errBody.detail || "Erreur lors de l'upload");
-  }
-
-  return res.json();
+  throw new Error("L'upload a échoué après plusieurs tentatives. Veuillez rafraîchir la page et réessayer.");
 }
 
 export async function generateTheme(

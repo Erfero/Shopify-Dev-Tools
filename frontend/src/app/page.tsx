@@ -135,23 +135,26 @@ export default function Home() {
 
         {/* Footer */}
         <motion.div
-          className="mt-12 flex items-center justify-between text-xs text-muted-foreground/40"
+          className="mt-10 flex items-center justify-between"
           variants={fadeUp}
           custom={5}
         >
-          <span>Propulsé par OpenRouter AI</span>
-          <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground/40">Propulsé par OpenRouter AI</span>
+          <div className="flex items-center gap-2">
             {user?.is_admin && (
-              <Link href="/admin" className="flex items-center gap-1 hover:text-muted-foreground transition-colors">
-                <ShieldCheck className="h-3 w-3" />
-                Admin
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium transition hover:bg-foreground/[0.04]"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Gérer les accès
               </Link>
             )}
             <button
               onClick={logout}
-              className="flex items-center gap-1 hover:text-muted-foreground transition-colors"
+              className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium transition hover:bg-foreground/[0.04]"
             >
-              <LogOut className="h-3 w-3" />
+              <LogOut className="h-3.5 w-3.5" />
               Déconnexion
             </button>
           </div>

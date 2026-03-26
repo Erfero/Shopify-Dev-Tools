@@ -610,12 +610,12 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
               const perImage = 800;
               const inputTokens = baseInput + productNames.length * perProduct + productImages.length * perImage;
               const outputTokens = baseOutput;
-              // Gemini 2.0 Flash pricing: $0.10/MTok input, $0.40/MTok output
-              const inputCostMin = (inputTokens / 1_000_000) * 0.10;
-              const outputCostMin = (outputTokens / 1_000_000) * 0.40;
+              // Gemini 2.5 Flash pricing: $0.15/MTok input, $0.60/MTok output
+              const inputCostMin = (inputTokens / 1_000_000) * 0.15;
+              const outputCostMin = (outputTokens / 1_000_000) * 0.60;
               const totalMin = inputCostMin + outputCostMin;
               const totalMax = totalMin * 1.4;
-              return `Coût estimé : ~$${totalMin.toFixed(3)} – $${totalMax.toFixed(3)} (gemini-2.0-flash)`;
+              return `Coût estimé : ~$${totalMin.toFixed(3)} – $${totalMax.toFixed(3)} (gemini-2.5-flash)`;
             })()}
           </span>
         </div>

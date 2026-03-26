@@ -35,7 +35,7 @@ MODEL_PRESETS = {
 class Settings(BaseSettings):
     # ── Shared ──────────────────────────────────────────────────────────────
     openrouter_api_key: str = ""
-    ai_preset: str = "best"
+    ai_preset: str = "paid_premium"
     ai_model: str = ""            # Override: if set, used for all text calls
     ai_vision_model: str = ""     # Override: if set, used for all vision calls
     use_mock: bool = False

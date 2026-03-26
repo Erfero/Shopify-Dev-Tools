@@ -1281,6 +1281,53 @@ def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
         return
 
     merged = _deep_merge(fr_data, en_data)
+
+    # ── Inject keys missing from BOTH FR and EN schemas ───────────────────────
+    # These are keys referenced in section liquid files but absent from all locale
+    # schema files. We inject sensible multilingual values to prevent any remaining
+    # "missing translation: t:sections.*" errors in the Shopify admin editor.
+    #
+    # Detected by scanning all sections/*.liquid files against both FR + EN schemas.
+    _HARDCODED_PATCHES: dict[str, dict] = {
+        # sections.global.alignement (typo variant of "alignment" used in e-tabs-alternate.liquid)
+        # FR already has global.alignment.options with left/center/right, this fills the
+        # alternate spelling so both keys resolve correctly.
+        "sections": {
+            "global": {
+                "alignement": {
+                    "options": {
+                        "left":   "Gauche",
+                        "center": "Centrer",
+                        "right":  "Droite",
+                    },
+                },
+                "button_text": {
+                    # "default" is the pre-fill value for the button_text setting
+                    # when a new block is added in the Shopify theme editor.
+                    "default": "Acheter maintenant",
+                },
+            },
+            "bundle": {
+                # Fills free_label keys missing from FR schema
+                "free_label": {
+                    "label": "Label prix gratuit",
+                    "info":  "Si vide, le zéro formaté en devise sera affiché (ex: 0,00 €).",
+                },
+            },
+            "product": {
+                "blocks": {
+                    "price": {
+                        "sale_badge": {
+                            "info": "[percent] sera remplacé par le pourcentage de réduction et [amount] par le montant.",
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+    merged = _deep_merge(merged, _HARDCODED_PATCHES)
+
     out_path.write_text(
         _json.dumps(merged, ensure_ascii=False, indent=2),
         encoding="utf-8",

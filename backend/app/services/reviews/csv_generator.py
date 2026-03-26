@@ -7,6 +7,16 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 
+_FORMULA_CHARS = frozenset("=+-@\t\r")
+
+
+def _csv_safe(value: str) -> str:
+    """Prevent CSV formula injection (Excel / LibreOffice / Google Sheets)."""
+    if value and value[0] in _FORMULA_CHARS:
+        return "'" + value
+    return value
+
+
 def generate_id(length: int = 9) -> str:
     chars = string.ascii_letters + string.digits
     return "".join(random.choices(chars, k=length))
@@ -130,7 +140,7 @@ def generate_loox_full_csv(
         reply_date = generate_reply_date(review_date) if reply_text else ""
 
         img_url = _pick_image(review_data, i, image_urls, female_image_urls, male_image_urls, gender_counters)
-        author = review_data.get("author", "Client")
+        author = _csv_safe(review_data.get("author", "Client"))
         email = generate_fake_email(author)
 
         row = {
@@ -141,14 +151,14 @@ def generate_loox_full_csv(
             "img": img_url,
             "nickname": author,
             "full_name": author,
-            "review": review_data.get("review", ""),
+            "review": _csv_safe(review_data.get("review", "")),
             "date": review_date,
             "productId": "",
             "handle": product_handle,
             "variant": "",
             "verified_purchase": "false",
             "orderId": "",
-            "reply": reply_text,
+            "reply": _csv_safe(reply_text),
             "replied_at": reply_date,
             "metaobject_handle": "",
             "incentivized": "",
@@ -188,15 +198,15 @@ def generate_loox_full_csv_multi(products: List[Dict]) -> str:
             reply_text = review_data.get("reply", "")
             reply_date = generate_reply_date(review_date) if reply_text else ""
             img_url = _pick_image(review_data, i, image_urls, female_urls, male_urls, gender_counters)
-            author = review_data.get("author", "Client")
+            author = _csv_safe(review_data.get("author", "Client"))
             email = generate_fake_email(author)
             writer.writerow({
                 "id": review_id, "status": "published", "rating": generate_rating(),
                 "email": email, "img": img_url, "nickname": author,
-                "full_name": author, "review": review_data.get("review", ""),
+                "full_name": author, "review": _csv_safe(review_data.get("review", "")),
                 "date": review_date, "productId": "", "handle": product_handle,
                 "variant": "", "verified_purchase": "false", "orderId": "",
-                "reply": reply_text, "replied_at": reply_date,
+                "reply": _csv_safe(reply_text), "replied_at": reply_date,
                 "metaobject_handle": "", "incentivized": "",
             })
 
@@ -229,12 +239,12 @@ def generate_loox_import_csv_multi(products: List[Dict]) -> str:
         for i, review_data in enumerate(shuffled):
             review_date = generate_random_date(90)
             img_url = _pick_image(review_data, i, image_urls, female_urls, male_urls, gender_counters)
-            author = review_data.get("author", "Client")
+            author = _csv_safe(review_data.get("author", "Client"))
             email = generate_fake_email(author)
             writer.writerow({
                 "product_handle": product_handle, "rating": generate_rating(),
                 "author": author, "email": email,
-                "body": review_data.get("review", ""),
+                "body": _csv_safe(review_data.get("review", "")),
                 "created_at": review_date, "photo_url": img_url,
                 "verified_purchase": "true",
             })
@@ -275,7 +285,7 @@ def generate_loox_import_csv(
     for i, review_data in enumerate(shuffled):
         review_date = generate_random_date(90)
         img_url = _pick_image(review_data, i, image_urls, female_image_urls, male_image_urls, gender_counters)
-        author = review_data.get("author", "Client")
+        author = _csv_safe(review_data.get("author", "Client"))
         email = generate_fake_email(author)
 
         row = {
@@ -283,7 +293,7 @@ def generate_loox_import_csv(
             "rating": generate_rating(),
             "author": author,
             "email": email,
-            "body": review_data.get("review", ""),
+            "body": _csv_safe(review_data.get("review", "")),
             "created_at": review_date,
             "photo_url": img_url,
             "verified_purchase": "true",

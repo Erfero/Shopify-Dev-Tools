@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -12,12 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { regenerateSection } from "@/lib/api-theme";
 
 interface GeneratedDataEditorProps {
   data: Record<string, unknown>;
   onValidate: (data: Record<string, unknown>) => void;
   isApplying: boolean;
   applyError: string | null;
+  sessionId?: string;
+  onSectionRegenerated?: (section: string, newData: unknown) => void;
 }
 
 // ── Deep clone + path-based update ────────────────────────────────────────────
@@ -88,7 +91,7 @@ function RichTextField({
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showSource, setShowSource] = useState(false);
-  const [fmt, setFmt] = useState({ bold: false, italic: false, underline: false });
+  const [fmt, setFmt] = useState({ bold: false, italic: false, underline: false, ul: false, ol: false });
   // Flag to sync innerHTML after switching back from source mode
   const pendingSync = useRef(false);
 
@@ -116,6 +119,10 @@ function RichTextField({
       italic: document.queryCommandState("italic"),
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       underline: document.queryCommandState("underline"),
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      ul: document.queryCommandState("insertUnorderedList"),
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      ol: document.queryCommandState("insertOrderedList"),
     });
   };
 
@@ -154,6 +161,15 @@ function RichTextField({
           <button type="button" className={`${baseBtn} underline ${fmt.underline ? activeBtn : ""}`}
             onMouseDown={(e) => { e.preventDefault(); exec("underline"); }} title="Souligné (Ctrl+U)">S</button>
           <div className="mx-1 h-4 w-px bg-border" />
+          <button type="button" className={`${baseBtn} ${fmt.ul ? activeBtn : ""}`}
+            onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }} title="Liste à puces">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <button type="button" className={`${baseBtn} ${fmt.ol ? activeBtn : ""}`}
+            onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }} title="Liste numérotée">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="8" fontSize="7" fontWeight="bold" stroke="none" fill="currentColor">1.</text><text x="2" y="14" fontSize="7" fontWeight="bold" stroke="none" fill="currentColor">2.</text><text x="2" y="20" fontSize="7" fontWeight="bold" stroke="none" fill="currentColor">3.</text></svg>
+          </button>
+          <div className="mx-1 h-4 w-px bg-border" />
           <button type="button"
             className={`${baseBtn} text-muted-foreground ${showSource ? activeBtn : ""}`}
             onClick={toggleSource} title="HTML source"
@@ -178,7 +194,7 @@ function RichTextField({
             onSelect={updateFmt}
             onBlur={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
             onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
-            className="min-h-[80px] p-2 text-sm outline-none [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_p]:mb-1 [&_p:last-child]:mb-0"
+            className="min-h-[80px] p-2 text-sm outline-none [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-1 [&_li]:mb-0.5"
           />
         )}
       </div>
@@ -235,13 +251,47 @@ export function GeneratedDataEditor({
   onValidate,
   isApplying,
   applyError,
+  sessionId,
+  onSectionRegenerated,
 }: GeneratedDataEditorProps) {
   const [editData, setEditData] = useState<Record<string, unknown>>(deepClone(data));
   const [selectedPalette, setSelectedPalette] = useState(0);
+  const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
+  const regenAbortRef = useRef<AbortController | null>(null);
 
   function update(path: (string | number)[], value: string) {
     setEditData((prev) => setPath(prev, path, value));
   }
+
+  const handleRegenerate = useCallback(async (section: string) => {
+    if (!sessionId || regeneratingSection) return;
+    regenAbortRef.current?.abort();
+    const controller = new AbortController();
+    regenAbortRef.current = controller;
+    setRegeneratingSection(section);
+    try {
+      let newData: unknown = null;
+      await regenerateSection(
+        sessionId,
+        section,
+        (step) => {
+          if (step.status === "done" && step.data) {
+            newData = step.data;
+          }
+        },
+        controller.signal,
+      );
+      if (newData !== null) {
+        setEditData((prev) => ({ ...prev, [section]: newData }));
+        onSectionRegenerated?.(section, newData);
+      }
+    } catch {
+      // silently ignore abort errors
+    } finally {
+      if (regenAbortRef.current === controller) regenAbortRef.current = null;
+      setRegeneratingSection(null);
+    }
+  }, [sessionId, regeneratingSection, onSectionRegenerated]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hp = (editData.homepage || {}) as any;
@@ -266,6 +316,21 @@ export function GeneratedDataEditor({
             <AccordionTrigger className="text-sm font-medium">
               Palettes de couleurs
               <Badge variant="secondary" className="ml-auto mr-2 text-xs">Sélection</Badge>
+              {sessionId && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleRegenerate("colors"); }}
+                  disabled={!!regeneratingSection}
+                  className="ml-1 mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50"
+                >
+                  {regeneratingSection === "colors" ? (
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                  ) : (
+                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+                  )}
+                  Régénérer
+                </button>
+              )}
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-3 pb-2 sm:grid-cols-3">
@@ -280,7 +345,15 @@ export function GeneratedDataEditor({
         {/* ── Homepage ───────────────────────────────────────────────────── */}
         {hp && Object.keys(hp).length > 0 && (
           <AccordionItem value="homepage" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">Page d&apos;accueil</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">
+              Page d&apos;accueil
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("homepage"); }} disabled={!!regeneratingSection} className="ml-auto mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "homepage" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
 
               <Field label="Slogan bannière" value={hp.slogan || ""} onChange={(v) => update(["homepage", "slogan"], v)} />
@@ -337,7 +410,15 @@ export function GeneratedDataEditor({
         {/* ── Product page ───────────────────────────────────────────────── */}
         {pp && Object.keys(pp).length > 0 && (
           <AccordionItem value="product" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">Page produit</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">
+              Page produit
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("product_page"); }} disabled={!!regeneratingSection} className="ml-auto mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "product_page" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
 
               <Section title="Icônes produit">
@@ -397,7 +478,15 @@ export function GeneratedDataEditor({
         {/* ── FAQ ────────────────────────────────────────────────────────── */}
         {faq && Object.keys(faq).length > 0 && (
           <AccordionItem value="faq" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">FAQ</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">
+              FAQ
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("faq"); }} disabled={!!regeneratingSection} className="ml-auto mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "faq" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
               <Field label="Titre de la section" value={faq.title || ""} onChange={(v) => update(["faq", "faq", "title"], v)} />
               {(faq.items || []).map((item: { question: string; answer: string }, i: number) => (
@@ -413,7 +502,15 @@ export function GeneratedDataEditor({
         {/* ── Story page ─────────────────────────────────────────────────── */}
         {story && Object.keys(story).length > 0 && (
           <AccordionItem value="story" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">Page Notre Histoire</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">
+              Page Notre Histoire
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("story_page"); }} disabled={!!regeneratingSection} className="ml-auto mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "story_page" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
               <Field label="Titre de la page" value={story.page_heading || ""} onChange={(v) => update(["story_page", "page_heading"], v)} />
               <Field label="Sous-titre" value={story.page_subheading || ""} multiline onChange={(v) => update(["story_page", "page_subheading"], v)} />
@@ -437,7 +534,15 @@ export function GeneratedDataEditor({
         {/* ── Global texts ───────────────────────────────────────────────── */}
         {gt && Object.keys(gt).length > 0 && (
           <AccordionItem value="global" className="rounded-lg border px-4">
-            <AccordionTrigger className="text-sm font-medium">Textes globaux</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-medium">
+              Textes globaux
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("global_texts"); }} disabled={!!regeneratingSection} className="ml-auto mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "global_texts" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
 
               {(gt.header?.announcement_timer || gt.header?.announcement_marquee) && (

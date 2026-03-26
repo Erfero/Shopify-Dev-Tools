@@ -1,11 +1,14 @@
+import asyncio
 import csv
 import io
 import json
 from typing import List, AsyncGenerator, Optional
 
-from fastapi import APIRouter, Form, File, UploadFile, Response, Request
+from fastapi import APIRouter, Depends, Form, File, UploadFile, Response, Request, HTTPException
 from fastapi.responses import StreamingResponse
 
+from app.auth import verify_token
+from app.rate_limiter import generate_limiter
 from app.services.reviews.ai_generator import generate_review_batch, analyze_product_images
 from app.services.reviews.csv_generator import (
     generate_loox_full_csv, generate_loox_import_csv,
@@ -14,7 +17,7 @@ from app.services.reviews.csv_generator import (
 from app.services.reviews.image_uploader import process_image
 from app import database
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_token)])
 
 
 def sse_event(data: dict) -> str:
@@ -150,6 +153,46 @@ async def multi_generation_stream(
         "progress": 0,
     })
 
+    # ── Analyse d'images en parallèle ──────────────────────────────────────────
+    # Kick off all vision API calls simultaneously instead of sequentially.
+    products_with_images = [
+        (idx, product_images[idx])
+        for idx in range(len(products))
+        if product_images.get(idx)
+    ]
+
+    visual_analyses: dict[int, Optional[str]] = {}
+
+    if products_with_images:
+        n = len(products_with_images)
+        yield sse_event({
+            "type": "progress",
+            "message": f"Analyse IA des photos — {n} produit(s) en parallèle...",
+            "progress": 2,
+            "count": 0,
+        })
+
+        async def _analyze_one(idx: int, imgs: List[dict]) -> tuple[int, Optional[str]]:
+            try:
+                result = await analyze_product_images(
+                    [img["data"] for img in imgs],
+                    [img["mime"] for img in imgs],
+                )
+                return idx, result
+            except Exception:
+                return idx, None
+
+        results = await asyncio.gather(*[_analyze_one(idx, imgs) for idx, imgs in products_with_images])
+        for idx, analysis in results:
+            visual_analyses[idx] = analysis
+
+        yield sse_event({
+            "type": "progress",
+            "message": f"✓ Photos analysées pour {n} produit(s)",
+            "progress": 8,
+            "count": 0,
+        })
+
     for prod_idx, product in enumerate(products):
         product_name = product.get("product_name", "")
         brand_name = product.get("brand_name", "")
@@ -157,12 +200,12 @@ async def multi_generation_stream(
         product_handle = product.get("product_handle", "")
         target_gender = product.get("target_gender", "femmes")
         language = product.get("language", "Français")
-        review_count = int(product.get("review_count", 50))
+        review_count = max(1, min(int(product.get("review_count", 50)), 500))
         image_urls = product.get("image_urls", [])
 
         all_reviews: List[dict] = []
         existing_authors: List[str] = []
-        visual_analysis: Optional[str] = None
+        visual_analysis: Optional[str] = visual_analyses.get(prod_idx)
         batch_size = 10
         num_batches = (review_count + batch_size - 1) // batch_size
 
@@ -173,32 +216,6 @@ async def multi_generation_stream(
             female_image_urls_prod = None
         if male_image_urls_prod is not None and len(male_image_urls_prod) == 0:
             male_image_urls_prod = None
-
-        images_for_product = product_images.get(prod_idx, [])
-        if images_for_product:
-            yield sse_event({
-                "type": "progress",
-                "message": f"Produit {prod_idx + 1}/{len(products)} «{product_name}» — analyse de {len(images_for_product)} photo(s)...",
-                "progress": int(generated_total / max(total_reviews, 1) * 90),
-                "count": generated_total,
-            })
-            try:
-                imgs_data = [img["data"] for img in images_for_product]
-                imgs_mime = [img["mime"] for img in images_for_product]
-                visual_analysis = await analyze_product_images(imgs_data, imgs_mime)
-                yield sse_event({
-                    "type": "progress",
-                    "message": f"Produit {prod_idx + 1}/{len(products)} «{product_name}» — photos analysées ✓",
-                    "progress": int(generated_total / max(total_reviews, 1) * 90),
-                    "count": generated_total,
-                })
-            except Exception as e:
-                yield sse_event({
-                    "type": "progress",
-                    "message": f"Produit {prod_idx + 1} — analyse photos ignorée ({str(e)[:40]})",
-                    "progress": int(generated_total / max(total_reviews, 1) * 90),
-                    "count": generated_total,
-                })
 
         for batch_num in range(1, num_batches + 1):
             current_batch_size = min(batch_size, review_count - len(all_reviews))
@@ -271,7 +288,7 @@ async def multi_generation_stream(
         yield sse_event({"type": "error", "message": f"Erreur CSV: {str(e)}", "progress": 95, "count": generated_total})
 
 
-@router.post("/reviews/generate-multi")
+@router.post("/reviews/generate-multi", dependencies=[Depends(generate_limiter)])
 async def generate_reviews_multi(request: Request):
     form = await request.form()
     session_id = str(form.get("session_id", ""))
@@ -305,7 +322,7 @@ async def upload_images(files: List[UploadFile] = File(...)):
     return {"urls": urls}
 
 
-@router.post("/reviews/generate")
+@router.post("/reviews/generate", dependencies=[Depends(generate_limiter)])
 async def generate_reviews(
     product_name: str = Form(...),
     brand_name: str = Form(...),
@@ -320,6 +337,9 @@ async def generate_reviews(
     male_image_urls: str = Form("[]"),
     product_images: List[UploadFile] = File(default=[]),
 ):
+    if not (1 <= review_count <= 500):
+        raise HTTPException(status_code=400, detail="Le nombre d'avis doit être entre 1 et 500.")
+
     urls: List[str] = [u for u in json.loads(image_urls) if u and u.strip()]
     female_urls: Optional[List[str]] = [u for u in json.loads(female_image_urls) if u and u.strip()] or None
     male_urls: Optional[List[str]] = [u for u in json.loads(male_image_urls) if u and u.strip()] or None

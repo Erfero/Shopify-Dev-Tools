@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Paintbrush, History, Sparkles, ChevronLeft, CheckCircle2, Download, RefreshCw } from "lucide-react";
+import { Paintbrush, History, Sparkles, ChevronLeft, ChevronRight, CheckCircle2, Download, RefreshCw } from "lucide-react";
 import { UploadZone } from "@/components/theme/upload-zone";
 import { StoreConfigForm, type StoreConfig } from "@/components/theme/store-config-form";
 import { GenerationProgress } from "@/components/theme/generation-progress";
 import { TextPreview } from "@/components/theme/text-preview";
 import { GeneratedDataEditor } from "@/components/theme/generated-data-editor";
 import { ThemeHistoryPanel } from "@/components/theme/theme-history";
+import { AnalyticsPanel } from "@/components/theme/analytics-panel";
 import {
   uploadTheme,
   generateTheme,
@@ -38,6 +39,7 @@ const sv = {
 export default function ThemePage() {
   const [appStep, setAppStep] = useState<AppStep>("upload");
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState<UploadResponse | null>(null);
   const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
@@ -46,31 +48,104 @@ export default function ThemePage() {
   const [isApplying, setIsApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const lastConfigRef = useRef<StoreConfig | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const generateAbortRef = useRef<AbortController | null>(null);
+
+  // ── Undo / Redo ────────────────────────────────────────────────────────────
+  const [historyStack, setHistoryStack] = useState<Array<Record<string, unknown>>>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const historyIndexRef = useRef(-1);
+
+  const pushToHistory = useCallback((newData: Record<string, unknown>) => {
+    const currentIndex = historyIndexRef.current;
+    setHistoryStack((prev) => {
+      const trimmed = prev.slice(0, currentIndex + 1);
+      return [...trimmed, newData].slice(-10);
+    });
+    const nextIndex = Math.min(currentIndex + 1, 9);
+    historyIndexRef.current = nextIndex;
+    setHistoryIndex(nextIndex);
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    historyIndexRef.current = newIndex;
+    setHistoryIndex(newIndex);
+    setPreviewData(historyStack[newIndex]);
+  }, [historyIndex, historyStack]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex >= historyStack.length - 1) return;
+    const newIndex = historyIndex + 1;
+    historyIndexRef.current = newIndex;
+    setHistoryIndex(newIndex);
+    setPreviewData(historyStack[newIndex]);
+  }, [historyIndex, historyStack]);
 
   const currentStepIdx = STEPS.findIndex((s) => s.key === appStep);
 
+  // ── Restore session from localStorage on first mount ──────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("theme_session");
+      if (!saved) return;
+      const { uploadData: ud, appStep: as, previewData: pd } = JSON.parse(saved);
+      if (ud?.session_id) {
+        setUploadData(ud);
+        // Never restore "generating" — it means the page was refreshed mid-flight
+        setAppStep((as === "generating" ? "configure" : as) ?? "configure");
+        if (pd) setPreviewData(pd);
+      }
+    } catch {
+      localStorage.removeItem("theme_session");
+    }
+  }, []);
+
+  // ── Persist session to localStorage whenever key state changes ────────────
+  useEffect(() => {
+    if (!uploadData) return;
+    try {
+      localStorage.setItem(
+        "theme_session",
+        JSON.stringify({ uploadData, appStep, previewData }),
+      );
+    } catch {
+      // Storage full or unavailable — silently ignore
+    }
+  }, [uploadData, appStep, previewData]);
+
   const handleFileSelected = useCallback(async (file: File) => {
     setIsUploading(true);
+    setUploadProgress(0);
     setUploadError(null);
     try {
-      const data = await uploadTheme(file);
+      const data = await uploadTheme(file, setUploadProgress);
       setUploadData(data);
       setAppStep("configure");
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Erreur lors de l'upload");
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   }, []);
 
   const handleGenerate = useCallback(async (config: StoreConfig) => {
     if (!uploadData) return;
     lastConfigRef.current = config;
+
+    generateAbortRef.current?.abort();
+    const controller = new AbortController();
+    generateAbortRef.current = controller;
+
     setAppStep("generating");
     setGenerationSteps([]);
     setGenerationError(null);
     setPreviewData(null);
+    setIsGenerating(true);
     try {
       await generateTheme(
         { session_id: uploadData.session_id, ...config },
@@ -81,18 +156,34 @@ export default function ThemePage() {
             return [...prev, step];
           });
           if (step.step === "preview" && step.status === "done" && step.data) {
-            setPreviewData(step.data as Record<string, unknown>);
+            const newData = step.data as Record<string, unknown>;
+            setPreviewData(newData);
+            pushToHistory(newData);
             setAppStep("preview");
           }
           if (step.status === "error") {
             setGenerationError(step.message || null);
           }
         },
+        controller.signal,
       );
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       setGenerationError(err instanceof Error ? err.message : "Erreur lors de la génération");
+    } finally {
+      setIsGenerating(false);
+      if (generateAbortRef.current === controller) generateAbortRef.current = null;
     }
   }, [uploadData]);
+
+  const handleCancelGeneration = useCallback(() => {
+    generateAbortRef.current?.abort();
+    generateAbortRef.current = null;
+    setIsGenerating(false);
+    setGenerationSteps([]);
+    setGenerationError(null);
+    setAppStep("configure");
+  }, []);
 
   const handleValidate = useCallback(async (editedData: Record<string, unknown>) => {
     if (!uploadData) return;
@@ -109,6 +200,9 @@ export default function ThemePage() {
   }, [uploadData]);
 
   const handleReset = useCallback(() => {
+    generateAbortRef.current?.abort();
+    generateAbortRef.current = null;
+    setIsGenerating(false);
     setAppStep("upload");
     setUploadData(null);
     setGenerationSteps([]);
@@ -116,6 +210,7 @@ export default function ThemePage() {
     setPreviewData(null);
     setApplyError(null);
     setUploadError(null);
+    localStorage.removeItem("theme_session");
   }, []);
 
   return (
@@ -143,6 +238,15 @@ export default function ThemePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAnalytics(true)}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
+            >
+              <Sparkles size={14} />
+              Analytics
+            </button>
             <button
               onClick={() => setShowHistory(true)}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
@@ -265,6 +369,7 @@ export default function ThemePage() {
                   <UploadZone
                     onFileSelected={handleFileSelected}
                     isUploading={isUploading}
+                    uploadProgress={uploadProgress}
                     error={uploadError}
                   />
                 </div>
@@ -276,12 +381,22 @@ export default function ThemePage() {
               <motion.div key="configure" variants={sv} initial="initial" animate="animate" exit="exit">
                 <div className="card" style={{ padding: "32px" }}>
                   <div style={{ marginBottom: 24 }}>
-                    <button
-                      onClick={() => setAppStep("upload")}
-                      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 16, fontFamily: "inherit" }}
-                    >
-                      <ChevronLeft size={14} /> Retour
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <button
+                        onClick={() => setAppStep("upload")}
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+                      >
+                        <ChevronLeft size={14} /> Retour
+                      </button>
+                      {previewData && (
+                        <button
+                          onClick={() => setAppStep("preview")}
+                          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--primary)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+                        >
+                          Voir les textes générés <ChevronRight size={14} />
+                        </button>
+                      )}
+                    </div>
                     <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text)", marginBottom: 6 }}>
                       Configurer votre boutique
                     </h2>
@@ -312,14 +427,14 @@ export default function ThemePage() {
                   </div>
                   <GenerationProgress steps={generationSteps} error={generationError} />
                   <TextPreview steps={generationSteps} />
-                  {generationSteps.some((s) => s.step === "preview" && s.status === "error") && (
-                    <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24 }}>
-                      <button
-                        onClick={() => setAppStep("configure")}
-                        style={{ padding: "10px 20px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "inherit" }}
-                      >
-                        Modifier la config
-                      </button>
+                  <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 24 }}>
+                    <button
+                      onClick={handleCancelGeneration}
+                      style={{ padding: "10px 20px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <ChevronLeft size={13} /> {isGenerating ? "Annuler" : "Retour à la configuration"}
+                    </button>
+                    {(generationSteps.some((s) => s.step === "preview" && s.status === "error") || !!generationError) && !isGenerating && (
                       <button
                         onClick={() => {
                           setGenerationSteps([]);
@@ -330,8 +445,8 @@ export default function ThemePage() {
                       >
                         <RefreshCw size={13} /> Réessayer
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -341,12 +456,32 @@ export default function ThemePage() {
               <motion.div key="preview" variants={sv} initial="initial" animate="animate" exit="exit">
                 <div className="card" style={{ padding: "32px" }}>
                   <div style={{ marginBottom: 24 }}>
-                    <button
-                      onClick={() => setAppStep("configure")}
-                      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 16, fontFamily: "inherit" }}
-                    >
-                      <ChevronLeft size={14} /> Modifier la configuration
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                      <button
+                        onClick={() => setAppStep("configure")}
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+                      >
+                        <ChevronLeft size={14} /> Modifier la configuration
+                      </button>
+                      {(historyStack.length > 1) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <button
+                            onClick={handleUndo}
+                            disabled={historyIndex <= 0}
+                            style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, border: "1.5px solid var(--border)", background: "white", cursor: historyIndex <= 0 ? "default" : "pointer", fontSize: 12, fontWeight: 600, color: historyIndex <= 0 ? "var(--text-muted)" : "var(--text-secondary)", fontFamily: "inherit", opacity: historyIndex <= 0 ? 0.5 : 1 }}
+                          >
+                            <ChevronLeft size={12} /> Annuler
+                          </button>
+                          <button
+                            onClick={handleRedo}
+                            disabled={historyIndex >= historyStack.length - 1}
+                            style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 8, border: "1.5px solid var(--border)", background: "white", cursor: historyIndex >= historyStack.length - 1 ? "default" : "pointer", fontSize: 12, fontWeight: 600, color: historyIndex >= historyStack.length - 1 ? "var(--text-muted)" : "var(--text-secondary)", fontFamily: "inherit", opacity: historyIndex >= historyStack.length - 1 ? 0.5 : 1 }}
+                          >
+                            Refaire <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text)", marginBottom: 6 }}>
                       Prévisualisation et édition
                     </h2>
@@ -359,6 +494,12 @@ export default function ThemePage() {
                     onValidate={handleValidate}
                     isApplying={isApplying}
                     applyError={applyError}
+                    sessionId={uploadData?.session_id}
+                    onSectionRegenerated={(section, newData) => {
+                      const updated = { ...previewData, [section]: newData };
+                      setPreviewData(updated);
+                      pushToHistory(updated);
+                    }}
                   />
                 </div>
               </motion.div>
@@ -398,6 +539,13 @@ export default function ThemePage() {
                       Télécharger le thème
                     </a>
                     <button
+                      onClick={() => setAppStep("preview")}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 24px", borderRadius: 12, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit" }}
+                    >
+                      <ChevronLeft size={13} />
+                      Modifier les textes
+                    </button>
+                    <button
                       onClick={handleReset}
                       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 24px", borderRadius: 12, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit" }}
                     >
@@ -426,6 +574,11 @@ export default function ThemePage() {
       {/* History slide-in panel */}
       <AnimatePresence>
         {showHistory && <ThemeHistoryPanel onClose={() => setShowHistory(false)} />}
+      </AnimatePresence>
+
+      {/* Analytics panel */}
+      <AnimatePresence>
+        {showAnalytics && <AnalyticsPanel onClose={() => setShowAnalytics(false)} />}
       </AnimatePresence>
     </div>
   );

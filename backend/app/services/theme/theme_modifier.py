@@ -614,8 +614,14 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         if pp.get("how_it_works"):
             _rep(reps, "text2", str(s.get("text2", "")),
                  _sanitize_richtext(pp["how_it_works"].get("text", "")))
-        # heading3 = "+9860 [public] l'ont déjà adopté !" (fixe)
-        _rep(reps, "heading3", str(s.get("heading3", "")), h3)
+        # heading3: "Nos ingrédients" for natural products, social proof otherwise
+        _adoption_heading = pp.get("adoption", {}).get("heading", "")
+        _is_ingredients = any(
+            kw in _adoption_heading.lower()
+            for kw in ["ingr", "zutat", "ingredi"]
+        )
+        _h3_effective = _adoption_heading if _is_ingredients else h3
+        _rep(reps, "heading3", str(s.get("heading3", "")), _h3_effective)
         if pp.get("adoption"):
             _rep(reps, "text3", str(s.get("text3", "")),
                  _sanitize_richtext(pp["adoption"].get("text", "")))
@@ -951,16 +957,42 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
         if stype == "icons":
             # Trust badges — icons.description is inline_richtext
             badges = footer.get("trust_badges", [])
+            store_strong = f"<strong>{store_name}</strong>" if store_name else None
+
             for i, (_, blk) in enumerate(_blocks_by_type(sec, "icon")):
-                if i >= len(badges):
-                    break
-                b = badges[i]
+                current_desc = _s(blk, "description")
+                b = badges[i] if i < len(badges) else {}
+
+                # Heading: use AI value only if it contains visible text
                 if b.get("heading"):
-                    _rep(reps, "heading", _s(blk, "heading"),
-                         b["heading"])
+                    heading_clean = re.sub(r"<[^>]+>", "", b["heading"]).strip()
+                    if heading_clean:
+                        _rep(reps, "heading", _s(blk, "heading"), b["heading"])
+
+                # Description: prefer AI value if it contains visible text, else keep original
+                final_desc = None
                 if b.get("description"):
-                    _rep(reps, "description", _s(blk, "description"),
-                         _inline(b["description"]))
+                    candidate = _inline(b["description"])
+                    if re.sub(r"<[^>]+>", "", candidate).strip():
+                        final_desc = candidate
+
+                if final_desc is None:
+                    # French or empty AI — keep the original from the theme file
+                    final_desc = current_desc
+
+                # Substitute store name only in <strong> tags introduced by a brand preposition
+                # (e.g. "Chez <strong>OldName</strong>" → "Chez <strong>NewName</strong>")
+                # Leaves emphasis tags like "<strong>livraison gratuite</strong>" untouched.
+                if store_strong and final_desc:
+                    final_desc = re.sub(
+                        r"((?:Chez|At|By|Bei|Con|Met|Da|Com|Na|Avec|With)\s+)<strong>[^<]*</strong>",
+                        rf"\1{store_strong}",
+                        final_desc,
+                        flags=re.IGNORECASE,
+                    )
+
+                if final_desc and final_desc != current_desc:
+                    _rep(reps, "description", current_desc, final_desc)
 
         elif stype == "footer":
             link_idx = 0
@@ -971,7 +1003,7 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
                     # brand_text (À propos) — text_footer is richtext
                     if footer.get("brand_text"):
                         _rep(reps, "text_footer", _s(blk, "text_footer"),
-                             footer["brand_text"])
+                             _sanitize_richtext(footer["brand_text"]))
 
                 elif btype == "newsletter":
                     # Heading toujours fixe : "REJOIGNEZ L'ÉQUIPE [STORE] !"

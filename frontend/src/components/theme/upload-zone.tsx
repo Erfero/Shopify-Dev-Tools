@@ -1,18 +1,20 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Upload, FolderOpen, Loader2 } from "lucide-react";
 
 interface UploadZoneProps {
   onFileSelected: (file: File) => void;
   isUploading: boolean;
+  uploadProgress?: number;
   error?: string | null;
 }
 
-export function UploadZone({ onFileSelected, isUploading, error }: UploadZoneProps) {
+export function UploadZone({ onFileSelected, isUploading, uploadProgress = 0, error }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -21,6 +23,8 @@ export function UploadZone({ onFileSelected, isUploading, error }: UploadZonePro
       }
       setFileName(file.name);
       onFileSelected(file);
+      // Reset so the same file can be selected again
+      if (inputRef.current) inputRef.current.value = "";
     },
     [onFileSelected],
   );
@@ -65,11 +69,11 @@ export function UploadZone({ onFileSelected, isUploading, error }: UploadZonePro
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => {
-          if (!isUploading) document.getElementById("theme-file-input")?.click();
+          if (!isUploading) inputRef.current?.click();
         }}
       >
         <input
-          id="theme-file-input"
+          ref={inputRef}
           type="file"
           accept=".zip"
           className="hidden"
@@ -88,14 +92,28 @@ export function UploadZone({ onFileSelected, isUploading, error }: UploadZonePro
             </div>
           )}
 
-          <div className="text-center">
+          <div className="w-full text-center">
             {fileName && !isUploading ? (
               <div className="flex items-center gap-2 justify-center">
                 <FolderOpen className="h-4 w-4 text-foreground/60" />
                 <p className="text-sm font-medium text-foreground">{fileName}</p>
               </div>
             ) : isUploading ? (
-              <p className="text-sm font-medium text-foreground/60">Analyse du theme en cours...</p>
+              <div className="w-full max-w-xs mx-auto space-y-2">
+                <p className="text-sm font-medium text-foreground/60">
+                  {uploadProgress < 70
+                    ? `Envoi du fichier… ${uploadProgress}%`
+                    : uploadProgress < 100
+                    ? `Analyse du thème… ${uploadProgress}%`
+                    : "Finalisation…"}
+                </p>
+                <div className="h-1.5 w-full rounded-full bg-foreground/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-foreground/40 transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
             ) : (
               <>
                 <p className="text-sm font-medium text-foreground">

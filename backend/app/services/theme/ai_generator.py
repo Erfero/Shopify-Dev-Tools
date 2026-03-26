@@ -251,6 +251,90 @@ async def generate_all_texts(
     yield ("complete", "done", all_results)
 
 
+async def generate_single_section(
+    section: str,
+    store_name: str,
+    store_email: str,
+    product_names: list[str],
+    product_description: str | None = None,
+    language: str = "fr",
+    image_paths: list[Path] | None = None,
+    target_gender: str = "femme",
+    product_price: str | None = None,
+    store_address: str | None = None,
+    siret: str | None = None,
+    delivery_delay: str = "3-5 jours ouvrés",
+    return_policy_days: str = "30",
+    marketing_angles: str | None = None,
+) -> AsyncGenerator[tuple[str, str, dict | None], None]:
+    """Generate a single section's texts.
+
+    Yields tuples of (step_name, status, data) for SSE streaming.
+    """
+    # Find the matching step
+    step_entry = next((s for s in GENERATION_STEPS if s[0] == section), None)
+    if step_entry is None:
+        yield (section, "error", {"error": f"Section inconnue : {section}"})
+        return
+
+    step_id, _step_label, prompt_builder = step_entry
+
+    context = {
+        "store_name": store_name,
+        "store_email": store_email,
+        "product_names": product_names,
+        "product_description": product_description or "",
+        "language": language,
+        "has_images": bool(image_paths),
+        "target_gender": target_gender,
+        "product_price": product_price,
+        "store_address": store_address,
+        "siret": siret,
+        "delivery_delay": delivery_delay,
+        "return_policy_days": return_policy_days,
+        "marketing_angles": marketing_angles or "",
+    }
+
+    yield (step_id, "generating", None)
+
+    try:
+        system_prompt, user_prompt = prompt_builder(context)
+
+        if context.get("product_description"):
+            desc = context["product_description"].strip()
+            system_prompt += (
+                "\n\n---\nDESCRIPTION PRODUIT (source de verite — prioritaire) :\n"
+                + desc
+                + "\n\nTous les textes generes DOIVENT etre ancres dans cette description. "
+                "Les benefices, promesses, caracteristiques et arguments doivent en deriver directement. "
+                "Ne pas inventer d'elements absents de cette description."
+            )
+            user_prompt = (
+                f"DESCRIPTION PRODUIT (a respecter absolument dans tous tes textes) :\n{desc}\n\n"
+                + user_prompt
+            )
+
+        if context.get("marketing_angles"):
+            angles = context["marketing_angles"].strip()
+            system_prompt += (
+                "\n\n---\nANGLES MARKETING OBLIGATOIRES :\n"
+                + angles
+                + "\n\nCes angles sont le coeur du message. Chaque texte genere DOIT reflechir ces angles directement — dans le choix des mots, des promesses, des benefices et des accroches."
+            )
+            user_prompt = (
+                f"ANGLES MARKETING A APPLIQUER (prioritaire sur tout le reste) :\n{angles}\n\n"
+                "Tous les textes que tu generes ci-dessous DOIVENT integrer ces angles comme message central.\n\n"
+                + user_prompt
+            )
+
+        step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
+        result = await _call_with_retry(system_prompt, user_prompt, step_images)
+        yield (step_id, "done", result)
+    except Exception as e:
+        logger.error(f"Section {step_id} regeneration failed: {e}")
+        yield (step_id, "error", {"error": str(e)})
+
+
 async def _call_with_retry(
     system_prompt: str,
     user_prompt: str,

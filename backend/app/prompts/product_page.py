@@ -9,6 +9,8 @@ Tu reponds UNIQUEMENT en JSON valide, sans texte autour.
 
 REGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (product_description.text, how_it_works.text, adoption.text), tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-a-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur. Chaque champ HTML doit contenir plusieurs <strong>.
 
+REGLE INGREDIENTS : Si le produit est un produit naturel (savon, huile essentielle, serum, cire, lotion, creme, gel, shampoing, beurre de karite, huile de soin, etc.) : dans le champ adoption, heading = 'Nos ingredients' ET text = description HTML des ingredients principaux avec leurs benefices. Sinon : heading = social proof chiffre + public, text = social proof.
+
 REGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes."""
 
     products = ", ".join(context["product_names"])
@@ -65,8 +67,8 @@ Genere les textes de la page produit. Reponds en JSON avec ce schema EXACT :
     "text": "<p>2 phrases courtes expliquant le mecanisme avec <strong>mots d'impact</strong>.</p><p>2 phrases courtes sur les benefices.</p>"
   }},
   "adoption": {{
-    "heading": "+9860 {plural_label} l'ont adopte (texte simple, personnalise le chiffre avec un nombre realiste)",
-    "text": "<p>2 phrases courtes social proof avec <strong>expression percutante</strong>.</p>"
+    "heading": "REGLE : Si le produit est a base d'ingredients naturels (savon, huile essentielle, serum, cire, beurre de karite, lotion, creme, gel, shampoing, serum de cils, huile de soin, etc.) → ecris EXACTEMENT 'Nos ingredients' (sans accent sur le e). Sinon → ecris '+XXXX {plural_label} l'ont adopte' avec un chiffre realiste et percutant.",
+    "text": "REGLE : Si produit naturel → '<p>Liste les <strong>ingredients cles</strong> du produit avec leurs benefices specifiques.</p><p>Phrase courte sur la <strong>qualite et l'origine</strong> des ingredients.</p>'. Sinon → '<p>2 phrases social proof courtes avec <strong>expression percutante</strong>.</p>'"
   }},
   "mini_reviews": [
     {{"name": "Prenom N. (coherent avec public {gender})", "age": "XX ans", "text": "Temoignage court : 2 phrases simples sans HTML."}},
@@ -86,6 +88,7 @@ Genere les textes de la page produit. Reponds en JSON avec ce schema EXACT :
 
 CONTRAINTES :
 - Exactement 5 product_benefits, 3 mini_reviews, 4 product_specs.items
+- adoption.heading : 'Nos ingredients' si produit naturel/ingredient, sinon '+XXXX {plural_label} l'ont adopte'
 - Les short_titles doivent etre courts (3-5 mots maximum)
 - Les mini_reviews.text sont en texte simple (AUCUN HTML)
 - Les champs HTML DOIVENT contenir plusieurs <strong> sur des expressions et mots d'impact

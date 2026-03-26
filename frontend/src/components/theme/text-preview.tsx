@@ -23,6 +23,60 @@ interface TextPreviewProps {
   steps: GenerationStep[];
 }
 
+/** Count the number of leaf string fields in a nested object */
+function countFields(obj: unknown, depth = 0): number {
+  if (depth > 4 || obj === null || obj === undefined) return 0;
+  if (typeof obj === "string") return 1;
+  if (Array.isArray(obj)) return obj.reduce((sum, item) => sum + countFields(item, depth + 1), 0);
+  if (typeof obj === "object") {
+    return Object.values(obj as Record<string, unknown>).reduce(
+      (sum, v) => sum + countFields(v, depth + 1),
+      0,
+    );
+  }
+  return 0;
+}
+
+/** Extract the most prominent preview snippet for a section */
+function getHighlight(sectionKey: string, data: Record<string, unknown>): string | null {
+  try {
+    if (sectionKey === "homepage") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = data as any;
+      return d.slogan || d.welcome?.title || null;
+    }
+    if (sectionKey === "faq") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items = (data as any)?.faq?.items;
+      if (Array.isArray(items) && items.length > 0) return items[0].question || null;
+    }
+    if (sectionKey === "product_page") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = data as any;
+      return d.product_description?.heading || d.product_benefits?.[0]?.short_title || null;
+    }
+    if (sectionKey === "story_page") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = data as any;
+      return d.page_heading || null;
+    }
+    if (sectionKey === "global_texts") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = data as any;
+      return d.header?.announcement_timer || d.footer?.brand_text?.slice(0, 80) || null;
+    }
+    if (sectionKey === "legal_pages") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = data as any;
+      const first = Object.values(d)[0];
+      if (typeof first === "string") return first.slice(0, 80);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export function TextPreview({ steps }: TextPreviewProps) {
   const completedSteps = steps.filter(
     (s) => s.status === "done" && s.data && s.step !== "complete" && s.step !== "export",
@@ -35,20 +89,38 @@ export function TextPreview({ steps }: TextPreviewProps) {
       <h3 className="text-sm font-medium">Apercu des textes generes</h3>
 
       <Accordion type="multiple" className="space-y-2">
-        {completedSteps.map((step) => (
-          <AccordionItem
-            key={step.step}
-            value={step.step}
-            className="rounded-xl border border-border/60 px-4 data-[state=open]:bg-foreground/[0.01]"
-          >
-            <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-              {SECTION_LABELS[step.step] || step.step}
-            </AccordionTrigger>
-            <AccordionContent className="pb-4">
-              <PreviewData data={step.data!} sectionKey={step.step} />
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+        {completedSteps.map((step) => {
+          const fieldCount = countFields(step.data);
+          const highlight = step.step !== "colors" ? getHighlight(step.step, step.data!) : null;
+          return (
+            <AccordionItem
+              key={step.step}
+              value={step.step}
+              className="rounded-xl border border-border/60 px-4 data-[state=open]:bg-foreground/[0.01]"
+            >
+              <AccordionTrigger className="py-3 hover:no-underline">
+                <div className="flex flex-col items-start gap-0.5 text-left">
+                  <span className="text-sm font-medium">
+                    {SECTION_LABELS[step.step] || step.step}
+                    {fieldCount > 0 && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        — {fieldCount} texte{fieldCount > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </span>
+                  {highlight && (
+                    <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs">
+                      {highlight.replace(/<[^>]*>/g, "").slice(0, 80)}
+                    </span>
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <PreviewData data={step.data!} sectionKey={step.step} />
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
       </Accordion>
     </div>
   );
@@ -163,10 +235,10 @@ function GenericPreview({
 
           return (
             <div key={key} className="space-y-0.5">
-              <p className="text-xs font-medium text-muted-foreground">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
                 {formatKey(key)}
               </p>
-              <p className="text-xs text-foreground/80">{cleanValue}</p>
+              <p className="text-xs text-foreground/80 leading-relaxed">{cleanValue}</p>
             </div>
           );
         }

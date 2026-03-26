@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -11,28 +12,52 @@ from app.config import settings
 from app.database import init_db
 from app.routers import health, reviews, theme
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 async def _cleanup_temp_loop() -> None:
-    """Delete temp dirs and ZIPs older than 7 days — every 6 hours."""
+    """Delete temp dirs and ZIPs older than 30 days — every 6 hours."""
     while True:
         await asyncio.sleep(6 * 3600)
-        cutoff = datetime.now() - timedelta(days=7)
+        cutoff = datetime.now() - timedelta(days=30)
         try:
             for path in settings.temp_path.iterdir():
-                mtime = datetime.fromtimestamp(path.stat().st_mtime)
+                try:
+                    mtime = datetime.fromtimestamp(path.stat().st_mtime)
+                except OSError:
+                    continue
                 if mtime >= cutoff:
                     continue
-                if path.is_dir():
-                    shutil.rmtree(path, ignore_errors=True)
-                elif path.is_file() and path.suffix == ".zip":
-                    path.unlink(missing_ok=True)
-        except Exception:
-            pass
+                try:
+                    if path.is_dir():
+                        shutil.rmtree(path, ignore_errors=True)
+                        logger.info("Cleanup: removed session dir %s", path.name)
+                    elif path.is_file() and path.suffix == ".zip":
+                        path.unlink(missing_ok=True)
+                        logger.info("Cleanup: removed ZIP %s", path.name)
+                except Exception as e:
+                    logger.warning("Cleanup: failed to delete %s: %s", path, e)
+        except Exception as e:
+            logger.error("Cleanup loop error: %s", e)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+
+    # Warn if API_TOKEN is not set — all endpoints are publicly accessible
+    if not settings.api_token:
+        logger.warning(
+            "⚠️  API_TOKEN is not set — all endpoints are publicly accessible. "
+            "Set the API_TOKEN environment variable in production."
+        )
+    else:
+        logger.info("✅ API_TOKEN configured — endpoints protected.")
+
     cleanup_task = asyncio.create_task(_cleanup_temp_loop())
     yield
     cleanup_task.cancel()
@@ -44,8 +69,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
-
-import re as _re
 
 def _build_origins() -> list[str]:
     origins = {

@@ -596,6 +596,31 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
         </div>
       </div>
 
+      {/* Cost estimation */}
+      {productNames.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10, background: "oklch(0.97 0.01 260)", border: "1px solid oklch(0.91 0.02 260)" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+            {(() => {
+              const baseInput = 8000;
+              const baseOutput = 4000;
+              const perProduct = 1500;
+              const perImage = 800;
+              const inputTokens = baseInput + productNames.length * perProduct + productImages.length * perImage;
+              const outputTokens = baseOutput;
+              // Gemini 2.0 Flash pricing: $0.10/MTok input, $0.40/MTok output
+              const inputCostMin = (inputTokens / 1_000_000) * 0.10;
+              const outputCostMin = (outputTokens / 1_000_000) * 0.40;
+              const totalMin = inputCostMin + outputCostMin;
+              const totalMax = totalMin * 1.4;
+              return `Coût estimé : ~$${totalMin.toFixed(3)} – $${totalMax.toFixed(3)} (gemini-2.0-flash)`;
+            })()}
+          </span>
+        </div>
+      )}
+
       <Button
         type="submit"
         disabled={!isValid || isGenerating}

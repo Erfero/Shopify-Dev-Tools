@@ -40,7 +40,10 @@ export interface GenerationStep {
   data?: Record<string, unknown> | null;
 }
 
-export async function uploadTheme(file: File): Promise<UploadResponse> {
+export async function uploadTheme(
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<UploadResponse> {
   const MAX_ATTEMPTS = 3;
   const RETRY_DELAY_MS = 3000;
 
@@ -48,45 +51,66 @@ export async function uploadTheme(file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("theme_file", file);
 
-    // AbortController timeout: 150 seconds (server cold-start can take ~30s on Render)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 150_000);
-
-    let res: Response;
     try {
-      res = await apiFetch(`${API_BASE}/api/theme/upload`, {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
+      const data = await new Promise<UploadResponse>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${API_BASE}/api/theme/upload`);
+        if (API_TOKEN) xhr.setRequestHeader("X-API-Token", API_TOKEN);
+        xhr.timeout = 150_000;
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && onProgress) {
+            // Upload phase: 0–70 %; server processing: we animate 70–95 %
+            onProgress(Math.round((e.loaded / e.total) * 70));
+          }
+        };
+
+        // Simulate server-side processing progress (70 → 95) while waiting for response
+        let serverPct = 70;
+        const serverTick = setInterval(() => {
+          if (serverPct < 95) {
+            serverPct += 1;
+            onProgress?.(serverPct);
+          }
+        }, 300);
+
+        xhr.onload = () => {
+          clearInterval(serverTick);
+          onProgress?.(100);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch { reject(new Error("Réponse invalide du serveur")); }
+          } else {
+            try {
+              const body = JSON.parse(xhr.responseText);
+              reject(Object.assign(new Error(body.detail || "Erreur lors de l'upload"), { status: xhr.status }));
+            } catch {
+              reject(Object.assign(new Error("Erreur lors de l'upload"), { status: xhr.status }));
+            }
+          }
+        };
+
+        xhr.onerror = () => { clearInterval(serverTick); reject(new TypeError("Network error")); };
+        xhr.ontimeout = () => {
+          clearInterval(serverTick);
+          reject(new Error("Le serveur met trop de temps à répondre. Veuillez réessayer dans quelques secondes."));
+        };
+
+        xhr.send(formData);
       });
+      return data;
     } catch (err) {
-      clearTimeout(timeoutId);
-      const isTimeout = err instanceof Error && err.name === "AbortError";
+      const status = (err as { status?: number }).status;
       const isNetwork = err instanceof TypeError;
-      // Retry on network errors or timeouts (server may be waking up)
-      if ((isTimeout || isNetwork) && attempt < MAX_ATTEMPTS) {
+      const isTimeout = err instanceof Error && err.message.includes("trop de temps");
+      // Retry on network / 5xx (server may be waking up)
+      if ((isNetwork || isTimeout || (status !== undefined && status >= 500)) && attempt < MAX_ATTEMPTS) {
+        onProgress?.(0);
         await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         continue;
-      }
-      if (isTimeout) {
-        throw new Error("Le serveur met trop de temps à répondre. Veuillez réessayer dans quelques secondes.");
       }
       throw err;
-    } finally {
-      clearTimeout(timeoutId);
     }
-
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({ detail: "Erreur lors de l'upload" }));
-      // Retry on server errors (5xx) but not client errors (4xx)
-      if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-        continue;
-      }
-      throw new Error(errBody.detail || "Erreur lors de l'upload");
-    }
-
-    return res.json();
   }
 
   throw new Error("L'upload a échoué après plusieurs tentatives. Veuillez rafraîchir la page et réessayer.");
@@ -95,6 +119,7 @@ export async function uploadTheme(file: File): Promise<UploadResponse> {
 export async function generateTheme(
   request: GenerateRequest,
   onStep: (step: GenerationStep) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const formData = new FormData();
   formData.append("session_id", request.session_id);
@@ -128,10 +153,17 @@ export async function generateTheme(
     }
   }
 
-  const res = await apiFetch(`${API_BASE}/api/theme/generate`, {
-    method: "POST",
-    body: formData,
-  });
+  let res: Response;
+  try {
+    res = await apiFetch(`${API_BASE}/api/theme/generate`, {
+      method: "POST",
+      body: formData,
+      signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return;
+    throw err;
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Erreur lors de la generation" }));
@@ -144,25 +176,35 @@ export async function generateTheme(
   const decoder = new TextDecoder();
   let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() || "";
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("data: ")) {
-        try {
-          const step: GenerationStep = JSON.parse(trimmed.slice(6));
-          onStep(step);
-        } catch {
-          // skip malformed lines
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("data: ")) {
+          try {
+            const step: GenerationStep = JSON.parse(trimmed.slice(6));
+            onStep(step);
+          } catch {
+            // skip malformed lines
+          }
         }
       }
     }
+  } catch (err) {
+    reader.cancel().catch(() => undefined);
+    if (err instanceof Error && err.name === "AbortError") return;
+    throw new Error(
+      err instanceof Error && err.message
+        ? `Connexion interrompue : ${err.message}`
+        : "La connexion au serveur a été interrompue. Veuillez réessayer.",
+    );
   }
 }
 
@@ -226,4 +268,84 @@ export async function deleteHistoryItem(historyId: string): Promise<void> {
 
 export async function clearHistory(): Promise<void> {
   await apiFetch(`${API_BASE}/api/theme/history`, { method: "DELETE" });
+}
+
+export async function regenerateSection(
+  sessionId: string,
+  section: string,
+  onStep: (step: GenerationStep) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("session_id", sessionId);
+  formData.append("section", section);
+
+  let res: Response;
+  try {
+    res = await apiFetch(`${API_BASE}/api/theme/regenerate`, {
+      method: "POST",
+      body: formData,
+      signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return;
+    throw err;
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Erreur lors de la régénération" }));
+    throw new Error(err.detail || "Erreur lors de la régénération");
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("Streaming non supporté");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("data: ")) {
+          try {
+            const step: GenerationStep = JSON.parse(trimmed.slice(6));
+            onStep(step);
+          } catch {
+            // skip malformed lines
+          }
+        }
+      }
+    }
+  } catch (err) {
+    reader.cancel().catch(() => undefined);
+    if (err instanceof Error && err.name === "AbortError") return;
+    throw new Error(
+      err instanceof Error && err.message
+        ? `Connexion interrompue : ${err.message}`
+        : "La connexion au serveur a été interrompue.",
+    );
+  }
+}
+
+export interface AnalyticsSummary {
+  total: number;
+  successful: number;
+  success_rate: number;
+  avg_duration: number;
+  by_language: Record<string, number>;
+  total_regenerations: number;
+}
+
+export async function getAnalytics(): Promise<AnalyticsSummary> {
+  const res = await apiFetch(`${API_BASE}/api/theme/analytics`);
+  if (!res.ok) throw new Error("Erreur lors du chargement des analytics");
+  return res.json();
 }

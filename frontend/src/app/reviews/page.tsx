@@ -315,6 +315,7 @@ export default function ReviewsPage() {
   };
 
   const handleBack = () => {
+    if (step === 5) { setStep(4); return; }
     if (step === 4 && isGenerating) { abortRef.current?.(); setIsGenerating(false); }
     if (mode === "multi" && step === 4) { setStep(2); return; }
     if (step > 1) setStep((s) => s - 1);
@@ -494,42 +495,44 @@ export default function ReviewsPage() {
         </motion.div>
 
         {/* Navigation */}
-        {step !== 5 && (
-          <motion.div
-            className="flex items-center justify-between mt-5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-          >
-            <motion.button className="btn-secondary" onClick={handleBack} disabled={step === 1} whileTap={{ scale: 0.97 }}>
-              <ChevronLeft size={16} /> Retour
-            </motion.button>
+        <motion.div
+          className="flex items-center justify-between mt-5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
+          <motion.button className="btn-secondary" onClick={handleBack} disabled={step === 1} whileTap={{ scale: 0.97 }}>
+            <ChevronLeft size={16} /> Retour
+          </motion.button>
 
-            {step !== 4 && (
-              <motion.button className="btn-primary" onClick={handleNext} disabled={!canNext()} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                {(mode === "multi" && step === 2) || step === 3
-                  ? <><Sparkles size={15} />{nextLabel}</>
-                  : <>{nextLabel}<ChevronRight size={16} /></>}
-              </motion.button>
-            )}
-            {step === 4 && done && (
-              <motion.button className="btn-primary" onClick={() => setStep(5)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                <ArrowRight size={15} /> Télécharger les avis
-              </motion.button>
-            )}
-            {step === 4 && isGenerating && (
-              <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "var(--primary)" }}>
-                <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
-                Génération en cours...
-              </div>
-            )}
-            {step === 4 && error && !isGenerating && (
-              <motion.button className="btn-primary" onClick={mode === "multi" ? startMultiGeneration : startGeneration} whileTap={{ scale: 0.97 }}>
-                <RefreshCw size={14} /> Réessayer
-              </motion.button>
-            )}
-          </motion.div>
-        )}
+          {step !== 5 && (
+            <>
+              {step !== 4 && (
+                <motion.button className="btn-primary" onClick={handleNext} disabled={!canNext()} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  {(mode === "multi" && step === 2) || step === 3
+                    ? <><Sparkles size={15} />{nextLabel}</>
+                    : <>{nextLabel}<ChevronRight size={16} /></>}
+                </motion.button>
+              )}
+              {step === 4 && done && (
+                <motion.button className="btn-primary" onClick={() => setStep(5)} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <ArrowRight size={15} /> Télécharger les avis
+                </motion.button>
+              )}
+              {step === 4 && isGenerating && (
+                <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "var(--primary)" }}>
+                  <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "var(--primary)", borderTopColor: "transparent" }} />
+                  Génération en cours...
+                </div>
+              )}
+              {step === 4 && error && !isGenerating && (
+                <motion.button className="btn-primary" onClick={mode === "multi" ? startMultiGeneration : startGeneration} whileTap={{ scale: 0.97 }}>
+                  <RefreshCw size={14} /> Réessayer
+                </motion.button>
+              )}
+            </>
+          )}
+        </motion.div>
       </main>
 
       {showHistory && (

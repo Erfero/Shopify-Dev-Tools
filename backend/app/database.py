@@ -92,6 +92,19 @@ CREATE TABLE IF NOT EXISTS theme_upload_cache (
     zip_data   TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS theme_analytics (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id           TEXT,
+    store_name           TEXT,
+    language             TEXT,
+    product_count        INTEGER,
+    has_images           INTEGER,
+    duration_seconds     REAL,
+    success              INTEGER,
+    sections_regenerated INTEGER DEFAULT 0,
+    created_at           TEXT DEFAULT (datetime('now'))
+);
 """
 
 _CREATE_TABLES_PG = """
@@ -127,6 +140,19 @@ CREATE TABLE IF NOT EXISTS theme_upload_cache (
     filename   TEXT NOT NULL,
     zip_data   TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS theme_analytics (
+    id                   SERIAL PRIMARY KEY,
+    session_id           TEXT,
+    store_name           TEXT,
+    language             TEXT,
+    product_count        INTEGER,
+    has_images           BOOLEAN,
+    duration_seconds     REAL,
+    success              BOOLEAN,
+    sections_regenerated INTEGER DEFAULT 0,
+    created_at           TIMESTAMP DEFAULT NOW()
 );
 """
 
@@ -341,3 +367,97 @@ async def delete_theme_zip(session_id: str) -> None:
             text("DELETE FROM theme_upload_cache WHERE session_id = :sid"),
             {"sid": session_id},
         )
+
+
+# ── Theme analytics functions ─────────────────────────────────────────────────
+
+async def analytics_record(
+    session_id: str,
+    store_name: str,
+    language: str,
+    product_count: int,
+    has_images: bool,
+    duration_seconds: float,
+    success: bool,
+) -> None:
+    """Insert a new analytics record after a generation completes."""
+    async with _engine.begin() as conn:
+        if _IS_SQLITE:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_analytics
+                    (session_id, store_name, language, product_count, has_images, duration_seconds, success)
+                VALUES (:sid, :store, :lang, :pc, :hi, :dur, :ok)
+                """),
+                {
+                    "sid": session_id, "store": store_name, "lang": language,
+                    "pc": product_count, "hi": int(has_images),
+                    "dur": duration_seconds, "ok": int(success),
+                },
+            )
+        else:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_analytics
+                    (session_id, store_name, language, product_count, has_images, duration_seconds, success)
+                VALUES (:sid, :store, :lang, :pc, :hi, :dur, :ok)
+                """),
+                {
+                    "sid": session_id, "store": store_name, "lang": language,
+                    "pc": product_count, "hi": has_images,
+                    "dur": duration_seconds, "ok": success,
+                },
+            )
+
+
+async def analytics_increment_regen(session_id: str) -> None:
+    """Increment the sections_regenerated counter for a session."""
+    async with _engine.begin() as conn:
+        await conn.execute(
+            text("""
+            UPDATE theme_analytics
+            SET sections_regenerated = sections_regenerated + 1
+            WHERE session_id = :sid
+            """),
+            {"sid": session_id},
+        )
+
+
+async def analytics_get_summary() -> dict:
+    """Return aggregated analytics summary."""
+    async with _engine.connect() as conn:
+        row = await conn.execute(
+            text("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN success THEN 1 ELSE 0 END) as successful,
+                AVG(duration_seconds) as avg_duration,
+                SUM(sections_regenerated) as total_regen
+            FROM theme_analytics
+            """)
+        )
+        r = row.fetchone()
+
+        lang_rows = await conn.execute(
+            text("""
+            SELECT language, COUNT(*) as cnt
+            FROM theme_analytics
+            GROUP BY language
+            ORDER BY cnt DESC
+            """)
+        )
+        by_language = {lr[0] or "unknown": lr[1] for lr in lang_rows}
+
+    total = r[0] or 0
+    successful = r[1] or 0
+    avg_duration = round(r[2] or 0, 1)
+    total_regen = r[3] or 0
+
+    return {
+        "total": total,
+        "successful": successful,
+        "success_rate": round((successful / total * 100) if total > 0 else 0, 1),
+        "avg_duration": avg_duration,
+        "by_language": by_language,
+        "total_regenerations": total_regen,
+    }

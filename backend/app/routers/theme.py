@@ -1,6 +1,8 @@
 import asyncio
 import json
+import logging
 import shutil
+import time as _time
 import uuid
 from datetime import datetime
 from functools import partial
@@ -10,24 +12,26 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 
+from app.auth import verify_token
+from app.rate_limiter import upload_limiter, generate_limiter
 from app.config import settings
-from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip
+
+logger = logging.getLogger(__name__)
+
+# Max ZIP size: 150 MB (Shopify themes are typically under 50 MB)
+_MAX_ZIP_BYTES = 150 * 1024 * 1024
+# Max products per generation request
+_MAX_PRODUCTS = 50
+from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, analytics_record, analytics_increment_regen, analytics_get_summary
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
 from app.services.theme.text_mapper import extract_text_slots
-from app.services.theme.ai_generator import generate_all_texts
+from app.services.theme.ai_generator import generate_all_texts, generate_single_section
 from app.services.theme.mock_generator import generate_mock_texts
 from app.services.theme.theme_modifier import apply_generated_texts
 from app.services.theme.theme_translator import translate_remaining_texts
 from app.services.theme.theme_exporter import export_theme
 from app.utils.json_handler import read_theme_json, detect_json_format
-
-# ── Auth dependency ───────────────────────────────────────────────────────────
-
-def verify_token(x_api_token: str = Header(default="")) -> None:
-    """Vérifie le token d'API si API_TOKEN est configuré dans .env."""
-    if settings.api_token and x_api_token != settings.api_token:
-        raise HTTPException(status_code=401, detail="Token d'API invalide ou manquant.")
 
 router = APIRouter(prefix="/api/theme", tags=["theme"], dependencies=[Depends(verify_token)])
 
@@ -56,6 +60,15 @@ def _save_session_meta(session_id: str, session: dict) -> None:
         "language": session.get("language", "fr"),
         "target_gender": session.get("target_gender", "femme"),
         "store_name": session.get("store_name", ""),
+        "store_email": session.get("store_email", ""),
+        "product_names": session.get("product_names", []),
+        "product_description": session.get("product_description"),
+        "product_price": session.get("product_price"),
+        "store_address": session.get("store_address"),
+        "siret": session.get("siret"),
+        "delivery_delay": session.get("delivery_delay", "3-5 jours ouvrés"),
+        "return_policy_days": session.get("return_policy_days", "30"),
+        "marketing_angles": session.get("marketing_angles"),
         "generated_texts": session.get("generated_texts"),
         "zip_path": session.get("zip_path"),
         "created_at": session.get("created_at", datetime.now().isoformat()),
@@ -101,6 +114,15 @@ async def _restore_session(session_id: str) -> dict | None:
             "language": meta.get("language", "fr"),
             "target_gender": meta.get("target_gender", "femme"),
             "store_name": meta.get("store_name", ""),
+            "store_email": meta.get("store_email", ""),
+            "product_names": meta.get("product_names", []),
+            "product_description": meta.get("product_description"),
+            "product_price": meta.get("product_price"),
+            "store_address": meta.get("store_address"),
+            "siret": meta.get("siret"),
+            "delivery_delay": meta.get("delivery_delay", "3-5 jours ouvrés"),
+            "return_policy_days": meta.get("return_policy_days", "30"),
+            "marketing_angles": meta.get("marketing_angles"),
             "zip_path": meta.get("zip_path"),
             "created_at": meta.get("created_at", datetime.now().isoformat()),
         }
@@ -125,6 +147,15 @@ async def _restore_session(session_id: str) -> dict | None:
         "language": meta.get("language", "fr"),
         "target_gender": meta.get("target_gender", "femme"),
         "store_name": meta.get("store_name", ""),
+        "store_email": meta.get("store_email", ""),
+        "product_names": meta.get("product_names", []),
+        "product_description": meta.get("product_description"),
+        "product_price": meta.get("product_price"),
+        "store_address": meta.get("store_address"),
+        "siret": meta.get("siret"),
+        "delivery_delay": meta.get("delivery_delay", "3-5 jours ouvrés"),
+        "return_policy_days": meta.get("return_policy_days", "30"),
+        "marketing_angles": meta.get("marketing_angles"),
         "zip_path": meta.get("zip_path"),
         "created_at": meta.get("created_at"),
     }
@@ -155,13 +186,19 @@ async def _get_session(session_id: str) -> dict | None:
     return session
 
 
-@router.post("/upload", response_model=UploadResponse)
+@router.post("/upload", response_model=UploadResponse, dependencies=[Depends(upload_limiter)])
 async def upload_theme(theme_file: UploadFile = File(...)):
     """Upload a Shopify theme ZIP file and parse its structure."""
     if not theme_file.filename or not theme_file.filename.endswith(".zip"):
-        raise HTTPException(status_code=400, detail="Le fichier doit etre un ZIP")
+        raise HTTPException(status_code=400, detail="Le fichier doit être un ZIP")
 
     content = await theme_file.read()
+
+    if len(content) > _MAX_ZIP_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Le fichier ZIP est trop volumineux (max {_MAX_ZIP_BYTES // 1024 // 1024} Mo).",
+        )
 
     temp_zip = settings.temp_path / f"upload_{theme_file.filename}"
     settings.temp_path.mkdir(parents=True, exist_ok=True)
@@ -194,8 +231,8 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     # Save ZIP to DB so the session can be rebuilt after a server restart
     try:
         await save_theme_zip(structure.session_id, theme_file.filename, content)
-    except Exception:
-        pass  # Non-fatal: session will still work if server doesn't restart
+    except Exception as e:
+        logger.warning("Could not save ZIP to DB for session %s: %s", structure.session_id, e)
 
     return UploadResponse(
         session_id=structure.session_id,
@@ -205,7 +242,7 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     )
 
 
-@router.post("/generate")
+@router.post("/generate", dependencies=[Depends(generate_limiter)])
 async def generate_theme(
     session_id: str = Form(...),
     store_name: str = Form(...),
@@ -227,10 +264,6 @@ async def generate_theme(
     if not session:
         raise HTTPException(status_code=404, detail="Session non trouvee. Veuillez re-uploader le theme.")
 
-    session["language"] = language
-    session["target_gender"] = target_gender
-    session["store_name"] = store_name
-
     try:
         parsed_product_names = json.loads(product_names)
         if not isinstance(parsed_product_names, list):
@@ -238,13 +271,35 @@ async def generate_theme(
     except json.JSONDecodeError:
         parsed_product_names = [product_names]
 
+    if len(parsed_product_names) > _MAX_PRODUCTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum {_MAX_PRODUCTS} produits par requête.",
+        )
+
+    session["language"] = language
+    session["target_gender"] = target_gender
+    session["store_name"] = store_name
+    session["store_email"] = store_email
+    session["product_names"] = parsed_product_names
+    session["product_description"] = product_description
+    session["product_price"] = product_price
+    session["store_address"] = store_address
+    session["siret"] = siret
+    session["delivery_delay"] = delivery_delay
+    session["return_policy_days"] = return_policy_days
+    session["marketing_angles"] = marketing_angles
+
     image_paths: list[Path] = []
     images_dir = settings.temp_path / session_id / "_product_images"
     if product_images:
         images_dir.mkdir(parents=True, exist_ok=True)
         for img in product_images:
             if img.content_type and img.content_type in ALLOWED_IMAGE_TYPES and img.filename:
-                img_path = images_dir / img.filename
+                # Use a random name to prevent path traversal via malicious filenames
+                ext = Path(img.filename).suffix.lower() or ".jpg"
+                safe_name = f"{uuid.uuid4().hex}{ext}"
+                img_path = images_dir / safe_name
                 with open(img_path, "wb") as f:
                     f.write(await img.read())
                 image_paths.append(img_path)
@@ -252,6 +307,7 @@ async def generate_theme(
     async def event_stream():
         all_results = {}
         has_any_success = False
+        _start_time = _time.monotonic()
 
         generator_fn = generate_mock_texts if settings.use_mock else generate_all_texts
 
@@ -291,6 +347,8 @@ async def generate_theme(
 
             yield f"data: {step.model_dump_json()}\n\n"
 
+        _duration = _time.monotonic() - _start_time
+
         if not has_any_success:
             error_step = GenerationStep(
                 step="preview",
@@ -298,10 +356,35 @@ async def generate_theme(
                 message="Aucun texte n'a pu etre genere. Verifiez votre cle API et le modele configure.",
             )
             yield f"data: {error_step.model_dump_json()}\n\n"
+            try:
+                await analytics_record(
+                    session_id=session_id,
+                    store_name=store_name,
+                    language=language,
+                    product_count=len(parsed_product_names),
+                    has_images=bool(image_paths),
+                    duration_seconds=_duration,
+                    success=False,
+                )
+            except Exception:
+                pass
             return
 
         session["generated_texts"] = all_results
         _save_session_meta(session_id, session)
+
+        try:
+            await analytics_record(
+                session_id=session_id,
+                store_name=store_name,
+                language=language,
+                product_count=len(parsed_product_names),
+                has_images=bool(image_paths),
+                duration_seconds=_duration,
+                success=True,
+            )
+        except Exception:
+            pass
 
         preview_step = GenerationStep(
             step="preview",
@@ -463,8 +546,7 @@ async def delete_history_item(history_id: str):
     if not entry:
         raise HTTPException(status_code=404, detail="Entrée non trouvée.")
     zip_path = Path(entry["zip_path"])
-    if zip_path.exists():
-        zip_path.unlink()
+    zip_path.unlink(missing_ok=True)
     await theme_history_delete(history_id)
     return {"status": "deleted"}
 
@@ -474,11 +556,110 @@ async def clear_history():
     """Delete all history entries and their ZIP files."""
     entries = await theme_history_list()
     for entry in entries:
-        zip_path = Path(entry["zip_path"])
-        if zip_path.exists():
-            zip_path.unlink()
+        Path(entry["zip_path"]).unlink(missing_ok=True)
     await theme_history_clear()
     return {"status": "cleared"}
+
+
+@router.post("/regenerate")
+async def regenerate_section(
+    session_id: str = Form(...),
+    section: str = Form(...),
+):
+    """Regenerate a single section using stored session config. Returns SSE stream."""
+    session = await _get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session non trouvee. Veuillez re-uploader le theme.")
+
+    meta_path = _meta_path(session_id)
+    meta: dict = {}
+    if meta_path.exists():
+        try:
+            with open(meta_path, encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            pass
+
+    store_name = meta.get("store_name") or session.get("store_name", "")
+    store_email = meta.get("store_email") or session.get("store_email", "")
+    product_names = meta.get("product_names") or session.get("product_names", [])
+    product_description = meta.get("product_description") or session.get("product_description")
+    language = meta.get("language") or session.get("language", "fr")
+    target_gender = meta.get("target_gender") or session.get("target_gender", "femme")
+    product_price = meta.get("product_price") or session.get("product_price")
+    store_address = meta.get("store_address") or session.get("store_address")
+    siret = meta.get("siret") or session.get("siret")
+    delivery_delay = meta.get("delivery_delay") or session.get("delivery_delay", "3-5 jours ouvrés")
+    return_policy_days = meta.get("return_policy_days") or session.get("return_policy_days", "30")
+    marketing_angles = meta.get("marketing_angles") or session.get("marketing_angles")
+
+    # Re-use existing product images if still on disk
+    images_dir = settings.temp_path / session_id / "_product_images"
+    image_paths: list[Path] = []
+    if images_dir.exists():
+        image_paths = [p for p in images_dir.iterdir() if p.is_file()]
+
+    async def regen_stream():
+        result_data: dict | None = None
+
+        async for step_id, status, data in generate_single_section(
+            section=section,
+            store_name=store_name,
+            store_email=store_email,
+            product_names=product_names,
+            product_description=product_description,
+            language=language,
+            image_paths=image_paths if image_paths else None,
+            target_gender=target_gender,
+            product_price=product_price,
+            store_address=store_address,
+            siret=siret,
+            delivery_delay=delivery_delay,
+            return_policy_days=return_policy_days,
+            marketing_angles=marketing_angles,
+        ):
+            step_obj = GenerationStep(
+                step=step_id,
+                status=status,
+                message=_step_message(step_id, status, data),
+                data=data if status in ("done", "error") else None,
+            )
+            if status == "done":
+                result_data = data
+            yield f"data: {step_obj.model_dump_json()}\n\n"
+
+        if result_data is not None:
+            # Merge result into session's generated_texts
+            generated = session.get("generated_texts") or {}
+            generated[section] = result_data
+            session["generated_texts"] = generated
+            _save_session_meta(session_id, session)
+
+            # Increment regen counter in analytics
+            try:
+                await analytics_increment_regen(session_id)
+            except Exception:
+                pass
+
+    return StreamingResponse(
+        regen_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get("/analytics")
+async def get_analytics():
+    """Return analytics summary for the theme generator."""
+    try:
+        summary = await analytics_get_summary()
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur analytics: {str(e)}")
 
 
 def _step_message(step_id: str, status: str, data: dict | None = None) -> str:

@@ -1,7 +1,7 @@
 import uuid
 
+import bcrypt
 from fastapi import APIRouter, HTTPException, Depends
-from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from app.auth import create_access_token, verify_token
@@ -16,7 +16,13 @@ from app.database import (
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-_pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def _verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
 class RegisterRequest(BaseModel):
@@ -42,7 +48,7 @@ async def register(req: RegisterRequest):
     is_approved = is_admin  # admin auto-approuvé, les autres attendent
 
     user_id = str(uuid.uuid4())
-    password_hash = _pwd.hash(req.password)
+    password_hash = _hash_password(req.password)
     await create_user(user_id, req.email.lower(), password_hash, is_approved, is_admin)
 
     if is_approved:
@@ -60,7 +66,7 @@ async def register(req: RegisterRequest):
 @router.post("/login")
 async def login(req: LoginRequest):
     user = await get_user_by_email(req.email.lower())
-    if not user or not _pwd.verify(req.password, user["password_hash"]):
+    if not user or not _verify_password(req.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect.")
 
     if not user["is_approved"]:

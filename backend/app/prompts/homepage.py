@@ -14,7 +14,9 @@ REGLE SLOGAN : Le slogan suit TOUJOURS le format : NomBoutique : Promesse courte
 
 REGLE TITRES AVANTAGES : Chaque titre d'avantage doit etre une phrase imperative vendeuse commencant par un verbe d'action fort (Obtenez, Sculptez, Retrouvez, Adoptez, Rayonnez, Transformez, Decouvrez...) suivi d'un benefice specifique et concret du produit. Le texte associe doit faire EXACTEMENT 2 phrases courtes maximum — chaque phrase de 10 a 15 mots max. PAS PLUS.
 
-REGLE LONGUEUR STRICTE : Tous les champs "text" et "description" (sauf les titres) doivent etre COURTS : maximum 2 phrases de 10-15 mots chacune. INTERDIT de faire des textes longs."""
+REGLE LONGUEUR STRICTE : Tous les champs "text" et "description" (sauf les titres) doivent etre COURTS : maximum 2 phrases de 10-15 mots chacune. INTERDIT de faire des textes longs.
+
+REGLE COMPARISON FEATURES : Chaque champ "feature" du tableau comparatif doit etre une expression COURTE et PRECISE de 3 a 5 mots MAXIMUM qui exprime un avantage concret, un benefice reel ou une caracteristique distinctive du produit. INTERDIT les expressions generiques et vagues (ex: "Qualite Premium", "Livraison rapide", "Tres bon produit"). OBLIGATOIRE d'aller droit au but avec des expressions percutantes et specifiques au produit (ex: "Resultats en 14 jours", "Sans sulfate ni parabene", "Certifie cruelty-free", "Tenue 24h garantie", "Ingrediants d'origine naturelle"). Chaque feature doit donner une raison forte et concrete d'acheter CE produit plutot qu'un autre. Sois TRES specifique au produit envoye."""
 
     products = ", ".join(context["product_names"])
     gender = context.get("target_gender", "femme")
@@ -72,11 +74,11 @@ Genere tous les textes de la page d'accueil. Reponds en JSON avec ce schema EXAC
     "title": "Titre section comparaison (ex: Pourquoi choisir {store} ?)",
     "description": "Sous-titre inline motivant avec <strong>mot d'impact</strong>",
     "items": [
-      {{"feature": "Avantage concurrentiel 1 (texte simple)", "tooltip": "Explication courte inline avec <strong>expression forte</strong>"}},
-      {{"feature": "Avantage 2 (texte simple)", "tooltip": "Explication inline"}},
-      {{"feature": "Avantage 3 (texte simple)", "tooltip": "Explication inline"}},
-      {{"feature": "Avantage 4 (texte simple)", "tooltip": "Explication inline"}},
-      {{"feature": "Avantage 5 (texte simple)", "tooltip": "Explication inline"}}
+      {{"feature": "3-5 mots MAX : resultat ou benefice chiffre specifique au produit (ex: Resultats en 14 jours)", "tooltip": "Explication courte inline avec <strong>expression forte</strong>"}},
+      {{"feature": "3-5 mots MAX : caracteristique composition ou formule distinctive (ex: Sans sulfate ni parabene)", "tooltip": "Explication inline avec <strong>mot fort</strong>"}},
+      {{"feature": "3-5 mots MAX : certifcation, label ou engagement qualite (ex: Certifie cruelty-free)", "tooltip": "Explication inline avec <strong>mot fort</strong>"}},
+      {{"feature": "3-5 mots MAX : avantage usage ou praticite du produit (ex: Tenue 24h garantie)", "tooltip": "Explication inline avec <strong>mot fort</strong>"}},
+      {{"feature": "3-5 mots MAX : promesse ou transformation concrete que le client va vivre (ex: Peau lissee en 7 jours)", "tooltip": "Explication inline avec <strong>mot fort</strong>"}}
     ]
   }},
   "specs": {{
@@ -92,6 +94,7 @@ Genere tous les textes de la page d'accueil. Reponds en JSON avec ce schema EXAC
 
 CONTRAINTES :
 - Exactement 3 benefits, 7 advantages, 5 comparison.items, 4 specs.items
+- comparison.items[].feature : 3 a 5 mots MAXIMUM — avantage, benefice ou caracteristique SPECIFIQUE et CONCRET au produit. INTERDIT les expressions generiques vagues ("Qualite Premium", "Livraison rapide", "Produit naturel"). Chaque feature doit aller droit au but et donner une raison forte et precise d'acheter ce produit plutot qu'un autre
 - Chaque texte doit etre unique et different des autres
 - Sois specifique au produit, pas generique
 - Slogan OBLIGATOIREMENT au format : NomBoutique : Promesse percutante

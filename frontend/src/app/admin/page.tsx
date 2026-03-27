@@ -94,25 +94,47 @@ export default function AdminPage() {
 
   const fetchAll = useCallback(async (page = 0) => {
     setLoading(true);
-    try {
-      const [usersRes, activityRes, statsRes] = await Promise.all([
-        apiFetch(`${API_BASE}/api/auth/users`),
-        apiFetch(`${API_BASE}/api/admin/activity?limit=${ACTIVITY_PAGE_SIZE + 1}&offset=${page * ACTIVITY_PAGE_SIZE}`),
-        apiFetch(`${API_BASE}/api/admin/stats`),
-      ]);
-      if (usersRes.ok) setUsers(await usersRes.json());
-      if (activityRes.ok) {
-        const data: ActivityEntry[] = await activityRes.json();
-        setActivityHasMore(data.length > ACTIVITY_PAGE_SIZE);
-        setActivity(data.slice(0, ACTIVITY_PAGE_SIZE));
-        setActivityPage(page);
-      }
-      if (statsRes.ok) setStats(await statsRes.json());
-    } catch {
-      // 401 handled by apiFetch (logout redirect)
-    } finally {
-      setLoading(false);
-    }
+
+    await Promise.allSettled([
+      // ── Users ──────────────────────────────────────────────────────────
+      apiFetch(`${API_BASE}/api/auth/users`)
+        .then(async r => {
+          if (r.ok) { setUsers(await r.json()); }
+          else {
+            const e = await r.json().catch(() => ({}));
+            toast.error(`Utilisateurs (${r.status}): ${e.detail ?? "Erreur serveur"}`);
+          }
+        })
+        .catch(() => toast.error("Impossible de joindre le serveur (utilisateurs).")),
+
+      // ── Activity ────────────────────────────────────────────────────────
+      apiFetch(`${API_BASE}/api/admin/activity?limit=${ACTIVITY_PAGE_SIZE + 1}&offset=${page * ACTIVITY_PAGE_SIZE}`)
+        .then(async r => {
+          if (r.ok) {
+            const data: ActivityEntry[] = await r.json();
+            setActivityHasMore(data.length > ACTIVITY_PAGE_SIZE);
+            setActivity(data.slice(0, ACTIVITY_PAGE_SIZE));
+            setActivityPage(page);
+          } else {
+            const e = await r.json().catch(() => ({}));
+            toast.error(`Activité (${r.status}): ${e.detail ?? "Erreur serveur"}`);
+          }
+        })
+        .catch(() => toast.error("Impossible de joindre le serveur (activité).")),
+
+      // ── Stats ───────────────────────────────────────────────────────────
+      apiFetch(`${API_BASE}/api/admin/stats`)
+        .then(async r => {
+          if (r.ok) { setStats(await r.json()); }
+          else {
+            const e = await r.json().catch(() => ({}));
+            toast.error(`Stats (${r.status}): ${e.detail ?? "Erreur serveur"}`);
+          }
+        })
+        .catch(() => toast.error("Impossible de joindre le serveur (stats).")),
+    ]);
+
+    setLoading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -261,11 +283,16 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {loading && !stats ? (
+        {loading && !stats && activity.length === 0 && users.length === 0 ? (
           <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
             {/* ── TAB APERÇU ─────────────────────────────────────────────── */}
+            {tab === "overview" && !stats && !loading && (
+              <div className="rounded-2xl border border-dashed border-border/60 py-16 text-center text-sm text-muted-foreground">
+                Impossible de charger les statistiques. Vérifiez la console ou les toasts d&apos;erreur ci-dessus.
+              </div>
+            )}
             {tab === "overview" && stats && (
               <div className="space-y-6">
                 {/* Stat cards */}

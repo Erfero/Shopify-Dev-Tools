@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/login", "/register"];
+const PUBLIC_PATHS = ["/login", "/register", "/splash"];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,7 +17,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     if (!isAuthenticated()) {
-      router.replace("/login");
+      // Home page → show splash intro; other protected routes → login directly
+      router.replace(pathname === "/" ? "/splash" : "/login");
     } else {
       setReady(true);
     }

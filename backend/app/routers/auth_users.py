@@ -13,6 +13,7 @@ from app.database import (
     update_user_status,
     delete_user,
     log_activity,
+    _display_name_from_email,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -29,6 +30,7 @@ def _verify_password(password: str, hashed: str) -> bool:
 class RegisterRequest(BaseModel):
     email: str
     password: str
+    display_name: str = ""
 
 
 class LoginRequest(BaseModel):
@@ -48,9 +50,12 @@ async def register(req: RegisterRequest):
     is_admin = bool(settings.admin_email and req.email.lower() == settings.admin_email.lower())
     is_approved = is_admin  # admin auto-approuvé, les autres attendent
 
+    # Use provided display_name or auto-generate from email
+    display_name = req.display_name.strip() or _display_name_from_email(req.email)
+
     user_id = str(uuid.uuid4())
     password_hash = _hash_password(req.password)
-    await create_user(user_id, req.email.lower(), password_hash, is_approved, is_admin)
+    await create_user(user_id, req.email.lower(), password_hash, is_approved, is_admin, display_name)
 
     await log_activity(req.email.lower(), "register")
 
@@ -58,10 +63,11 @@ async def register(req: RegisterRequest):
         token = create_access_token({
             "sub": user_id,
             "email": req.email.lower(),
+            "display_name": display_name,
             "is_admin": True,
             "is_approved": True,
         })
-        return {"access_token": token, "token_type": "bearer", "is_admin": True}
+        return {"access_token": token, "token_type": "bearer", "is_admin": True, "display_name": display_name}
 
     return {"message": "Compte créé avec succès. En attente d'approbation par l'administrateur."}
 
@@ -78,16 +84,26 @@ async def login(req: LoginRequest):
     token = create_access_token({
         "sub": user["id"],
         "email": user["email"],
+        "display_name": user.get("display_name") or _display_name_from_email(user["email"]),
         "is_admin": user["is_admin"],
         "is_approved": True,
     })
     await log_activity(user["email"], "login")
-    return {"access_token": token, "token_type": "bearer", "is_admin": user["is_admin"]}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "is_admin": user["is_admin"],
+        "display_name": user.get("display_name") or _display_name_from_email(user["email"]),
+    }
 
 
 @router.get("/me")
 async def me(current_user: dict = Depends(verify_token)):
-    return {"email": current_user.get("email"), "is_admin": current_user.get("is_admin", False)}
+    return {
+        "email": current_user.get("email"),
+        "display_name": current_user.get("display_name", ""),
+        "is_admin": current_user.get("is_admin", False),
+    }
 
 
 # ── Admin endpoints ────────────────────────────────────────────────────────────

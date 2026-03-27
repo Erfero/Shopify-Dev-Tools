@@ -4,6 +4,7 @@ const USER_KEY = "sdt_auth_user";
 export interface AuthUser {
   email: string;
   is_admin: boolean;
+  display_name?: string;
 }
 
 export function getToken(): string | null {

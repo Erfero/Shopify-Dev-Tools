@@ -32,7 +32,7 @@ export default function LoginPage() {
         return;
       }
       setToken(data.access_token, remember);
-      setUser({ email, is_admin: data.is_admin });
+      setUser({ email, is_admin: data.is_admin, display_name: data.display_name ?? "" });
       router.replace("/");
     } catch {
       setError("Impossible de contacter le serveur. Veuillez réessayer dans quelques secondes.");

@@ -17,8 +17,8 @@ import { getAuthHeaders, getUser, logout } from "@/lib/auth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface User { id: string; email: string; is_approved: boolean; is_admin: boolean; created_at: string; }
-interface ActivityEntry { id: number; user_email: string; action: string; details: string | null; ip_address: string | null; created_at: string; }
+interface User { id: string; email: string; is_approved: boolean; is_admin: boolean; created_at: string; display_name: string; }
+interface ActivityEntry { id: number; user_email: string; display_name: string; action: string; details: string | null; ip_address: string | null; created_at: string; }
 interface Stats {
   by_action: Record<string, number>;
   by_day: { date: string; count: number }[];
@@ -327,7 +327,10 @@ export default function AdminPage() {
                       <tbody className="divide-y divide-border/40">
                         {activity.map(a => (
                           <tr key={a.id} className="hover:bg-foreground/[0.01] transition">
-                            <td className="px-4 py-2.5 font-medium truncate max-w-[140px]">{a.user_email.split("@")[0]}<span className="text-muted-foreground font-normal">@{a.user_email.split("@")[1]}</span></td>
+                            <td className="px-4 py-2.5 max-w-[160px]">
+                              <p className="font-medium text-sm truncate">{a.display_name || a.user_email.split("@")[0]}</p>
+                              <p className="text-xs text-muted-foreground truncate">{a.user_email}</p>
+                            </td>
                             <td className="px-4 py-2.5"><ActionBadge action={a.action} /></td>
                             <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell max-w-[200px] truncate">
                               {a.details ? (() => { try { const d = JSON.parse(a.details!); return d.store_name ?? d.product ?? d.filename ?? a.details; } catch { return a.details; } })() : "—"}
@@ -439,7 +442,7 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
     <div className={`flex items-center justify-between rounded-xl border px-4 py-3 transition hover:bg-foreground/[0.03] ${user.is_admin ? "border-purple-500/20 bg-purple-500/[0.02]" : "border-border/60 bg-foreground/[0.01]"}`}>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-medium">{user.email}</p>
+          <p className="text-sm font-semibold">{user.display_name || user.email.split("@")[0]}</p>
           {user.is_admin && (
             <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-medium text-purple-600">
               <Crown className="h-3 w-3" /> Admin{isSelf ? " (vous)" : ""}
@@ -451,7 +454,8 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-muted-foreground truncate">{user.email}</p>
+        <p className="text-xs text-muted-foreground/60">
           Inscrit le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>

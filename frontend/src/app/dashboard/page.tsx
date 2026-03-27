@@ -87,7 +87,7 @@ export default function DashboardPage() {
               <Activity className="h-4 w-4 text-foreground/70" />
             </div>
             <div>
-              <h1 className="text-base font-semibold leading-none">Mon historique</h1>
+              <h1 className="text-base font-semibold leading-none">{user?.display_name || "Mon historique"}</h1>
               <p className="mt-0.5 text-xs text-muted-foreground">{user?.email}</p>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         {/* Welcome */}
         <div>
-          <h2 className="text-xl font-semibold">Bonjour 👋</h2>
+          <h2 className="text-xl font-semibold">Bonjour{user?.display_name ? `, ${user.display_name}` : ""} 👋</h2>
           <p className="mt-1 text-sm text-muted-foreground">Voici un résumé de votre activité sur Shopify Dev Tools.</p>
         </div>
 

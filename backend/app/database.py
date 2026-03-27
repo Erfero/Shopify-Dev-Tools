@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     is_approved   INTEGER DEFAULT 0,
     is_admin      INTEGER DEFAULT 0,
+    display_name  TEXT DEFAULT '',
     created_at    TEXT DEFAULT (datetime('now'))
 );
 
@@ -193,6 +194,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     is_approved   BOOLEAN DEFAULT FALSE,
     is_admin      BOOLEAN DEFAULT FALSE,
+    display_name  TEXT DEFAULT '',
     created_at    TIMESTAMP DEFAULT NOW()
 );
 
@@ -599,42 +601,42 @@ async def analytics_get_summary() -> dict:
 
 # ── User auth functions ────────────────────────────────────────────────────────
 
-async def create_user(id: str, email: str, password_hash: str, is_approved: bool, is_admin: bool) -> None:
+async def create_user(id: str, email: str, password_hash: str, is_approved: bool, is_admin: bool, display_name: str = "") -> None:
     async with _engine.begin() as conn:
         await conn.execute(
-            text("INSERT INTO users (id, email, password_hash, is_approved, is_admin) VALUES (:id, :email, :password_hash, :is_approved, :is_admin)"),
-            {"id": id, "email": email, "password_hash": password_hash, "is_approved": bool(is_approved), "is_admin": bool(is_admin)},
+            text("INSERT INTO users (id, email, password_hash, is_approved, is_admin, display_name) VALUES (:id, :email, :password_hash, :is_approved, :is_admin, :display_name)"),
+            {"id": id, "email": email, "password_hash": password_hash, "is_approved": bool(is_approved), "is_admin": bool(is_admin), "display_name": display_name},
         )
 
 
 async def get_user_by_email(email: str) -> dict | None:
     async with _engine.connect() as conn:
         row = (await conn.execute(
-            text("SELECT id, email, password_hash, is_approved, is_admin, created_at FROM users WHERE email = :email"),
+            text("SELECT id, email, password_hash, is_approved, is_admin, created_at, display_name FROM users WHERE email = :email"),
             {"email": email},
         )).fetchone()
     if not row:
         return None
-    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5])}
+    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5]), "display_name": row[6] or ""}
 
 
 async def get_user_by_id(id: str) -> dict | None:
     async with _engine.connect() as conn:
         row = (await conn.execute(
-            text("SELECT id, email, password_hash, is_approved, is_admin, created_at FROM users WHERE id = :id"),
+            text("SELECT id, email, password_hash, is_approved, is_admin, created_at, display_name FROM users WHERE id = :id"),
             {"id": id},
         )).fetchone()
     if not row:
         return None
-    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5])}
+    return {"id": row[0], "email": row[1], "password_hash": row[2], "is_approved": bool(row[3]), "is_admin": bool(row[4]), "created_at": str(row[5]), "display_name": row[6] or ""}
 
 
 async def get_all_users() -> list[dict]:
     async with _engine.connect() as conn:
         rows = (await conn.execute(
-            text("SELECT id, email, is_approved, is_admin, created_at FROM users ORDER BY created_at DESC")
+            text("SELECT id, email, is_approved, is_admin, created_at, display_name FROM users ORDER BY created_at DESC")
         )).fetchall()
-    return [{"id": r[0], "email": r[1], "is_approved": bool(r[2]), "is_admin": bool(r[3]), "created_at": str(r[4])} for r in rows]
+    return [{"id": r[0], "email": r[1], "is_approved": bool(r[2]), "is_admin": bool(r[3]), "created_at": str(r[4]), "display_name": r[5] or ""} for r in rows]
 
 
 async def update_user_status(id: str, is_approved: bool | None = None, is_admin: bool | None = None) -> None:
@@ -657,13 +659,31 @@ async def delete_user(id: str) -> None:
         await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": id})
 
 
+# ── Display name helper ────────────────────────────────────────────────────────
+
+import re as _re
+
+def _display_name_from_email(email: str) -> str:
+    """Derive a human-readable display name from an email address.
+    e.g. erferokamers@gmail.com  → Erferokamers
+         john.doe@gmail.com      → John Doe
+         mary_jane123@gmail.com  → Mary Jane
+    """
+    local = email.split("@")[0]
+    local = _re.sub(r'\d+$', '', local)          # strip trailing numbers
+    parts = _re.split(r'[._\-]', local)          # split on . _ -
+    parts = [p.capitalize() for p in parts if p]
+    return " ".join(parts) if parts else local.capitalize()
+
+
 # ── Activity log functions ─────────────────────────────────────────────────────
 
 async def _migrate_add_columns() -> None:
-    """Add user_email column to existing tables if missing (safe to run multiple times)."""
+    """Add missing columns to existing tables (safe to run multiple times)."""
     migrations = [
         "ALTER TABLE theme_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
         "ALTER TABLE review_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
+        "ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''",
     ]
     async with _engine.begin() as conn:
         for stmt in migrations:
@@ -671,6 +691,18 @@ async def _migrate_add_columns() -> None:
                 await conn.execute(text(stmt))
             except Exception:
                 pass  # Column already exists — ignore
+
+    # Populate display_name for existing users who don't have one
+    async with _engine.begin() as conn:
+        rows = (await conn.execute(
+            text("SELECT id, email FROM users WHERE display_name IS NULL OR display_name = ''")
+        )).fetchall()
+        for row in rows:
+            dn = _display_name_from_email(row[1])
+            await conn.execute(
+                text("UPDATE users SET display_name = :dn WHERE id = :id"),
+                {"dn": dn, "id": row[0]},
+            )
 
 
 async def log_activity(user_email: str, action: str, details: str | None = None, ip_address: str | None = None) -> None:
@@ -686,16 +718,20 @@ async def log_activity(user_email: str, action: str, details: str | None = None,
 
 
 async def get_activity_log(limit: int = 200, user_email: str | None = None) -> list[dict]:
-    q = "SELECT id, user_email, action, details, ip_address, created_at FROM activity_log"
+    base = (
+        "SELECT a.id, a.user_email, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name, "
+        "a.action, a.details, a.ip_address, a.created_at "
+        "FROM activity_log a LEFT JOIN users u ON a.user_email = u.email"
+    )
     params: dict = {}
     if user_email:
-        q += " WHERE user_email = :email"
+        base += " WHERE a.user_email = :email"
         params["email"] = user_email
-    q += " ORDER BY created_at DESC LIMIT :limit"
+    base += " ORDER BY a.created_at DESC LIMIT :limit"
     params["limit"] = limit
     async with _engine.connect() as conn:
-        rows = (await conn.execute(text(q), params)).fetchall()
-    return [{"id": r[0], "user_email": r[1], "action": r[2], "details": r[3], "ip_address": r[4], "created_at": str(r[5])} for r in rows]
+        rows = (await conn.execute(text(base), params)).fetchall()
+    return [{"id": r[0], "user_email": r[1], "display_name": r[2], "action": r[3], "details": r[4], "ip_address": r[5], "created_at": str(r[6])} for r in rows]
 
 
 async def get_activity_stats() -> dict:

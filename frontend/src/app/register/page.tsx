@@ -7,16 +7,32 @@ import { Layers, Loader2, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { API_BASE } from "@/lib/config";
 import { setToken, setUser } from "@/lib/auth";
 
+/** Auto-derive a display name from an email address. */
+function nameFromEmail(email: string): string {
+  const local = email.split("@")[0].replace(/\d+$/, "");
+  const parts = local.split(/[._\-]/).filter(Boolean);
+  return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ") || local;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [email, setEmail]             = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [password, setPassword]       = useState("");
+  const [confirm, setConfirm]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
+  const [showConfirm, setShowConfirm]   = useState(false);
+  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
+
+  function handleEmailChange(val: string) {
+    setEmail(val);
+    // Auto-fill name only if user hasn't manually typed one yet
+    if (!displayName || displayName === nameFromEmail(email)) {
+      setDisplayName(nameFromEmail(val));
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +46,7 @@ export default function RegisterPage() {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, display_name: displayName.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -39,7 +55,7 @@ export default function RegisterPage() {
       }
       if (data.access_token) {
         setToken(data.access_token, true);
-        setUser({ email, is_admin: data.is_admin });
+        setUser({ email, is_admin: data.is_admin, display_name: data.display_name });
         router.replace("/");
       } else {
         setPending(true);
@@ -94,11 +110,27 @@ export default function RegisterPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="votre@email.com"
               className="w-full rounded-xl border border-border/60 bg-foreground/[0.02] px-3.5 py-2.5 text-sm outline-none transition focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10"
             />
           </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">
+              Nom d&apos;utilisateur
+              <span className="ml-1.5 text-xs font-normal text-muted-foreground">(affiché dans l&apos;application)</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Ex : Jean Dupont"
+              className="w-full rounded-xl border border-border/60 bg-foreground/[0.02] px-3.5 py-2.5 text-sm outline-none transition focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10"
+            />
+          </div>
+
           <div>
             <label className="mb-1.5 block text-sm font-medium">Mot de passe</label>
             <div className="relative">
@@ -120,6 +152,7 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
+
           <div>
             <label className="mb-1.5 block text-sm font-medium">Confirmer le mot de passe</label>
             <div className="relative">

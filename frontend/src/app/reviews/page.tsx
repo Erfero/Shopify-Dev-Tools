@@ -16,6 +16,7 @@ import { MultiImageUpload } from "@/components/reviews/MultiImageUpload";
 import { GenderedImageUpload } from "@/components/reviews/GenderedImageUpload";
 import { deleteSession, SSEEvent } from "@/lib/api-reviews";
 import { addPendingEntry, getEntries, CSVEntry } from "@/lib/csvHistory";
+import { getToken } from "@/lib/auth";
 import { API } from "@/lib/config";
 
 interface FormState {
@@ -134,10 +135,12 @@ export default function ReviewsPage() {
 
     (async () => {
       try {
+        const token = getToken();
         const resp = await fetch(`${API}/reviews/generate`, {
           method: "POST",
           body: formData,
           signal: controller.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!resp.ok) { setError(`Erreur serveur ${resp.status}`); setIsGenerating(false); return; }
         const reader = resp.body?.getReader();
@@ -203,8 +206,10 @@ export default function ReviewsPage() {
           if (files.length === 0) return [];
           const uploadForm = new FormData();
           files.forEach((f) => uploadForm.append("files", f));
+          const uploadToken = getToken();
           const resp = await fetch(`${API}/reviews/upload-images`, {
             method: "POST", body: uploadForm, signal: controller.signal,
+            headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : {},
           });
           if (!resp.ok) return [];
           const data = await resp.json();
@@ -255,10 +260,12 @@ export default function ReviewsPage() {
           });
         });
 
+        const tokenMulti = getToken();
         const resp = await fetch(`${API}/reviews/generate-multi`, {
           method: "POST",
           body: formData,
           signal: controller.signal,
+          headers: tokenMulti ? { Authorization: `Bearer ${tokenMulti}` } : {},
         });
         if (!resp.ok) { setError(`Erreur serveur ${resp.status}`); setIsGenerating(false); return; }
         const reader = resp.body?.getReader();

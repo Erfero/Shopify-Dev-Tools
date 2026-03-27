@@ -12,13 +12,13 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <motion.div
-        className="w-full max-w-2xl"
+        className="w-full max-w-2xl flex flex-col"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
         {/* Header */}
-        <motion.div className="mb-12 text-center" variants={fadeUp} custom={0}>
+        <motion.div className="mb-8 sm:mb-12 text-center order-1" variants={fadeUp} custom={0}>
           <div className="mb-5 flex justify-center">
             <Link href="/">
               <motion.div
@@ -47,7 +47,7 @@ export default function Home() {
         </motion.div>
 
         {/* Tool cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 order-3 sm:order-2">
           {/* Shopify Theme Customizer */}
           <motion.div variants={staggerItem}>
             <Link
@@ -133,9 +133,9 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Footer */}
+        {/* Footer / Nav buttons — top on mobile, bottom on sm+ */}
         <motion.div
-          className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          className="order-2 sm:order-3 mb-6 sm:mb-0 sm:mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
           variants={fadeUp}
           custom={5}
         >

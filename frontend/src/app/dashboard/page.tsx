@@ -34,7 +34,7 @@ function ActionBadge({ action }: { action: string }) {
 }
 
 function StatCard({ label, value, icon, onClick, active }: {
-  label: string; value: number; icon: React.ReactNode; onClick?: () => void; active?: boolean;
+  label: string; value: number | null; icon: React.ReactNode; onClick?: () => void; active?: boolean;
 }) {
   return (
     <button
@@ -48,13 +48,24 @@ function StatCard({ label, value, icon, onClick, active }: {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="mt-1 text-2xl font-semibold">{value}</p>
+          <p className="mt-1 text-2xl font-semibold">{value ?? "—"}</p>
         </div>
         <div className="mt-1 opacity-40 transition group-hover:opacity-60">{icon}</div>
       </div>
     </button>
   );
 }
+
+// Map filter key → actions to fetch from server
+const FILTER_ACTIONS: Record<string, string[]> = {
+  all:       [],  // no filter = all actions
+  themes:    ["theme_generate"],
+  csv:       ["csv_generate"],
+  downloads: ["theme_download", "csv_download"],
+};
+
+// Actions counted for "Actions totales" stat
+const TOTAL_ACTIONS = ["login", "logout", "theme_generate", "theme_download", "csv_generate", "csv_download", "register"];
 
 const PAGE_SIZE = 20;
 
@@ -65,18 +76,46 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+
+  // Counts from a separate "totals" fetch (no pagination, limited to relevant actions)
+  const [totalCounts, setTotalCounts] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
-    fetchLogs(0);
+    fetchTotals();
+    fetchLogs(0, filter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function fetchLogs(p: number) {
+  async function fetchTotals() {
+    try {
+      // Fetch a large slice to count totals; server filters to relevant actions
+      const params = new URLSearchParams({ limit: "500", offset: "0" });
+      for (const a of TOTAL_ACTIONS) params.append("actions", a);
+      const res = await apiFetch(`${API_BASE}/api/admin/my-activity?${params}`);
+      if (res.ok) {
+        const data: ActivityEntry[] = await res.json();
+        const counts: Record<string, number> = {};
+        for (const entry of data) {
+          counts[entry.action] = (counts[entry.action] ?? 0) + 1;
+        }
+        setTotalCounts(counts);
+      }
+    } catch { /* handled */ }
+  }
+
+  async function fetchLogs(p: number, currentFilter: string) {
     setLoading(true);
     try {
-      const res = await apiFetch(`${API_BASE}/api/admin/my-activity?limit=${PAGE_SIZE + 1}&offset=${p * PAGE_SIZE}`);
+      const params = new URLSearchParams({
+        limit: String(PAGE_SIZE + 1),
+        offset: String(p * PAGE_SIZE),
+      });
+      const actions = FILTER_ACTIONS[currentFilter] ?? [];
+      for (const a of actions) params.append("actions", a);
+
+      const res = await apiFetch(`${API_BASE}/api/admin/my-activity?${params}`);
       if (res.ok) {
         const data: ActivityEntry[] = await res.json();
         setHasMore(data.length > PAGE_SIZE);
@@ -90,21 +129,23 @@ export default function DashboardPage() {
     }
   }
 
-  const counts = logs.reduce<Record<string, number>>((acc, l) => {
-    acc[l.action] = (acc[l.action] ?? 0) + 1;
-    return acc;
-  }, {});
+  function changeFilter(newFilter: string) {
+    setFilter(newFilter);
+    fetchLogs(0, newFilter);
+  }
 
-  const themesGenerated = counts["theme_generate"] ?? 0;
-  const csvGenerated    = counts["csv_generate"] ?? 0;
-  const downloads       = (counts["theme_download"] ?? 0) + (counts["csv_download"] ?? 0);
+  const themesGenerated = totalCounts?.["theme_generate"] ?? null;
+  const csvGenerated    = totalCounts?.["csv_generate"] ?? null;
+  const downloads       = totalCounts
+    ? (totalCounts["theme_download"] ?? 0) + (totalCounts["csv_download"] ?? 0)
+    : null;
+  const totalAll        = totalCounts
+    ? Object.values(totalCounts).reduce((s, v) => s + v, 0)
+    : null;
 
-  const FILTER_ACTIONS: Record<string, string[]> = {
-    themes:    ["theme_generate"],
-    csv:       ["csv_generate"],
-    downloads: ["theme_download", "csv_download"],
+  const filterLabel: Record<string, string> = {
+    themes: "Thèmes", csv: "Avis", downloads: "Téléchargements",
   };
-  const visibleLogs = filter ? logs.filter(l => FILTER_ACTIONS[filter]?.includes(l.action)) : logs;
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +163,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchLogs(page)}
+              onClick={() => fetchLogs(page, filter)}
               disabled={loading}
               className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40"
             >
@@ -159,14 +200,14 @@ export default function DashboardPage() {
 
         {/* Stats — cliquer pour filtrer le journal */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Actions totales"  value={logs.length}     icon={<Activity className="h-5 w-5" />}
-            active={filter === null} onClick={() => setFilter(null)} />
+          <StatCard label="Actions totales"  value={totalAll}        icon={<Activity className="h-5 w-5" />}
+            active={filter === "all"} onClick={() => changeFilter("all")} />
           <StatCard label="Thèmes générés"   value={themesGenerated} icon={<Paintbrush className="h-5 w-5" />}
-            active={filter === "themes"} onClick={() => setFilter(filter === "themes" ? null : "themes")} />
+            active={filter === "themes"} onClick={() => changeFilter(filter === "themes" ? "all" : "themes")} />
           <StatCard label="Avis générés"     value={csvGenerated}    icon={<Star className="h-5 w-5" />}
-            active={filter === "csv"} onClick={() => setFilter(filter === "csv" ? null : "csv")} />
+            active={filter === "csv"} onClick={() => changeFilter(filter === "csv" ? "all" : "csv")} />
           <StatCard label="Téléchargements"  value={downloads}       icon={<Download className="h-5 w-5" />}
-            active={filter === "downloads"} onClick={() => setFilter(filter === "downloads" ? null : "downloads")} />
+            active={filter === "downloads"} onClick={() => changeFilter(filter === "downloads" ? "all" : "downloads")} />
         </div>
 
         {/* Activity log */}
@@ -174,10 +215,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between border-b border-border/60 bg-foreground/[0.02] px-5 py-3">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold">Journal d&apos;activité</h3>
-              {filter && (
+              {filter !== "all" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium">
-                  {filter === "themes" ? "Thèmes" : filter === "csv" ? "Avis" : "Téléchargements"}
-                  <button onClick={() => setFilter(null)} className="ml-0.5 opacity-60 hover:opacity-100 transition" aria-label="Effacer le filtre">✕</button>
+                  {filterLabel[filter] ?? filter}
+                  <button onClick={() => changeFilter("all")} className="ml-0.5 opacity-60 hover:opacity-100 transition" aria-label="Effacer le filtre">✕</button>
                 </span>
               )}
             </div>
@@ -193,13 +234,13 @@ export default function DashboardPage() {
 
           {loading ? (
             <div className="py-16 text-center text-sm text-muted-foreground">Chargement…</div>
-          ) : visibleLogs.length === 0 ? (
+          ) : logs.length === 0 ? (
             <div className="py-16 text-center text-sm text-muted-foreground">
-              {filter ? "Aucune action dans cette catégorie." : "Aucune activité enregistrée pour votre compte."}
+              {filter !== "all" ? "Aucune action dans cette catégorie." : "Aucune activité enregistrée pour votre compte."}
             </div>
           ) : (
             <div className="divide-y divide-border/40">
-              {visibleLogs.map((log) => (
+              {logs.map((log) => (
                 <div key={log.id} className="flex items-center justify-between px-5 py-3 transition hover:bg-foreground/[0.01]">
                   <div className="flex min-w-0 items-center gap-3">
                     <ActionBadge action={log.action} />
@@ -219,15 +260,15 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Pagination — masquée quand un filtre est actif */}
-          {!loading && !filter && (page > 0 || hasMore) && (
+          {/* Pagination — always shown */}
+          {!loading && (page > 0 || hasMore) && (
             <div className="flex items-center justify-between border-t border-border/40 px-5 py-3">
-              <button disabled={page === 0} onClick={() => fetchLogs(page - 1)}
+              <button disabled={page === 0} onClick={() => fetchLogs(page - 1, filter)}
                 className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30">
                 ← Précédent
               </button>
               <span className="text-xs text-muted-foreground">Page {page + 1}</span>
-              <button disabled={!hasMore} onClick={() => fetchLogs(page + 1)}
+              <button disabled={!hasMore} onClick={() => fetchLogs(page + 1, filter)}
                 className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30">
                 Suivant →
               </button>

@@ -10,10 +10,11 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 async def my_activity(
     limit: int = Query(default=20, le=200),
     offset: int = Query(default=0, ge=0),
+    actions: list[str] | None = Query(default=None),
     current_user: dict = Depends(verify_token),
 ):
     """Historique personnel de l'utilisateur connecté."""
-    logs = await get_activity_log(limit=limit, offset=offset, user_email=current_user["email"])
+    logs = await get_activity_log(limit=limit, offset=offset, user_email=current_user["email"], actions=actions or None)
     return logs
 
 

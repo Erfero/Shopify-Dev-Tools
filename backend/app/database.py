@@ -743,16 +743,24 @@ async def log_activity(user_email: str, action: str, details: str | None = None,
         _logger.warning("Failed to log activity (%s / %s): %s", user_email, action, e)
 
 
-async def get_activity_log(limit: int = 200, user_email: str | None = None, offset: int = 0) -> list[dict]:
+async def get_activity_log(limit: int = 200, user_email: str | None = None, offset: int = 0, actions: list[str] | None = None) -> list[dict]:
     base = (
         "SELECT a.id, a.user_email, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name, "
         "a.action, a.details, a.ip_address, a.created_at "
         "FROM activity_log a LEFT JOIN users u ON a.user_email = u.email"
     )
     params: dict = {}
+    conditions = []
     if user_email:
-        base += " WHERE a.user_email = :email"
+        conditions.append("a.user_email = :email")
         params["email"] = user_email
+    if actions:
+        placeholders = ", ".join(f":a{i}" for i in range(len(actions)))
+        conditions.append(f"a.action IN ({placeholders})")
+        for i, act in enumerate(actions):
+            params[f"a{i}"] = act
+    if conditions:
+        base += " WHERE " + " AND ".join(conditions)
     base += " ORDER BY a.created_at DESC LIMIT :limit OFFSET :offset"
     params["limit"] = limit
     params["offset"] = offset

@@ -92,7 +92,8 @@ async def _restore_session(session_id: str) -> dict | None:
     extract_dir = Path(meta.get("extract_dir", "")) if meta else Path("")
 
     # Disk files missing → rebuild from DB ZIP cache (survives Render restarts)
-    if not extract_dir.exists():
+    # Note: Path("").exists() returns True (CWD), so we must also check the path is non-empty
+    if not meta.get("extract_dir") or not extract_dir.exists():
         result = await get_theme_zip(session_id)
         if result is None:
             return None

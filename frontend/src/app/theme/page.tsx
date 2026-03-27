@@ -226,18 +226,18 @@ export default function ThemePage() {
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{ background: "white", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}
       >
-        <div className="flex items-center justify-between" style={{ maxWidth: 820, margin: "0 auto", padding: "14px 20px" }}>
-          <div className="flex items-center gap-3">
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>← Accueil</span>
+        <div className="flex items-center justify-between" style={{ maxWidth: 820, margin: "0 auto", padding: "12px 16px" }}>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none", flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>← Accueil</span>
             </Link>
-            <div style={{ width: 1, height: 20, background: "var(--border)" }} />
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--gradient)" }}>
+            <div className="hidden sm:block" style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
+            <div className="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center flex-shrink-0" style={{ background: "var(--gradient)" }}>
               <Paintbrush size={17} className="text-white" />
             </div>
-            <div>
-              <p className="font-bold text-sm leading-tight" style={{ color: "var(--text)" }}>Theme Customizer</p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Personnalisation IA de thème Shopify</p>
+            <div className="hidden sm:block min-w-0">
+              <p className="font-bold text-sm leading-tight truncate" style={{ color: "var(--text)" }}>Theme Customizer</p>
+              <p className="truncate" style={{ fontSize: 11, color: "var(--text-muted)" }}>Personnalisation IA de thème Shopify</p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

@@ -29,6 +29,8 @@ interface Stats {
   active_users: string[];
   themes_by_user: { email: string; count: number; display_name: string }[];
   csv_by_user: { email: string; count: number; display_name: string }[];
+  themes_by_language: { language: string; count: number }[];
+  reviews_by_language: { language: string; count: number }[];
   total: number;
 }
 
@@ -367,12 +369,20 @@ export default function AdminPage() {
                     <h2 className="mb-3 text-sm font-semibold flex items-center gap-1.5"><Paintbrush className="h-4 w-4" /> Thèmes par utilisateur</h2>
                     {stats.themes_by_user.length === 0 ? <p className="text-sm text-muted-foreground">Aucune génération</p> : (
                       <div className="space-y-2">
-                        {stats.themes_by_user.map(u => (
-                          <div key={u.email} className="flex items-center justify-between text-sm">
-                            <span className="truncate font-medium">{u.display_name}</span>
-                            <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
-                          </div>
-                        ))}
+                        {stats.themes_by_user.map(u => {
+                          const max = stats.themes_by_user[0]?.count ?? 1;
+                          return (
+                            <div key={u.email}>
+                              <div className="flex items-center justify-between text-sm mb-1">
+                                <span className="truncate font-medium">{u.display_name}</span>
+                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">{u.count}</span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                                <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${Math.round((u.count / max) * 100)}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -380,14 +390,79 @@ export default function AdminPage() {
                     <h2 className="mb-3 text-sm font-semibold flex items-center gap-1.5"><Star className="h-4 w-4" /> CSV avis par utilisateur</h2>
                     {stats.csv_by_user.length === 0 ? <p className="text-sm text-muted-foreground">Aucune génération</p> : (
                       <div className="space-y-2">
-                        {stats.csv_by_user.map(u => (
-                          <div key={u.email} className="flex items-center justify-between text-sm">
-                            <span className="truncate font-medium">{u.display_name}</span>
-                            <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
-                          </div>
-                        ))}
+                        {stats.csv_by_user.map(u => {
+                          const max = stats.csv_by_user[0]?.count ?? 1;
+                          return (
+                            <div key={u.email}>
+                              <div className="flex items-center justify-between text-sm mb-1">
+                                <span className="truncate font-medium">{u.display_name}</span>
+                                <span className="ml-2 shrink-0 text-xs text-muted-foreground">{u.count}</span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                                <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.round((u.count / max) * 100)}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Language breakdowns */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <LanguageBreakdown
+                    title="Langues — Theme Customizer"
+                    icon={<Paintbrush className="h-4 w-4" />}
+                    data={stats.themes_by_language}
+                    total={stats.by_action.theme_generate ?? 0}
+                    color="#22c55e"
+                  />
+                  <LanguageBreakdown
+                    title="Langues — Loox Reviews"
+                    icon={<Star className="h-4 w-4" />}
+                    data={stats.reviews_by_language}
+                    total={stats.by_action.csv_generate ?? 0}
+                    color="#f59e0b"
+                  />
+                </div>
+
+                {/* Summary text */}
+                <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] p-5">
+                  <h2 className="mb-3 text-sm font-semibold">Résumé</h2>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Thèmes générés</p>
+                      <p className="font-semibold">{stats.by_action.theme_generate ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Thèmes téléchargés</p>
+                      <p className="font-semibold">{stats.by_action.theme_download ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">CSV générés</p>
+                      <p className="font-semibold">{stats.by_action.csv_generate ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">CSV téléchargés</p>
+                      <p className="font-semibold">{stats.by_action.csv_download ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Inscriptions</p>
+                      <p className="font-semibold">{stats.by_action.register ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Connexions</p>
+                      <p className="font-semibold">{stats.by_action.login ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Utilisateurs actifs</p>
+                      <p className="font-semibold">{stats.active_users.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total actions</p>
+                      <p className="font-semibold">{stats.total}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -403,24 +478,25 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <>
-                  <div className="overflow-hidden rounded-2xl border border-border/60">
-                    <table className="w-full text-sm">
+                  <div className="rounded-2xl border border-border/60 overflow-hidden">
+                    <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
                       <thead>
                         <tr className="border-b border-border/60 bg-foreground/[0.02] text-xs text-muted-foreground">
-                          <th className="px-4 py-3 text-left font-medium">Utilisateur</th>
-                          <th className="px-4 py-3 text-left font-medium">Action</th>
-                          <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Détails</th>
-                          <th className="px-4 py-3 text-left font-medium">Date & heure</th>
+                          <th className="px-4 py-3 text-left font-medium whitespace-nowrap">Utilisateur</th>
+                          <th className="px-4 py-3 text-left font-medium whitespace-nowrap">Action</th>
+                          <th className="px-4 py-3 text-left font-medium hidden sm:table-cell whitespace-nowrap">Détails</th>
+                          <th className="px-4 py-3 text-left font-medium whitespace-nowrap">Date & heure</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/40">
                         {activity.map(a => (
                           <tr key={a.id} className="hover:bg-foreground/[0.01] transition">
-                            <td className="px-4 py-2.5 max-w-[160px]">
-                              <p className="font-medium text-sm truncate">{a.display_name || a.user_email.split("@")[0]}</p>
-                              <p className="text-xs text-muted-foreground truncate">{a.user_email}</p>
+                            <td className="px-4 py-2.5">
+                              <p className="font-medium text-sm whitespace-nowrap">{a.display_name || a.user_email.split("@")[0]}</p>
+                              <p className="text-xs text-muted-foreground whitespace-nowrap">{a.user_email}</p>
                             </td>
-                            <td className="px-4 py-2.5"><ActionBadge action={a.action} /></td>
+                            <td className="px-4 py-2.5 whitespace-nowrap"><ActionBadge action={a.action} /></td>
                             <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell max-w-[200px] truncate">
                               {a.details ? (() => { try { const d = JSON.parse(a.details!); return d.store_name ?? d.product ?? d.filename ?? a.details; } catch { return a.details; } })() : "—"}
                             </td>
@@ -431,6 +507,7 @@ export default function AdminPage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                   {/* Pagination */}
                   <div className="flex items-center justify-between pt-2">
@@ -534,6 +611,41 @@ export default function AdminPage() {
       </div>
     </div>
     </>
+  );
+}
+
+// ── LanguageBreakdown component ───────────────────────────────────────────────
+
+function LanguageBreakdown({ title, icon, data, total, color }: {
+  title: string; icon: React.ReactNode;
+  data: { language: string; count: number }[];
+  total: number; color: string;
+}) {
+  const max = data.length > 0 ? data[0].count : 1;
+  return (
+    <div className="rounded-2xl border border-border/60 p-5">
+      <h2 className="mb-3 text-sm font-semibold flex items-center gap-1.5">{icon} {title}</h2>
+      {data.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Aucune donnée</p>
+      ) : (
+        <div className="space-y-2">
+          {data.map(({ language, count }) => {
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            return (
+              <div key={language}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium truncate">{language}</span>
+                  <span className="ml-2 shrink-0 text-xs text-muted-foreground">{count} ({pct}%)</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((count / max) * 100)}%`, background: color }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

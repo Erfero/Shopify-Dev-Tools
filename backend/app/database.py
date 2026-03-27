@@ -828,6 +828,37 @@ async def get_activity_stats() -> dict:
         ))).fetchall()
         csv_by_user = [{"email": r[0], "count": r[1], "display_name": r[2]} for r in csv_rows]
 
+        # Theme language breakdown from theme_analytics table
+        try:
+            theme_lang_rows = (await conn.execute(text(
+                "SELECT language, COUNT(*) as cnt FROM theme_analytics "
+                "WHERE language IS NOT NULL AND language != '' "
+                "GROUP BY language ORDER BY cnt DESC LIMIT 10"
+            ))).fetchall()
+            themes_by_language = [{"language": r[0], "count": r[1]} for r in theme_lang_rows]
+        except Exception:
+            themes_by_language = []
+
+        # Review language breakdown from activity_log details JSON
+        try:
+            if _IS_SQLITE:
+                review_lang_rows = (await conn.execute(text(
+                    "SELECT json_extract(details, '$.language') as lang, COUNT(*) as cnt "
+                    "FROM activity_log WHERE action = 'csv_generate' AND details IS NOT NULL "
+                    "AND json_extract(details, '$.language') IS NOT NULL "
+                    "GROUP BY lang ORDER BY cnt DESC LIMIT 10"
+                ))).fetchall()
+            else:
+                review_lang_rows = (await conn.execute(text(
+                    "SELECT t.lang, COUNT(*) as cnt FROM ("
+                    "  SELECT (details::jsonb)->>'language' as lang FROM activity_log "
+                    "  WHERE action = 'csv_generate' AND details IS NOT NULL"
+                    ") t WHERE t.lang IS NOT NULL GROUP BY t.lang ORDER BY cnt DESC LIMIT 10"
+                ))).fetchall()
+            reviews_by_language = [{"language": r[0], "count": r[1]} for r in review_lang_rows]
+        except Exception:
+            reviews_by_language = []
+
     return {
         "by_action": by_action,
         "by_day": by_day,
@@ -835,5 +866,7 @@ async def get_activity_stats() -> dict:
         "active_users": active_users,
         "themes_by_user": themes_by_user,
         "csv_by_user": csv_by_user,
+        "themes_by_language": themes_by_language,
+        "reviews_by_language": reviews_by_language,
         "total": sum(by_action.values()),
     }

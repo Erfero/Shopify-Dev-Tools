@@ -16,8 +16,9 @@ import { MultiImageUpload } from "@/components/reviews/MultiImageUpload";
 import { GenderedImageUpload } from "@/components/reviews/GenderedImageUpload";
 import { deleteSession, SSEEvent } from "@/lib/api-reviews";
 import { addPendingEntry, getEntries, CSVEntry } from "@/lib/csvHistory";
-import { getToken } from "@/lib/auth";
+import { getToken, getUser } from "@/lib/auth";
 import { API } from "@/lib/config";
+import { ReviewsAnalyticsPanel } from "@/components/reviews/ReviewsAnalyticsPanel";
 
 interface FormState {
   productName: string;
@@ -48,6 +49,9 @@ const INITIAL: FormState = {
 };
 
 export default function ReviewsPage() {
+  const currentUser = getUser();
+  const isAdmin = currentUser?.is_admin ?? false;
+
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(INITIAL);
 
@@ -61,6 +65,7 @@ export default function ReviewsPage() {
 
   const [csvEntries, setCsvEntries] = useState<CSVEntry[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [mode, setMode] = useState<"single" | "multi">("single");
   const [multiProducts, setMultiProducts] = useState<MultiProductConfig[]>([{
     id: crypto.randomUUID(),
@@ -367,21 +372,32 @@ export default function ReviewsPage() {
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{ background: "white", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 40 }}
       >
-        <div className="flex items-center justify-between" style={{ maxWidth: 760, margin: "0 auto", padding: "14px 20px" }}>
-          <div className="flex items-center gap-3">
-            <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>← Accueil</span>
+        <div className="flex items-center justify-between" style={{ maxWidth: 760, margin: "0 auto", padding: "12px 16px" }}>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <a href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none", flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>← Accueil</span>
             </a>
-            <div style={{ width: 1, height: 20, background: "var(--border)" }} />
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--gradient)" }}>
+            <div className="hidden sm:block" style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
+            <div className="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center flex-shrink-0" style={{ background: "var(--gradient)" }}>
               <Zap size={17} className="text-white" />
             </div>
-            <div>
-              <p className="font-bold text-sm leading-tight" style={{ color: "var(--text)" }}>Loox Review Generator</p>
-              <p style={{ fontSize: 11, color: "var(--text-muted)" }}>CSV compatible Shopify Loox</p>
+            <div className="hidden sm:block min-w-0">
+              <p className="font-bold text-sm leading-tight truncate" style={{ color: "var(--text)" }}>Loox Review Generator</p>
+              <p className="truncate" style={{ fontSize: 11, color: "var(--text-muted)" }}>CSV compatible Shopify Loox</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isAdmin && (
+              <button
+                onClick={() => setShowAnalytics(true)}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
+              >
+                <Sparkles size={14} />
+                <span className="hidden sm:inline">Analytics</span>
+              </button>
+            )}
             <button
               onClick={() => setShowHistory(true)}
               style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
@@ -545,6 +561,10 @@ export default function ReviewsPage() {
       {showHistory && (
         <CSVHistoryPanel entries={csvEntries} onClose={() => setShowHistory(false)} onRefresh={refreshEntries} />
       )}
+
+      <AnimatePresence>
+        {showAnalytics && <ReviewsAnalyticsPanel onClose={() => setShowAnalytics(false)} />}
+      </AnimatePresence>
 
       <footer style={{ borderTop: "1px solid var(--border)", padding: "20px", textAlign: "center", fontSize: 12, color: "var(--text-muted)", background: "white" }}>
         Loox Review Generator · <a href="/" style={{ color: "var(--primary)", textDecoration: "none" }}>← Retour à l&apos;accueil</a> · Propulsé par{" "}

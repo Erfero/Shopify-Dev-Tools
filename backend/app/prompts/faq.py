@@ -4,61 +4,63 @@ def build_faq_prompt(context: dict) -> tuple[str, str]:
     Schema : {"faq": {"title": str, "items": [{"question": str, "answer": str}]}}
     """
 
-    system = """Tu es un expert en service client e-commerce. Tu crees des FAQ pertinentes et detaillees.
-Les reponses utilisent du HTML richtext (<p>, <strong>).
+    system = """Tu es un expert en service client e-commerce. Tu crées des FAQ pertinentes et détaillées.
+Les réponses utilisent du HTML richtext (<p>, <strong>).
 Les questions sont du texte simple, sans HTML.
-Tu reponds UNIQUEMENT en JSON valide, sans texte autour.
+Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
 
-REGLE LONGUEUR QUESTIONS (OBLIGATOIRE) : Chaque question doit etre COURTE et naturelle — entre 5 et 10 mots maximum. Exemples corrects : "Est-ce que ca marche vraiment ?", "Combien de temps pour voir des resultats ?", "C'est sans danger pour la peau ?", "Comment l'utiliser au quotidien ?". INTERDIT de faire des questions trop longues ou complexes.
+RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres.
 
-REGLE GRAS OBLIGATOIRE : Dans chaque reponse HTML, tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-a-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur et donnent de la puissance au texte. Chaque reponse doit contenir au moins deux <strong>."""
+RÈGLE LONGUEUR QUESTIONS (OBLIGATOIRE) : Chaque question doit être COURTE et naturelle — entre 5 et 10 mots maximum. Exemples corrects : "Est-ce que ça marche vraiment ?", "Combien de temps pour voir des résultats ?", "C'est sans danger pour la peau ?", "Comment l'utiliser au quotidien ?". INTERDIT de faire des questions trop longues ou complexes.
+
+RÈGLE GRAS OBLIGATOIRE : Dans chaque réponse HTML, tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-à-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur et donnent de la puissance au texte. Chaque réponse doit contenir au moins deux <strong>."""
 
     products = ", ".join(context["product_names"])
     product = context["product_names"][0] if context["product_names"] else "Produit"
 
     lang = context.get("language", "fr")
     if lang.lower().startswith("en"):
-        lang_note = "Generate ALL texts in ENGLISH."
+        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
     elif lang.lower().startswith("de"):
-        lang_note = "Generate ALL texts in GERMAN."
+        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
     elif lang.lower().startswith("fr"):
-        lang_note = "Genere TOUS les textes en FRANCAIS."
+        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
     else:
-        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Do NOT write any French. Every single word must be in that language."
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
 
     user = f"""Boutique : {context['store_name']}
 Produit(s) : {products}
 {f"Description : {context['product_description']}" if context.get('product_description') else ""}
 {lang_note}
 
-Genere 5 questions frequentes et leurs reponses pour ce produit.
-RAPPEL CRITIQUE : chaque question = 5 a 10 mots. Questions naturelles et directes comme un vrai client les poserait.
+Génère 5 questions fréquentes et leurs réponses pour ce produit.
+RAPPEL CRITIQUE : chaque question = 5 à 10 mots. Questions naturelles et directes comme un vrai client les poserait.
 
-Reponds en JSON avec ce schema EXACT :
+Réponds en JSON avec ce schéma EXACT :
 
 {{
   "faq": {{
-    "title": "Questions Frequentes",
+    "title": "Questions Fréquentes",
     "items": [
       {{
-        "question": "Ca marche vraiment ?",
-        "answer": "<p>Reponse detaillee avec <strong>expression d'impact</strong>. Complete et utile avec <strong>mot fort</strong>.</p>"
+        "question": "Ça marche vraiment ?",
+        "answer": "<p>Réponse détaillée avec <strong>expression d'impact</strong>. Complète et utile avec <strong>mot fort</strong>.</p>"
       }},
       {{
-        "question": "Resultats en combien de temps ?",
-        "answer": "<p>Reponse HTML detaillee avec <strong>expression percutante</strong>.</p>"
+        "question": "Résultats en combien de temps ?",
+        "answer": "<p>Réponse HTML détaillée avec <strong>expression percutante</strong>.</p>"
       }},
       {{
         "question": "C'est sans danger pour ma peau ?",
-        "answer": "<p>Reponse HTML avec <strong>tournure forte</strong>.</p>"
+        "answer": "<p>Réponse HTML avec <strong>tournure forte</strong>.</p>"
       }},
       {{
         "question": "Comment l'utiliser ?",
-        "answer": "<p>Reponse HTML avec <strong>verbe d'action</strong>.</p>"
+        "answer": "<p>Réponse HTML avec <strong>verbe d'action</strong>.</p>"
       }},
       {{
         "question": "Livraison et retours ?",
-        "answer": "<p>Reponse HTML avec <strong>mot d'impact</strong>.</p>"
+        "answer": "<p>Réponse HTML avec <strong>mot d'impact</strong>.</p>"
       }}
     ]
   }}
@@ -67,7 +69,7 @@ Reponds en JSON avec ce schema EXACT :
 CONTRAINTES :
 - Exactement 5 items dans faq.items
 - Questions : texte simple, PAS de HTML, entre 5 et 10 mots chacune
-- Reponses : HTML avec <p> et <strong> — au moins deux <strong> par reponse
-- Specifique au produit {product}"""
+- Réponses : HTML avec <p> et <strong> — au moins deux <strong> par réponse
+- Spécifique au produit {product}"""
 
     return system, user

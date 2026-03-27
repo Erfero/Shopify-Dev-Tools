@@ -1,17 +1,19 @@
 def build_product_page_prompt(context: dict) -> tuple[str, str]:
     """Prompt page produit — schéma identique à mock_generator.py / theme_modifier.py."""
 
-    system = """Tu es un expert en copywriting e-commerce. Tu crees du contenu produit detaille et convaincant.
+    system = """Tu es un expert en copywriting e-commerce. Tu crées du contenu produit détaillé et convaincant.
 Les champs "text" richtext utilisent du HTML (<p>, <strong>).
 Les headings et short_titles sont du texte simple, sans HTML.
 Les textes des mini_reviews sont du texte simple (pas de HTML).
-Tu reponds UNIQUEMENT en JSON valide, sans texte autour.
+Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
 
-REGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (product_description.text, how_it_works.text, adoption.text), tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-a-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur. Chaque champ HTML doit contenir plusieurs <strong>.
+RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres.
 
-REGLE INGREDIENTS : Si le produit est un produit naturel (savon, huile essentielle, serum, cire, lotion, creme, gel, shampoing, beurre de karite, huile de soin, etc.) : dans le champ adoption, heading = 'Nos ingredients' ET text = description HTML des ingredients principaux avec leurs benefices. Sinon : heading = social proof chiffre + public, text = social proof.
+RÈGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (product_description.text, how_it_works.text, adoption.text), tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-à-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur. Chaque champ HTML doit contenir plusieurs <strong>.
 
-REGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes."""
+RÈGLE INGRÉDIENTS : Si le produit est un produit naturel (savon, huile essentielle, sérum, cire, lotion, crème, gel, shampoing, beurre de karité, huile de soin, etc.) : dans le champ adoption, heading = 'Nos ingrédients' ET text = description HTML des ingrédients principaux avec leurs bénéfices. Sinon : heading = social proof chiffré + public, text = social proof.
+
+RÈGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes."""
 
     products = ", ".join(context["product_names"])
     product = context["product_names"][0] if context["product_names"] else "Produit"
@@ -27,19 +29,19 @@ REGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases p
 
     lang = context.get("language", "fr")
     if lang.lower().startswith("en"):
-        lang_note = "Generate ALL texts in ENGLISH."
+        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
     elif lang.lower().startswith("de"):
-        lang_note = "Generate ALL texts in GERMAN."
+        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
     elif lang.lower().startswith("fr"):
-        lang_note = "Genere TOUS les textes en FRANCAIS."
+        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
     else:
-        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Do NOT write any French. Every single word must be in that language."
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
 
     image_note = """
 IMPORTANT : Des images du produit sont jointes. C'est CRUCIAL pour cette page :
-- Decris le produit en te basant sur ce que tu VOIS (forme, taille, couleur, materiau, design)
-- Les caracteristiques et avantages doivent correspondre au produit REEL visible
-- Sois precis et concret, pas generique
+- Décris le produit en te basant sur ce que tu VOIS (forme, taille, couleur, matériau, design)
+- Les caractéristiques et avantages doivent correspondre au produit RÉEL visible
+- Sois précis et concret, pas générique
 """ if context.get("has_images") else ""
 
     user = f"""Boutique : {store}
@@ -48,54 +50,54 @@ Produit : {product}
 Public cible : {plural_label}
 {lang_note}
 {image_note}
-Genere les textes de la page produit. Reponds en JSON avec ce schema EXACT :
+Génère les textes de la page produit. Réponds en JSON avec ce schéma EXACT :
 
 {{
   "product_benefits": [
-    {{"short_title": "Benefice court 1 (texte simple, ~3-4 mots)", "description": "Explication courte (1 phrase, texte simple)"}},
-    {{"short_title": "Benefice court 2", "description": "Explication courte"}},
-    {{"short_title": "Benefice court 3", "description": "Explication courte"}},
-    {{"short_title": "Benefice court 4", "description": "Explication courte"}},
-    {{"short_title": "Benefice court 5", "description": "Explication courte"}}
+    {{"short_title": "Bénéfice court 1 (texte simple, ~3-4 mots)", "description": "Explication courte (1 phrase, texte simple)"}},
+    {{"short_title": "Bénéfice court 2", "description": "Explication courte"}},
+    {{"short_title": "Bénéfice court 3", "description": "Explication courte"}},
+    {{"short_title": "Bénéfice court 4", "description": "Explication courte"}},
+    {{"short_title": "Bénéfice court 5", "description": "Explication courte"}}
   ],
   "product_description": {{
     "heading": "Description (texte simple)",
     "text": "<p>2 phrases courtes avec <strong>expression d'impact</strong>.</p><p>2 autres phrases courtes avec <strong>mot fort</strong>.</p>"
   }},
   "how_it_works": {{
-    "heading": "Comment ca marche ? (texte simple)",
-    "text": "<p>2 phrases courtes expliquant le mecanisme avec <strong>mots d'impact</strong>.</p><p>2 phrases courtes sur les benefices.</p>"
+    "heading": "Comment ça marche ? (texte simple)",
+    "text": "<p>2 phrases courtes expliquant le mécanisme avec <strong>mots d'impact</strong>.</p><p>2 phrases courtes sur les bénéfices.</p>"
   }},
   "adoption": {{
-    "heading": "REGLE : Si le produit est a base d'ingredients naturels (savon, huile essentielle, serum, cire, beurre de karite, lotion, creme, gel, shampoing, serum de cils, huile de soin, etc.) → ecris EXACTEMENT 'Nos ingredients' (sans accent sur le e). Sinon → ecris '+XXXX {plural_label} l'ont adopte' avec un chiffre realiste et percutant.",
-    "text": "REGLE : Si produit naturel → '<p>Liste les <strong>ingredients cles</strong> du produit avec leurs benefices specifiques.</p><p>Phrase courte sur la <strong>qualite et l'origine</strong> des ingredients.</p>'. Sinon → '<p>2 phrases social proof courtes avec <strong>expression percutante</strong>.</p>'"
+    "heading": "RÈGLE : Si le produit est à base d'ingrédients naturels (savon, huile essentielle, sérum, cire, beurre de karité, lotion, crème, gel, shampoing, sérum de cils, huile de soin, etc.) → écris EXACTEMENT 'Nos ingrédients'. Sinon → écris '+XXXX {plural_label} l\\'ont adopté' avec un chiffre réaliste et percutant.",
+    "text": "RÈGLE : Si produit naturel → '<p>Liste les <strong>ingrédients clés</strong> du produit avec leurs bénéfices spécifiques.</p><p>Phrase courte sur la <strong>qualité et l\\'origine</strong> des ingrédients.</p>'. Sinon → '<p>2 phrases social proof courtes avec <strong>expression percutante</strong>.</p>'"
   }},
   "mini_reviews": [
-    {{"name": "Prenom N. (coherent avec public {gender})", "age": "XX ans", "text": "Temoignage court : 2 phrases simples sans HTML."}},
-    {{"name": "Prenom N.", "age": "XX ans", "text": "Temoignage court different : 2 phrases."}},
-    {{"name": "Prenom N.", "age": "XX ans", "text": "Temoignage court different : 2 phrases."}}
+    {{"name": "Prénom N. (cohérent avec public {gender})", "age": "XX ans", "text": "Témoignage court : 2 phrases simples sans HTML."}},
+    {{"name": "Prénom N.", "age": "XX ans", "text": "Témoignage court différent : 2 phrases."}},
+    {{"name": "Prénom N.", "age": "XX ans", "text": "Témoignage court différent : 2 phrases."}}
   ],
   "product_specs": {{
-    "title": "Le [nom-court-du-produit] qu'il vous faut (format OBLIGATOIRE : Le + nom ou categorie courte + qu'il vous faut, ex: Le masque qu'il vous faut, Le serum qu'il vous faut)",
+    "title": "Le [nom-court-du-produit] qu'il vous faut (format OBLIGATOIRE : Le + nom ou catégorie courte + qu'il vous faut, ex: Le masque qu'il vous faut, Le sérum qu'il vous faut)",
     "items": [
       {{"title": "Avantage Produit", "description": "Description courte 1 phrase avec <strong>mot fort</strong>"}},
-      {{"title": "Benefice Cle", "description": "Description courte 1 phrase avec <strong>expression d'impact</strong>"}},
-      {{"title": "Resultat Visible", "description": "Description courte 1 phrase"}},
-      {{"title": "Qualite Garantie", "description": "Description courte 1 phrase"}}
+      {{"title": "Bénéfice Clé", "description": "Description courte 1 phrase avec <strong>expression d'impact</strong>"}},
+      {{"title": "Résultat Visible", "description": "Description courte 1 phrase"}},
+      {{"title": "Qualité Garantie", "description": "Description courte 1 phrase"}}
     ]
   }}
 }}
 
 CONTRAINTES :
 - Exactement 5 product_benefits, 3 mini_reviews, 4 product_specs.items
-- adoption.heading : 'Nos ingredients' si produit naturel/ingredient, sinon '+XXXX {plural_label} l'ont adopte'
-- Les short_titles doivent etre courts (3-5 mots maximum)
+- adoption.heading : 'Nos ingrédients' si produit naturel/ingrédient, sinon '+XXXX {plural_label} l\\'ont adopté'
+- Les short_titles doivent être courts (3-5 mots maximum)
 - Les mini_reviews.text sont en texte simple (AUCUN HTML)
 - Les champs HTML DOIVENT contenir plusieurs <strong> sur des expressions et mots d'impact
 - product_specs.title OBLIGATOIREMENT au format : "Le [nom] qu'il vous faut" (ex: Le masque qu'il vous faut)
-- product_specs.items[].title : EXACTEMENT 2 mots, representant un avantage ou benefice du produit (ex: Resultat Rapide, Formule Avancee, Confort Optimal, Zero Risque)
+- product_specs.items[].title : EXACTEMENT 2 mots, représentant un avantage ou bénéfice du produit (ex: Résultat Rapide, Formule Avancée, Confort Optimal, Zéro Risque)
 - Tous les textes HTML : MAX 2 paragraphes de 2 phrases courtes chacun
-- Temoignages : MAX 2 phrases courtes, texte simple
-- Sois specifique au produit, pas generique"""
+- Témoignages : MAX 2 phrases courtes, texte simple
+- Sois spécifique au produit, pas générique"""
 
     return system, user

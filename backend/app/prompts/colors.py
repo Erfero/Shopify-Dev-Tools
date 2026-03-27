@@ -2,13 +2,15 @@ def build_colors_prompt(context: dict) -> tuple[str, str]:
     """Build the prompt for generating color palettes."""
 
     system = """Tu es un expert en design UI/UX et en branding pour boutiques e-commerce.
-Tu reponds UNIQUEMENT en JSON valide, sans texte supplementaire."""
+Tu réponds UNIQUEMENT en JSON valide, sans texte supplémentaire.
+
+RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés (noms de palettes, descriptions) doivent être rédigés dans un français parfait : tous les accents obligatoires (é, è, ê, à, â, ç, ù, û, î, ô, œ), orthographe sans faute."""
 
     image_note = """
-IMPORTANT : Des images du produit sont jointes a ce message. Analyse-les attentivement pour :
+IMPORTANT : Des images du produit sont jointes à ce message. Analyse-les attentivement pour :
 - Identifier les couleurs dominantes du produit
 - Comprendre l'univers visuel et le style du produit
-- Proposer des palettes qui s'harmonisent avec l'apparence reelle du produit
+- Proposer des palettes qui s'harmonisent avec l'apparence réelle du produit
 """ if context.get("has_images") else ""
 
     user = f"""Voici les informations de ma boutique Shopify :
@@ -17,16 +19,16 @@ IMPORTANT : Des images du produit sont jointes a ce message. Analyse-les attenti
 {f"- Description : {context['product_description']}" if context.get('product_description') else ""}
 {image_note}
 J'aimerais que tu me fasses 3 propositions de palette de couleurs pour mettre en valeur mon/mes produit(s).
-Choisis bien les couleurs en fonction du produit, de ses caracteristiques et de son univers.
+Choisis bien les couleurs en fonction du produit, de ses caractéristiques et de son univers.
 
 Chaque palette doit contenir :
 - Une couleur de fond principale (background)
 - Une couleur de texte (text)
 - Une couleur d'accent principale (accent1) - pour les boutons, liens
-- Une couleur d'accent secondaire (accent2) - pour les elements complementaires
-- Une couleur de fond secondaire (bg_secondary) - pour les sections alternees
+- Une couleur d'accent secondaire (accent2) - pour les éléments complémentaires
+- Une couleur de fond secondaire (bg_secondary) - pour les sections alternées
 
-Reponds en JSON avec ce format exact :
+Réponds en JSON avec ce format exact :
 {{
   "palettes": [
     {{

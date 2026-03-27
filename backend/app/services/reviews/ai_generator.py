@@ -135,7 +135,7 @@ PRODUCT DETAILS:
 - Target audience: {gender['description']}
 
 STRICT RULES:
-1. LANGUAGE: Every single word (reviews AND replies) MUST be written in {language}. No exceptions.
+1. LANGUAGE & QUALITY: Every single word (reviews AND replies) MUST be written in {language}. No exceptions. Use perfect grammar, correct spelling with ALL required accents and special characters (for French: é, è, ê, à, â, ç, ù, û, î, ô, œ — NEVER omit them; for German: ä, ö, ü, ß and capitalized nouns). Native-level fluency, zero errors.
 2. AUTHOR NAMES: {gender['names_instruction']}. Format: "Prénom L. - XX ans" (e.g., "Marie P. - 28 ans"). Age between 18 and 52. NEVER repeat the same name.
 3. REVIEWS: Each review MUST be minimum 3 sentences. Make them varied, natural and SPECIFIC to this product. Mention product details from the description. Focus on different themes:
    - Product quality and appearance (reference specific visual details)
@@ -200,7 +200,14 @@ async def generate_review_batch(
                 "role": "system",
                 "content": (
                     "You are an expert at generating authentic, diverse e-commerce customer reviews. "
-                    "You always return valid JSON arrays only, with no extra text or markdown."
+                    "You always return valid JSON arrays only, with no extra text or markdown.\n\n"
+                    "ABSOLUTE LANGUAGE QUALITY RULE: Every single word you generate must be written "
+                    "in perfect, native-level language as specified in the user prompt. "
+                    "For French: use all required accents (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ) — "
+                    "NEVER omit accents. Perfect grammar, correct conjugation, proper agreements. "
+                    "For German: use all umlauts (ä, ö, ü, ß) and capitalize all nouns. "
+                    "For any language: zero spelling errors, zero missing special characters. "
+                    "This rule is absolute and cannot be overridden."
                 ),
             },
             {"role": "user", "content": prompt},

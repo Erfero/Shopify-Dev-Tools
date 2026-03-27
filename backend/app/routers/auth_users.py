@@ -9,12 +9,15 @@ from app.config import settings
 from app.database import (
     create_user,
     get_user_by_email,
+    get_user_by_id,
     get_all_users,
     update_user_status,
+    update_user_profile,
     delete_user,
     log_activity,
     _display_name_from_email,
 )
+from app.email_utils import send_approval_email
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -36,6 +39,12 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class UpdateProfileRequest(BaseModel):
+    display_name: str | None = None
+    current_password: str | None = None
+    new_password: str | None = None
 
 
 @router.post("/register")
@@ -106,6 +115,40 @@ async def me(current_user: dict = Depends(verify_token)):
     }
 
 
+@router.patch("/profile")
+async def update_profile(req: UpdateProfileRequest, current_user: dict = Depends(verify_token)):
+    """Update the current user's display_name and/or password."""
+    user = await get_user_by_id(current_user["sub"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+
+    new_display_name: str | None = None
+    new_password_hash: str | None = None
+
+    if req.display_name is not None:
+        stripped = req.display_name.strip()
+        if stripped:
+            new_display_name = stripped
+
+    if req.new_password:
+        if not req.current_password:
+            raise HTTPException(status_code=400, detail="Mot de passe actuel requis.")
+        if not _verify_password(req.current_password, user["password_hash"]):
+            raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect.")
+        if len(req.new_password) < 6:
+            raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caractères.")
+        new_password_hash = _hash_password(req.new_password)
+
+    if new_display_name is None and new_password_hash is None:
+        raise HTTPException(status_code=400, detail="Aucune modification à effectuer.")
+
+    await update_user_profile(current_user["sub"], display_name=new_display_name, password_hash=new_password_hash)
+    return {
+        "status": "updated",
+        "display_name": new_display_name or user["display_name"],
+    }
+
+
 # ── Admin endpoints ────────────────────────────────────────────────────────────
 
 def _require_admin(current_user: dict = Depends(verify_token)) -> dict:
@@ -123,6 +166,12 @@ async def list_users(current_user: dict = Depends(_require_admin)):
 @router.patch("/users/{user_id}/approve")
 async def approve_user(user_id: str, current_user: dict = Depends(_require_admin)):
     await update_user_status(user_id, is_approved=True)
+    user = await get_user_by_id(user_id)
+    if user:
+        await send_approval_email(
+            to_email=user["email"],
+            display_name=user.get("display_name") or _display_name_from_email(user["email"]),
+        )
     return {"status": "approved"}
 
 

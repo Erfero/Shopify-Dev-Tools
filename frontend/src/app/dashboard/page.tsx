@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Activity, ArrowLeft, Download, LogIn, Paintbrush, RefreshCw, Star, UserPlus } from "lucide-react";
-import { getUser, logout, getAuthHeaders } from "@/lib/auth";
+import { Activity, ArrowLeft, Download, LogIn, Paintbrush, RefreshCw, Star, UserPlus, User } from "lucide-react";
+import { getUser, logout } from "@/lib/auth";
+import { apiFetch } from "@/lib/api-fetch";
 import { API_BASE } from "@/lib/config";
 
 interface ActivityEntry {
@@ -46,23 +47,34 @@ function StatCard({ label, value, icon }: { label: string; value: number; icon: 
   );
 }
 
+const PAGE_SIZE = 20;
+
 export default function DashboardPage() {
   const router = useRouter();
   const user = typeof window !== "undefined" ? getUser() : null;
   const [logs, setLogs] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
-    fetchLogs();
+    fetchLogs(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function fetchLogs() {
+  async function fetchLogs(p: number) {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/my-activity?limit=100`, { headers: getAuthHeaders() });
-      if (res.ok) setLogs(await res.json());
+      const res = await apiFetch(`${API_BASE}/api/admin/my-activity?limit=${PAGE_SIZE + 1}&offset=${p * PAGE_SIZE}`);
+      if (res.ok) {
+        const data: ActivityEntry[] = await res.json();
+        setHasMore(data.length > PAGE_SIZE);
+        setLogs(data.slice(0, PAGE_SIZE));
+        setPage(p);
+      }
+    } catch {
+      // 401 handled by apiFetch
     } finally {
       setLoading(false);
     }
@@ -93,11 +105,17 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchLogs}
+              onClick={() => fetchLogs(page)}
               disabled={loading}
               className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+            <button
+              onClick={() => router.push("/profile")}
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
+            >
+              <User className="h-3.5 w-3.5" /> Profil
             </button>
             <button
               onClick={() => router.push("/")}
@@ -161,6 +179,26 @@ export default function DashboardPage() {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+          {/* Pagination */}
+          {!loading && (page > 0 || hasMore) && (
+            <div className="flex items-center justify-between border-t border-border/40 px-5 py-3">
+              <button
+                disabled={page === 0}
+                onClick={() => fetchLogs(page - 1)}
+                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30"
+              >
+                ← Précédent
+              </button>
+              <span className="text-xs text-muted-foreground">Page {page + 1}</span>
+              <button
+                disabled={!hasMore}
+                onClick={() => fetchLogs(page + 1)}
+                className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30"
+              >
+                Suivant →
+              </button>
             </div>
           )}
         </div>

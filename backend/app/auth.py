@@ -1,18 +1,14 @@
-from datetime import datetime, timedelta, timezone
-
 from fastapi import Header, HTTPException
 from jose import jwt, JWTError
 
 from app.config import settings
 
 _ALGORITHM = "HS256"
-_TOKEN_EXPIRE_DAYS = 7
 
 
 def create_access_token(payload: dict) -> str:
-    data = payload.copy()
-    data["exp"] = datetime.now(timezone.utc) + timedelta(days=_TOKEN_EXPIRE_DAYS)
-    return jwt.encode(data, settings.jwt_secret, algorithm=_ALGORITHM)
+    """Create a JWT with no expiry — tokens are only invalidated by secret rotation."""
+    return jwt.encode(payload.copy(), settings.jwt_secret, algorithm=_ALGORITHM)
 
 
 def _decode_jwt(token: str) -> dict:

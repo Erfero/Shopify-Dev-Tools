@@ -8,11 +8,12 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.get("/my-activity")
 async def my_activity(
-    limit: int = Query(default=50, le=200),
+    limit: int = Query(default=20, le=200),
+    offset: int = Query(default=0, ge=0),
     current_user: dict = Depends(verify_token),
 ):
     """Historique personnel de l'utilisateur connecté."""
-    logs = await get_activity_log(limit=limit, user_email=current_user["email"])
+    logs = await get_activity_log(limit=limit, offset=offset, user_email=current_user["email"])
     return logs
 
 
@@ -24,12 +25,13 @@ def _require_admin(current_user: dict = Depends(verify_token)) -> dict:
 
 @router.get("/activity")
 async def activity_log(
-    limit: int = Query(default=200, le=500),
+    limit: int = Query(default=30, le=500),
+    offset: int = Query(default=0, ge=0),
     user_email: str | None = Query(default=None),
     current_user: dict = Depends(_require_admin),
 ):
     """Journal complet des actions utilisateurs."""
-    logs = await get_activity_log(limit=limit, user_email=user_email or None)
+    logs = await get_activity_log(limit=limit, offset=offset, user_email=user_email or None)
     return logs
 
 

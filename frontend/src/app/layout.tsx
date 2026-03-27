@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AuthGuard from "@/components/auth-guard";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Shopify Dev Tools",
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className="antialiased">
         <AuthGuard>{children}</AuthGuard>
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );

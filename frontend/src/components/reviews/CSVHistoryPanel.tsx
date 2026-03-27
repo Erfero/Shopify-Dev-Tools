@@ -15,6 +15,7 @@ import {
 import { CSVEntry, markAsDownloaded, deleteEntry } from "@/lib/csvHistory";
 import { getDownloadUrl } from "@/lib/api-reviews";
 import { getToken } from "@/lib/auth";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface Props {
   entries: CSVEntry[];
@@ -35,6 +36,7 @@ function formatDate(iso: string): string {
 export function CSVHistoryPanel({ entries, onClose, onRefresh }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const pending = entries.filter((e) => e.status === "pending");
   const downloaded = entries.filter((e) => e.status === "downloaded");
@@ -79,12 +81,29 @@ export function CSVHistoryPanel({ entries, onClose, onRefresh }: Props) {
     }
   };
 
-  const handleDelete = async (sessionId: string) => {
-    await deleteEntry(sessionId);
+  const handleDelete = (sessionId: string) => {
+    setConfirmDelete(sessionId);
+  };
+
+  const confirmDoDelete = async () => {
+    if (!confirmDelete) return;
+    await deleteEntry(confirmDelete);
+    setConfirmDelete(null);
     onRefresh();
   };
 
+  const entryToDelete = entries.find((e) => e.sessionId === confirmDelete);
+
   return (
+    <>
+    <ConfirmModal
+      open={!!confirmDelete}
+      title="Supprimer cet historique ?"
+      description={entryToDelete ? `"${entryToDelete.productName}" sera définitivement supprimé.` : undefined}
+      confirmLabel="Supprimer"
+      onConfirm={confirmDoDelete}
+      onCancel={() => setConfirmDelete(null)}
+    />
     <div
       style={{
         position: "fixed",
@@ -220,6 +239,7 @@ export function CSVHistoryPanel({ entries, onClose, onRefresh }: Props) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

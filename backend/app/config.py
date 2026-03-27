@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production-use-a-long-random-string"
     admin_email: str = ""             # This email is auto-approved as admin on registration
 
+    # ── Email (SMTP) — optional, for approval notifications ─────────────────
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""               # Defaults to smtp_user if not set
+
     # ── Computed properties ─────────────────────────────────────────────────
 
     @property

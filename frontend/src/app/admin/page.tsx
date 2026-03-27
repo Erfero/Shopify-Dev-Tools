@@ -6,7 +6,7 @@ import {
   Loader2, CheckCircle, XCircle, Trash2, LogOut, ShieldCheck,
   Clock, Users, UserCheck, RefreshCw, ArrowLeft, Activity,
   BarChart3, Paintbrush, Star, Download, LogIn, UserPlus, Wifi,
-  Crown, CrownOff,
+  Crown,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -14,6 +14,9 @@ import {
 } from "recharts";
 import { API_BASE } from "@/lib/config";
 import { getAuthHeaders, getUser, logout } from "@/lib/auth";
+import { apiFetch } from "@/lib/api-fetch";
+import { toast } from "sonner";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -80,64 +83,112 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [activityPage, setActivityPage] = useState(0);
+  const [activityHasMore, setActivityHasMore] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean; title: string; description?: string; variant?: "danger" | "warning"; onConfirm: () => void;
+  }>({ open: false, title: "", onConfirm: () => {} });
 
   const currentUser = getUser();
+  const ACTIVITY_PAGE_SIZE = 30;
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (page = 0) => {
     setLoading(true);
     try {
       const [usersRes, activityRes, statsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/auth/users`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE}/api/admin/activity?limit=200`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE}/api/admin/stats`, { headers: getAuthHeaders() }),
+        apiFetch(`${API_BASE}/api/auth/users`),
+        apiFetch(`${API_BASE}/api/admin/activity?limit=${ACTIVITY_PAGE_SIZE + 1}&offset=${page * ACTIVITY_PAGE_SIZE}`),
+        apiFetch(`${API_BASE}/api/admin/stats`),
       ]);
       if (usersRes.ok) setUsers(await usersRes.json());
-      if (activityRes.ok) setActivity(await activityRes.json());
+      if (activityRes.ok) {
+        const data: ActivityEntry[] = await activityRes.json();
+        setActivityHasMore(data.length > ACTIVITY_PAGE_SIZE);
+        setActivity(data.slice(0, ACTIVITY_PAGE_SIZE));
+        setActivityPage(page);
+      }
       if (statsRes.ok) setStats(await statsRes.json());
+    } catch {
+      // 401 handled by apiFetch (logout redirect)
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!currentUser?.is_admin) { router.replace("/"); return; }
-    fetchAll();
-    const interval = setInterval(fetchAll, 30_000); // auto-refresh every 30s
+    fetchAll(0);
+    const interval = setInterval(() => fetchAll(activityPage), 30_000);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.is_admin, fetchAll, router]);
 
   async function handleApprove(id: string) {
     setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}/approve`, { method: "PATCH", headers: getAuthHeaders() });
-    await fetchAll(); setActionId(null);
+    await apiFetch(`${API_BASE}/api/auth/users/${id}/approve`, { method: "PATCH" });
+    toast.success("Accès accordé.");
+    await fetchAll(activityPage); setActionId(null);
   }
   async function handleReject(id: string) {
     setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}/reject`, { method: "PATCH", headers: getAuthHeaders() });
-    await fetchAll(); setActionId(null);
+    await apiFetch(`${API_BASE}/api/auth/users/${id}/reject`, { method: "PATCH" });
+    toast.success("Accès révoqué.");
+    await fetchAll(activityPage); setActionId(null);
   }
-  async function handleDelete(id: string) {
+  function handleDelete(id: string) {
     const u = users.find(u => u.id === id);
-    if (!confirm(`Supprimer définitivement ${u?.email} ?\n\nCette action est irréversible.`)) return;
-    setActionId(id);
-    const res = await fetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE", headers: getAuthHeaders() });
-    if (!res.ok) { const d = await res.json(); alert(d.detail); }
-    await fetchAll(); setActionId(null);
+    setConfirmModal({
+      open: true,
+      title: "Supprimer ce compte ?",
+      description: `Le compte "${u?.display_name || u?.email}" sera définitivement supprimé. Cette action est irréversible.`,
+      variant: "danger",
+      onConfirm: async () => {
+        setConfirmModal(m => ({ ...m, open: false }));
+        setActionId(id);
+        try {
+          const res = await apiFetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE" });
+          if (!res.ok) { const d = await res.json(); toast.error(d.detail); }
+          else toast.success("Compte supprimé.");
+        } catch { /* apiFetch handles 401 */ }
+        await fetchAll(activityPage); setActionId(null);
+      },
+    });
   }
-  async function handlePromote(id: string) {
+  function handlePromote(id: string) {
     const u = users.find(u => u.id === id);
-    if (!confirm(`Promouvoir ${u?.email} en administrateur ?\n\nCet utilisateur aura accès à toutes les données et pourra gérer les accès.`)) return;
-    setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}/promote`, { method: "PATCH", headers: getAuthHeaders() });
-    await fetchAll(); setActionId(null);
+    setConfirmModal({
+      open: true,
+      title: "Promouvoir en administrateur ?",
+      description: `"${u?.display_name || u?.email}" aura accès à toutes les données et pourra gérer les accès.`,
+      variant: "warning",
+      onConfirm: async () => {
+        setConfirmModal(m => ({ ...m, open: false }));
+        setActionId(id);
+        await apiFetch(`${API_BASE}/api/auth/users/${id}/promote`, { method: "PATCH" });
+        toast.success("Utilisateur promu administrateur.");
+        await fetchAll(activityPage); setActionId(null);
+      },
+    });
   }
-  async function handleDemote(id: string) {
+  function handleDemote(id: string) {
     const u = users.find(u => u.id === id);
-    if (!confirm(`Retirer le rôle d'admin à ${u?.email} ?`)) return;
-    setActionId(id);
-    const res = await fetch(`${API_BASE}/api/auth/users/${id}/demote`, { method: "PATCH", headers: getAuthHeaders() });
-    if (!res.ok) { const d = await res.json(); alert(d.detail); }
-    await fetchAll(); setActionId(null);
+    setConfirmModal({
+      open: true,
+      title: "Retirer le rôle admin ?",
+      description: `"${u?.display_name || u?.email}" redeviendra un utilisateur standard.`,
+      variant: "warning",
+      onConfirm: async () => {
+        setConfirmModal(m => ({ ...m, open: false }));
+        setActionId(id);
+        try {
+          const res = await apiFetch(`${API_BASE}/api/auth/users/${id}/demote`, { method: "PATCH" });
+          if (!res.ok) { const d = await res.json(); toast.error(d.detail); }
+          else toast.success("Rôle admin retiré.");
+        } catch { /* apiFetch handles 401 */ }
+        await fetchAll(activityPage); setActionId(null);
+      },
+    });
   }
 
   const admins   = users.filter(u => u.is_admin);
@@ -149,6 +200,16 @@ export default function AdminPage() {
   })) : [];
 
   return (
+    <>
+    <ConfirmModal
+      open={confirmModal.open}
+      title={confirmModal.title}
+      description={confirmModal.description}
+      variant={confirmModal.variant}
+      confirmLabel="Confirmer"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={() => setConfirmModal(m => ({ ...m, open: false }))}
+    />
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <div className="sticky top-0 z-10 border-b border-border/60 bg-background/90 backdrop-blur-sm px-4 py-3">
@@ -169,7 +230,7 @@ export default function AdminPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchAll} disabled={loading} className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40">
+            <button onClick={() => fetchAll(activityPage)} disabled={loading} className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40">
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
             <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted">
@@ -314,6 +375,7 @@ export default function AdminPage() {
                     Aucune activité enregistrée
                   </div>
                 ) : (
+                  <>
                   <div className="overflow-hidden rounded-2xl border border-border/60">
                     <table className="w-full text-sm">
                       <thead>
@@ -343,6 +405,25 @@ export default function AdminPage() {
                       </tbody>
                     </table>
                   </div>
+                  {/* Pagination */}
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      disabled={activityPage === 0}
+                      onClick={() => fetchAll(activityPage - 1)}
+                      className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-muted disabled:opacity-30"
+                    >
+                      ← Précédent
+                    </button>
+                    <span className="text-xs text-muted-foreground">Page {activityPage + 1}</span>
+                    <button
+                      disabled={!activityHasMore}
+                      onClick={() => fetchAll(activityPage + 1)}
+                      className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-muted disabled:opacity-30"
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                  </>
                 )}
               </div>
             )}
@@ -425,6 +506,7 @@ export default function AdminPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -468,7 +550,7 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
             {/* Admin actions */}
             {user.is_admin && !isSelf && (
               <button onClick={() => onDemote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
-                <CrownOff className="h-3.5 w-3.5" /> Retirer admin
+                <Crown className="h-3.5 w-3.5 opacity-50" /> Retirer admin
               </button>
             )}
 

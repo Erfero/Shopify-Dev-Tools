@@ -9,7 +9,9 @@ import {
   type HistoryEntry,
 } from "@/lib/api-theme";
 import { getToken } from "@/lib/auth";
+import { toast } from "sonner";
 import { History, Download, Trash2, FileArchive, X, Loader2 } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 function formatDate(iso: string) {
   try {
@@ -26,6 +28,12 @@ export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () =>
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description?: string;
+    onConfirm: () => void;
+  }>({ open: false, title: "", onConfirm: () => {} });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,7 +51,7 @@ export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () =>
       const res = await fetch(getHistoryDownloadUrl(entry.id), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) { alert("Fichier introuvable ou expiré."); return; }
+      if (!res.ok) { toast.error("Fichier introuvable ou expiré."); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -54,24 +62,51 @@ export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () =>
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      alert("Erreur lors du téléchargement.");
+      toast.error("Erreur lors du téléchargement.");
     } finally {
       setDownloading(null);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteHistoryItem(id);
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = (id: string) => {
+    const entry = entries.find((e) => e.id === id);
+    setConfirmModal({
+      open: true,
+      title: "Supprimer ce thème ?",
+      description: entry ? `"${entry.store_name || entry.filename}" sera définitivement supprimé.` : "Cette action est irréversible.",
+      onConfirm: async () => {
+        setConfirmModal((m) => ({ ...m, open: false }));
+        await deleteHistoryItem(id);
+        setEntries((prev) => prev.filter((e) => e.id !== id));
+        toast.success("Thème supprimé.");
+      },
+    });
   };
 
-  const handleClearAll = async () => {
-    await clearHistory();
-    setEntries([]);
+  const handleClearAll = () => {
+    setConfirmModal({
+      open: true,
+      title: "Tout supprimer ?",
+      description: `Les ${entries.length} thème${entries.length > 1 ? "s" : ""} seront définitivement supprimés.`,
+      onConfirm: async () => {
+        setConfirmModal((m) => ({ ...m, open: false }));
+        await clearHistory();
+        setEntries([]);
+        toast.success("Historique effacé.");
+      },
+    });
   };
 
   return (
     <>
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmLabel="Supprimer"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((m) => ({ ...m, open: false }))}
+      />
       {/* Overlay */}
       <div
         style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 49 }}

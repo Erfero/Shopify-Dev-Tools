@@ -9,11 +9,14 @@ Tables:
   - review_history   (for loox review generator history)
   - theme_history    (for shopify theme customizer history)
 """
+import logging
 import os
 from pathlib import Path
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+
+_logger = logging.getLogger(__name__)
 
 # ── Engine setup ──────────────────────────────────────────────────────────────
 
@@ -659,6 +662,21 @@ async def delete_user(id: str) -> None:
         await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": id})
 
 
+async def update_user_profile(user_id: str, display_name: str | None = None, password_hash: str | None = None) -> None:
+    parts = []
+    params: dict = {"id": user_id}
+    if display_name is not None:
+        parts.append("display_name = :display_name")
+        params["display_name"] = display_name
+    if password_hash is not None:
+        parts.append("password_hash = :password_hash")
+        params["password_hash"] = password_hash
+    if not parts:
+        return
+    async with _engine.begin() as conn:
+        await conn.execute(text(f"UPDATE users SET {', '.join(parts)} WHERE id = :id"), params)
+
+
 # ── Display name helper ────────────────────────────────────────────────────────
 
 import re as _re
@@ -713,11 +731,11 @@ async def log_activity(user_email: str, action: str, details: str | None = None,
                 text("INSERT INTO activity_log (user_email, action, details, ip_address) VALUES (:email, :action, :details, :ip)"),
                 {"email": user_email, "action": action, "details": details, "ip": ip_address},
             )
-    except Exception:
-        pass  # Non-fatal
+    except Exception as e:
+        _logger.warning("Failed to log activity (%s / %s): %s", user_email, action, e)
 
 
-async def get_activity_log(limit: int = 200, user_email: str | None = None) -> list[dict]:
+async def get_activity_log(limit: int = 200, user_email: str | None = None, offset: int = 0) -> list[dict]:
     base = (
         "SELECT a.id, a.user_email, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name, "
         "a.action, a.details, a.ip_address, a.created_at "
@@ -727,8 +745,9 @@ async def get_activity_log(limit: int = 200, user_email: str | None = None) -> l
     if user_email:
         base += " WHERE a.user_email = :email"
         params["email"] = user_email
-    base += " ORDER BY a.created_at DESC LIMIT :limit"
+    base += " ORDER BY a.created_at DESC LIMIT :limit OFFSET :offset"
     params["limit"] = limit
+    params["offset"] = offset
     async with _engine.connect() as conn:
         rows = (await conn.execute(text(base), params)).fetchall()
     return [{"id": r[0], "user_email": r[1], "display_name": r[2], "action": r[3], "details": r[4], "ip_address": r[5], "created_at": str(r[6])} for r in rows]

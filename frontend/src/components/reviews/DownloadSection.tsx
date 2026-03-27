@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Download, FileText, FileSpreadsheet, RotateCcw, Star, MessageSquare, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { getDownloadUrl, getPreview } from "@/lib/api-reviews";
 import { markAsDownloaded } from "@/lib/csvHistory";
+import { getToken } from "@/lib/auth";
 
 interface ReviewPreview { author: string; review: string; reply: string; }
 
@@ -14,8 +16,11 @@ function buildFilename(brandName: string, reviewCount: number, suffix: string): 
 
 async function triggerDownload(url: string, filename: string, onDone: () => void) {
   try {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error("Erreur serveur");
+    const token = getToken();
+    const resp = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!resp.ok) throw new Error(`Erreur serveur (${resp.status})`);
     const blob = await resp.blob();
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -27,7 +32,7 @@ async function triggerDownload(url: string, filename: string, onDone: () => void
     URL.revokeObjectURL(objectUrl);
     onDone();
   } catch (e) {
-    alert("Erreur lors du téléchargement : " + (e instanceof Error ? e.message : "inconnue"));
+    toast.error("Erreur lors du téléchargement : " + (e instanceof Error ? e.message : "inconnue"));
   }
 }
 

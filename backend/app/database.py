@@ -785,7 +785,7 @@ async def get_activity_stats() -> dict:
 
         # Top users by activity
         top_rows = (await conn.execute(text(
-            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(MAX(u.display_name),''), a.user_email) as display_name "
             "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
             "GROUP BY a.user_email ORDER BY cnt DESC LIMIT 10"
         ))).fetchall()
@@ -806,7 +806,7 @@ async def get_activity_stats() -> dict:
 
         # Theme generations per user
         theme_rows = (await conn.execute(text(
-            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(MAX(u.display_name),''), a.user_email) as display_name "
             "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
             "WHERE a.action = 'theme_generate' GROUP BY a.user_email ORDER BY cnt DESC"
         ))).fetchall()
@@ -814,7 +814,7 @@ async def get_activity_stats() -> dict:
 
         # CSV generations per user
         csv_rows = (await conn.execute(text(
-            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(MAX(u.display_name),''), a.user_email) as display_name "
             "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
             "WHERE a.action = 'csv_generate' GROUP BY a.user_email ORDER BY cnt DESC"
         ))).fetchall()

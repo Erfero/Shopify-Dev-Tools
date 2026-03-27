@@ -12,6 +12,7 @@ from app.database import (
     get_all_users,
     update_user_status,
     delete_user,
+    log_activity,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -51,6 +52,8 @@ async def register(req: RegisterRequest):
     password_hash = _hash_password(req.password)
     await create_user(user_id, req.email.lower(), password_hash, is_approved, is_admin)
 
+    await log_activity(req.email.lower(), "register")
+
     if is_approved:
         token = create_access_token({
             "sub": user_id,
@@ -78,6 +81,7 @@ async def login(req: LoginRequest):
         "is_admin": user["is_admin"],
         "is_approved": True,
     })
+    await log_activity(user["email"], "login")
     return {"access_token": token, "token_type": "bearer", "is_admin": user["is_admin"]}
 
 

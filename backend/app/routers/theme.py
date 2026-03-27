@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 _MAX_ZIP_BYTES = 150 * 1024 * 1024
 # Max products per generation request
 _MAX_PRODUCTS = 50
-from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary
+from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary, log_activity
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
 from app.services.theme.text_mapper import extract_text_slots
@@ -409,6 +409,7 @@ async def generate_theme(
 async def apply_theme(
     session_id: str = Form(...),
     generated_data: str = Form(...),
+    current_user: dict = Depends(verify_token),
 ):
     """Apply generated texts to the theme and export a ZIP."""
     session = await _get_session(session_id)
@@ -452,6 +453,7 @@ async def apply_theme(
         except Exception as e:
             logger.warning("Could not save output ZIP to DB for %s: %s", history_id, e)
 
+        user_email = current_user.get("email", "inconnu")
         try:
             await theme_history_add({
                 "id": history_id,
@@ -459,9 +461,17 @@ async def apply_theme(
                 "store_name": store_name,
                 "created_at": datetime.now().isoformat(),
                 "zip_path": str(zip_path),
+                "user_email": user_email,
             })
         except Exception:
             pass  # Non-fatal: history entry is optional
+
+        import json as _json
+        await log_activity(user_email, "theme_generate", _json.dumps({
+            "store_name": store_name,
+            "filename": zip_path.name,
+            "products": session.get("product_names", []),
+        }))
 
         return {"download_url": f"/api/theme/download/{structure.session_id}"}
 
@@ -538,20 +548,20 @@ async def get_history():
 
 
 @router.get("/history/{history_id}/download")
-async def download_history_item(history_id: str):
+async def download_history_item(history_id: str, current_user: dict = Depends(verify_token)):
     """Download a theme from history by its ID."""
     entry = await theme_history_get(history_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Fichier non trouvé dans l'historique.")
     zip_path = Path(entry["zip_path"])
     if not zip_path.exists():
-        # Attempt to restore from DB cache (survives Render restarts)
         result = await get_theme_output_zip(history_id)
         if result is None:
             raise HTTPException(status_code=404, detail="Fichier ZIP introuvable sur le serveur.")
         _, zip_bytes = result
         zip_path.parent.mkdir(parents=True, exist_ok=True)
         zip_path.write_bytes(zip_bytes)
+    await log_activity(current_user.get("email", "inconnu"), "theme_download", entry["filename"])
     return FileResponse(path=zip_path, media_type="application/zip", filename=entry["filename"])
 
 

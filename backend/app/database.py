@@ -121,6 +121,15 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin      INTEGER DEFAULT 0,
     created_at    TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS activity_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    action     TEXT NOT NULL,
+    details    TEXT,
+    ip_address TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 _CREATE_TABLES_PG = """
@@ -186,6 +195,15 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin      BOOLEAN DEFAULT FALSE,
     created_at    TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS activity_log (
+    id         SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    action     TEXT NOT NULL,
+    details    TEXT,
+    ip_address TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 """
 
 
@@ -199,6 +217,7 @@ async def init_db() -> None:
             stmt = stmt.strip()
             if stmt:
                 await conn.execute(text(stmt))
+    await _migrate_add_columns()
 
 
 # ── Review session functions ───────────────────────────────────────────────────
@@ -626,3 +645,110 @@ async def update_user_status(id: str, is_approved: bool | None = None, is_admin:
 async def delete_user(id: str) -> None:
     async with _engine.begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": id})
+
+
+# ── Activity log functions ─────────────────────────────────────────────────────
+
+async def _migrate_add_columns() -> None:
+    """Add user_email column to existing tables if missing (safe to run multiple times)."""
+    migrations = [
+        "ALTER TABLE theme_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
+        "ALTER TABLE review_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
+    ]
+    async with _engine.begin() as conn:
+        for stmt in migrations:
+            try:
+                await conn.execute(text(stmt))
+            except Exception:
+                pass  # Column already exists — ignore
+
+
+async def log_activity(user_email: str, action: str, details: str | None = None, ip_address: str | None = None) -> None:
+    """Log a user action to the activity log."""
+    try:
+        async with _engine.begin() as conn:
+            await conn.execute(
+                text("INSERT INTO activity_log (user_email, action, details, ip_address) VALUES (:email, :action, :details, :ip)"),
+                {"email": user_email, "action": action, "details": details, "ip": ip_address},
+            )
+    except Exception:
+        pass  # Non-fatal
+
+
+async def get_activity_log(limit: int = 200, user_email: str | None = None) -> list[dict]:
+    q = "SELECT id, user_email, action, details, ip_address, created_at FROM activity_log"
+    params: dict = {}
+    if user_email:
+        q += " WHERE user_email = :email"
+        params["email"] = user_email
+    q += " ORDER BY created_at DESC LIMIT :limit"
+    params["limit"] = limit
+    async with _engine.connect() as conn:
+        rows = (await conn.execute(text(q), params)).fetchall()
+    return [{"id": r[0], "user_email": r[1], "action": r[2], "details": r[3], "ip_address": r[4], "created_at": str(r[5])} for r in rows]
+
+
+async def get_activity_stats() -> dict:
+    """Aggregated stats for admin dashboard."""
+    async with _engine.connect() as conn:
+        # Total actions per action type
+        rows = (await conn.execute(text(
+            "SELECT action, COUNT(*) as cnt FROM activity_log GROUP BY action ORDER BY cnt DESC"
+        ))).fetchall()
+        by_action = {r[0]: r[1] for r in rows}
+
+        # Activity per day (last 14 days)
+        if _IS_SQLITE:
+            daily_rows = (await conn.execute(text(
+                "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM activity_log "
+                "WHERE created_at >= DATE('now', '-14 days') GROUP BY day ORDER BY day"
+            ))).fetchall()
+        else:
+            daily_rows = (await conn.execute(text(
+                "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM activity_log "
+                "WHERE created_at >= NOW() - INTERVAL '14 days' GROUP BY day ORDER BY day"
+            ))).fetchall()
+        by_day = [{"date": str(r[0]), "count": r[1]} for r in daily_rows]
+
+        # Top users by activity
+        top_rows = (await conn.execute(text(
+            "SELECT user_email, COUNT(*) as cnt FROM activity_log GROUP BY user_email ORDER BY cnt DESC LIMIT 10"
+        ))).fetchall()
+        top_users = [{"email": r[0], "count": r[1]} for r in top_rows]
+
+        # Active users (last 15 min)
+        if _IS_SQLITE:
+            active_rows = (await conn.execute(text(
+                "SELECT DISTINCT user_email FROM activity_log "
+                "WHERE created_at >= DATETIME('now', '-15 minutes')"
+            ))).fetchall()
+        else:
+            active_rows = (await conn.execute(text(
+                "SELECT DISTINCT user_email FROM activity_log "
+                "WHERE created_at >= NOW() - INTERVAL '15 minutes'"
+            ))).fetchall()
+        active_users = [r[0] for r in active_rows]
+
+        # Theme generations per user
+        theme_rows = (await conn.execute(text(
+            "SELECT user_email, COUNT(*) as cnt FROM activity_log WHERE action = 'theme_generate' "
+            "GROUP BY user_email ORDER BY cnt DESC"
+        ))).fetchall()
+        themes_by_user = [{"email": r[0], "count": r[1]} for r in theme_rows]
+
+        # CSV generations per user
+        csv_rows = (await conn.execute(text(
+            "SELECT user_email, COUNT(*) as cnt FROM activity_log WHERE action = 'csv_generate' "
+            "GROUP BY user_email ORDER BY cnt DESC"
+        ))).fetchall()
+        csv_by_user = [{"email": r[0], "count": r[1]} for r in csv_rows]
+
+    return {
+        "by_action": by_action,
+        "by_day": by_day,
+        "top_users": top_users,
+        "active_users": active_users,
+        "themes_by_user": themes_by_user,
+        "csv_by_user": csv_by_user,
+        "total": sum(by_action.values()),
+    }

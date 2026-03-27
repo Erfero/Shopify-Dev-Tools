@@ -16,6 +16,7 @@ from app.services.reviews.csv_generator import (
 )
 from app.services.reviews.image_uploader import process_image
 from app import database
+from app.database import log_activity
 
 router = APIRouter(dependencies=[Depends(verify_token)])
 
@@ -336,9 +337,14 @@ async def generate_reviews(
     female_image_urls: str = Form("[]"),
     male_image_urls: str = Form("[]"),
     product_images: List[UploadFile] = File(default=[]),
+    current_user: dict = Depends(verify_token),
 ):
     if not (1 <= review_count <= 500):
         raise HTTPException(status_code=400, detail="Le nombre d'avis doit être entre 1 et 500.")
+
+    await log_activity(current_user.get("email", "inconnu"), "csv_generate", json.dumps({
+        "product": product_name, "brand": brand_name, "count": review_count, "language": language,
+    }))
 
     urls: List[str] = [u for u in json.loads(image_urls) if u and u.strip()]
     female_urls: Optional[List[str]] = [u for u in json.loads(female_image_urls) if u and u.strip()] or None
@@ -374,7 +380,7 @@ async def generate_reviews(
 
 
 @router.get("/reviews/download/{session_id}")
-async def download_csv(session_id: str, format: str = "full"):
+async def download_csv(session_id: str, format: str = "full", current_user: dict = Depends(verify_token)):
     data = await database.get_session(session_id)
     if data is None:
         return Response(status_code=404, content="Session introuvable.")
@@ -383,6 +389,7 @@ async def download_csv(session_id: str, format: str = "full"):
         csv_content, filename = data["import_csv"], f"loox_import_{count}_avis_{session_id[:8]}.csv"
     else:
         csv_content, filename = data["full_csv"], f"loox_complet_{count}_avis_{session_id[:8]}.csv"
+    await log_activity(current_user.get("email", "inconnu"), "csv_download", filename)
     return Response(
         content=csv_content.encode("utf-8-sig"),
         media_type="text/csv",

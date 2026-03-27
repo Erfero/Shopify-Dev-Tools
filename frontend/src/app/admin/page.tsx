@@ -1,339 +1,427 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Loader2, CheckCircle, XCircle, Trash2, LogOut,
-  ShieldCheck, Clock, Users, UserCheck, RefreshCw, ArrowLeft,
+  Loader2, CheckCircle, XCircle, Trash2, LogOut, ShieldCheck,
+  Clock, Users, UserCheck, RefreshCw, ArrowLeft, Activity,
+  BarChart3, Paintbrush, Star, Download, LogIn, UserPlus, Wifi,
 } from "lucide-react";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend,
+} from "recharts";
 import { API_BASE } from "@/lib/config";
 import { getAuthHeaders, getUser, logout } from "@/lib/auth";
 
-interface User {
-  id: string;
-  email: string;
-  is_approved: boolean;
-  is_admin: boolean;
-  created_at: string;
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface User { id: string; email: string; is_approved: boolean; is_admin: boolean; created_at: string; }
+interface ActivityEntry { id: number; user_email: string; action: string; details: string | null; ip_address: string | null; created_at: string; }
+interface Stats {
+  by_action: Record<string, number>;
+  by_day: { date: string; count: number }[];
+  top_users: { email: string; count: number }[];
+  active_users: string[];
+  themes_by_user: { email: string; count: number }[];
+  csv_by_user: { email: string; count: number }[];
+  total: number;
 }
 
-function StatCard({ icon, label, value, color }: {
-  icon: React.ReactNode; label: string; value: number; color: string;
-}) {
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const ACTION_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  login:          { label: "Connexion",            icon: <LogIn className="h-3.5 w-3.5" />,    color: "text-blue-500 bg-blue-500/10" },
+  register:       { label: "Inscription",          icon: <UserPlus className="h-3.5 w-3.5" />, color: "text-purple-500 bg-purple-500/10" },
+  theme_generate: { label: "Thème généré",         icon: <Paintbrush className="h-3.5 w-3.5" />, color: "text-green-600 bg-green-500/10" },
+  theme_download: { label: "Thème téléchargé",     icon: <Download className="h-3.5 w-3.5" />, color: "text-emerald-600 bg-emerald-500/10" },
+  csv_generate:   { label: "CSV généré",           icon: <Star className="h-3.5 w-3.5" />,     color: "text-amber-600 bg-amber-500/10" },
+  csv_download:   { label: "CSV téléchargé",       icon: <Download className="h-3.5 w-3.5" />, color: "text-orange-600 bg-orange-500/10" },
+};
+
+const PIE_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#3b82f6", "#ec4899", "#14b8a6"];
+
+function ActionBadge({ action }: { action: string }) {
+  const meta = ACTION_LABELS[action] ?? { label: action, icon: <Activity className="h-3.5 w-3.5" />, color: "text-foreground/60 bg-foreground/10" };
   return (
-    <div className={`rounded-2xl border px-5 py-4 ${color}`}>
-      <div className="flex items-center justify-between">
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${meta.color}`}>
+      {meta.icon}{meta.label}
+    </span>
+  );
+}
+
+function StatCard({ label, value, sub, icon, highlight }: { label: string; value: number | string; sub?: string; icon: React.ReactNode; highlight?: boolean }) {
+  return (
+    <div className={`rounded-2xl border px-5 py-4 ${highlight ? "border-amber-500/30 bg-amber-500/5" : "border-border/60"}`}>
+      <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
           <p className="mt-1 text-2xl font-semibold">{value}</p>
+          {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
         </div>
-        <div className="opacity-60">{icon}</div>
+        <div className="mt-1 opacity-50">{icon}</div>
       </div>
     </div>
   );
 }
 
-function UserRow({ user, actionId, onApprove, onReject, onDelete }: {
-  user: User;
-  actionId: string | null;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
-  onDelete: (id: string) => void;
-}) {
-  const isLoading = actionId === user.id;
+// ── Tabs ──────────────────────────────────────────────────────────────────────
 
+type Tab = "overview" | "activity" | "users";
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>("overview");
+  const [users, setUsers] = useState<User[]>([]);
+  const [activity, setActivity] = useState<ActivityEntry[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+
+  const currentUser = getUser();
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [usersRes, activityRes, statsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/auth/users`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/api/admin/activity?limit=200`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/api/admin/stats`, { headers: getAuthHeaders() }),
+      ]);
+      if (usersRes.ok) setUsers(await usersRes.json());
+      if (activityRes.ok) setActivity(await activityRes.json());
+      if (statsRes.ok) setStats(await statsRes.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser?.is_admin) { router.replace("/"); return; }
+    fetchAll();
+    const interval = setInterval(fetchAll, 30_000); // auto-refresh every 30s
+    return () => clearInterval(interval);
+  }, [currentUser?.is_admin, fetchAll, router]);
+
+  async function handleApprove(id: string) {
+    setActionId(id);
+    await fetch(`${API_BASE}/api/auth/users/${id}/approve`, { method: "PATCH", headers: getAuthHeaders() });
+    await fetchAll(); setActionId(null);
+  }
+  async function handleReject(id: string) {
+    setActionId(id);
+    await fetch(`${API_BASE}/api/auth/users/${id}/reject`, { method: "PATCH", headers: getAuthHeaders() });
+    await fetchAll(); setActionId(null);
+  }
+  async function handleDelete(id: string) {
+    const u = users.find(u => u.id === id);
+    if (!confirm(`Supprimer définitivement ${u?.email} ?`)) return;
+    setActionId(id);
+    await fetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+    await fetchAll(); setActionId(null);
+  }
+
+  const pending  = users.filter(u => !u.is_approved && !u.is_admin);
+  const approved = users.filter(u => u.is_approved && !u.is_admin);
+
+  const pieData = stats ? Object.entries(stats.by_action).map(([name, value]) => ({
+    name: ACTION_LABELS[name]?.label ?? name, value,
+  })) : [];
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <div className="sticky top-0 z-10 border-b border-border/60 bg-background/90 backdrop-blur-sm px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-foreground/[0.05]">
+              <ShieldCheck className="h-4.5 w-4.5 text-foreground/70" />
+            </div>
+            <div>
+              <h1 className="text-base font-semibold leading-none">Dashboard Admin</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">{currentUser?.email}</p>
+            </div>
+            {stats && (
+              <span className="ml-2 flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-600">
+                <Wifi className="h-3 w-3" />
+                {stats.active_users.length} actif{stats.active_users.length > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={fetchAll} disabled={loading} className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+            <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted">
+              <ArrowLeft className="h-3.5 w-3.5" /> Retour
+            </button>
+            <button onClick={logout} className="flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-80">
+              <LogOut className="h-3.5 w-3.5" /> Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
+        {/* Tabs */}
+        <div className="flex gap-1 rounded-2xl border border-border/60 bg-foreground/[0.02] p-1 w-fit">
+          {([
+            ["overview",  <BarChart3 className="h-4 w-4" />,  "Aperçu"],
+            ["activity",  <Activity className="h-4 w-4" />,   "Activité"],
+            ["users",     <Users className="h-4 w-4" />,      `Utilisateurs${pending.length > 0 ? ` (${pending.length})` : ""}`],
+          ] as [Tab, React.ReactNode, string][]).map(([id, icon, label]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition ${tab === id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {icon}{label}
+            </button>
+          ))}
+        </div>
+
+        {loading && !stats ? (
+          <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <>
+            {/* ── TAB APERÇU ─────────────────────────────────────────────── */}
+            {tab === "overview" && stats && (
+              <div className="space-y-6">
+                {/* Stat cards */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatCard label="Actions totales"       value={stats.total}                      icon={<Activity className="h-5 w-5" />} />
+                  <StatCard label="Thèmes générés"        value={stats.by_action.theme_generate ?? 0} icon={<Paintbrush className="h-5 w-5" />} />
+                  <StatCard label="CSV générés"           value={stats.by_action.csv_generate ?? 0}   icon={<Star className="h-5 w-5" />} />
+                  <StatCard label="Actifs maintenant"     value={stats.active_users.length}        icon={<Wifi className="h-5 w-5" />} highlight={stats.active_users.length > 0}
+                    sub={stats.active_users.length > 0 ? stats.active_users.join(", ") : "Personne en ce moment"} />
+                </div>
+
+                {/* Charts row 1: activity over time */}
+                <div className="rounded-2xl border border-border/60 p-5">
+                  <h2 className="mb-4 text-sm font-semibold">Activité des 14 derniers jours</h2>
+                  {stats.by_day.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">Pas encore de données</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={stats.by_day}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ borderRadius: 12, fontSize: 12 }}
+                          labelFormatter={d => `Le ${d}`}
+                          formatter={(v: number) => [v, "actions"]}
+                        />
+                        <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+
+                {/* Charts row 2: top users + répartition */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <h2 className="mb-4 text-sm font-semibold">Top utilisateurs</h2>
+                    {stats.top_users.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-muted-foreground">Pas encore de données</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={180}>
+                        <BarChart data={stats.top_users} layout="vertical">
+                          <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                          <YAxis type="category" dataKey="email" tick={{ fontSize: 10 }} width={120} tickFormatter={e => e.split("@")[0]} />
+                          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [v, "actions"]} />
+                          <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <h2 className="mb-4 text-sm font-semibold">Répartition des actions</h2>
+                    {pieData.length === 0 ? (
+                      <p className="py-6 text-center text-sm text-muted-foreground">Pas encore de données</p>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={180}>
+                        <PieChart>
+                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                            {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                          </Pie>
+                          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                {/* Thèmes et CSV par utilisateur */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <h2 className="mb-3 text-sm font-semibold flex items-center gap-1.5"><Paintbrush className="h-4 w-4" /> Thèmes par utilisateur</h2>
+                    {stats.themes_by_user.length === 0 ? <p className="text-sm text-muted-foreground">Aucune génération</p> : (
+                      <div className="space-y-2">
+                        {stats.themes_by_user.map(u => (
+                          <div key={u.email} className="flex items-center justify-between text-sm">
+                            <span className="truncate text-muted-foreground">{u.email}</span>
+                            <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-2xl border border-border/60 p-5">
+                    <h2 className="mb-3 text-sm font-semibold flex items-center gap-1.5"><Star className="h-4 w-4" /> CSV avis par utilisateur</h2>
+                    {stats.csv_by_user.length === 0 ? <p className="text-sm text-muted-foreground">Aucune génération</p> : (
+                      <div className="space-y-2">
+                        {stats.csv_by_user.map(u => (
+                          <div key={u.email} className="flex items-center justify-between text-sm">
+                            <span className="truncate text-muted-foreground">{u.email}</span>
+                            <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── TAB ACTIVITÉ ───────────────────────────────────────────── */}
+            {tab === "activity" && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">Toutes les actions en temps réel — actualisé toutes les 30 secondes.</p>
+                {activity.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/60 py-16 text-center text-sm text-muted-foreground">
+                    Aucune activité enregistrée
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-border/60">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border/60 bg-foreground/[0.02] text-xs text-muted-foreground">
+                          <th className="px-4 py-3 text-left font-medium">Utilisateur</th>
+                          <th className="px-4 py-3 text-left font-medium">Action</th>
+                          <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Détails</th>
+                          <th className="px-4 py-3 text-left font-medium">Date & heure</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/40">
+                        {activity.map(a => (
+                          <tr key={a.id} className="hover:bg-foreground/[0.01] transition">
+                            <td className="px-4 py-2.5 font-medium truncate max-w-[140px]">{a.user_email.split("@")[0]}<span className="text-muted-foreground font-normal">@{a.user_email.split("@")[1]}</span></td>
+                            <td className="px-4 py-2.5"><ActionBadge action={a.action} /></td>
+                            <td className="px-4 py-2.5 text-muted-foreground text-xs hidden sm:table-cell max-w-[200px] truncate">
+                              {a.details ? (() => { try { const d = JSON.parse(a.details!); return d.store_name ?? d.product ?? d.filename ?? a.details; } catch { return a.details; } })() : "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(a.created_at).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB UTILISATEURS ───────────────────────────────────────── */}
+            {tab === "users" && (
+              <div className="space-y-6">
+                {/* Explication */}
+                <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] px-5 py-4 text-sm text-muted-foreground leading-relaxed">
+                  <span className="font-medium text-foreground">Comment ça fonctionne : </span>
+                  Après inscription, un utilisateur est <span className="text-amber-600 font-medium">en attente</span>. Donne-lui l&apos;accès pour qu&apos;il puisse utiliser les outils. Tu peux <span className="text-amber-600 font-medium">révoquer</span> à tout moment sans supprimer le compte, ou <span className="text-red-500 font-medium">supprimer</span> définitivement.
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <StatCard label="En attente" value={pending.length} icon={<Clock className="h-5 w-5" />} highlight={pending.length > 0} />
+                  <StatCard label="Accès accordé" value={approved.length} icon={<UserCheck className="h-5 w-5" />} />
+                  <StatCard label="Total comptes" value={users.length} icon={<Users className="h-5 w-5" />} />
+                </div>
+
+                {/* Pending */}
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <h2 className="text-sm font-semibold">En attente d'approbation</h2>
+                    {pending.length > 0 && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600">{pending.length}</span>}
+                  </div>
+                  {pending.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">Aucune demande en attente</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pending.map(u => <UserRow key={u.id} user={u} actionId={actionId} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} />)}
+                    </div>
+                  )}
+                </section>
+
+                {/* Approved */}
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-green-500" />
+                    <h2 className="text-sm font-semibold">Accès accordé</h2>
+                    {approved.length > 0 && <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600">{approved.length}</span>}
+                  </div>
+                  {approved.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">Aucun utilisateur approuvé</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {approved.map(u => <UserRow key={u.id} user={u} actionId={actionId} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} />)}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── UserRow component ─────────────────────────────────────────────────────────
+
+function UserRow({ user, actionId, onApprove, onReject, onDelete }: {
+  user: User; actionId: string | null;
+  onApprove: (id: string) => void; onReject: (id: string) => void; onDelete: (id: string) => void;
+}) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-border/60 bg-foreground/[0.01] px-4 py-3 transition hover:bg-foreground/[0.03]">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-medium">{user.email}</p>
-          {user.is_admin && (
-            <span className="rounded-full bg-foreground/[0.08] px-2 py-0.5 text-xs font-medium text-foreground/60">
-              Admin
-            </span>
-          )}
+          {user.is_admin && <span className="rounded-full bg-foreground/[0.08] px-2 py-0.5 text-xs font-medium text-foreground/60">Admin</span>}
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${user.is_approved ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"}`}>
+            {user.is_approved ? "Accès accordé" : "En attente"}
+          </span>
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Inscrit le{" "}
-          {new Date(user.created_at).toLocaleDateString("fr-FR", {
-            day: "numeric", month: "long", year: "numeric",
-          })}
+          Inscrit le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
-
       {!user.is_admin && (
         <div className="ml-4 flex shrink-0 items-center gap-2">
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          ) : (
+          {actionId === user.id ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : (
             <>
               {!user.is_approved ? (
-                <button
-                  onClick={() => onApprove(user.id)}
-                  className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15"
-                >
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  Donner l'accès
+                <button onClick={() => onApprove(user.id)} className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15">
+                  <CheckCircle className="h-3.5 w-3.5" /> Donner l&apos;accès
                 </button>
               ) : (
-                <button
-                  onClick={() => onReject(user.id)}
-                  className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15"
-                >
-                  <XCircle className="h-3.5 w-3.5" />
-                  Révoquer l'accès
+                <button onClick={() => onReject(user.id)} className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15">
+                  <XCircle className="h-3.5 w-3.5" /> Révoquer
                 </button>
               )}
-              <button
-                onClick={() => onDelete(user.id)}
-                title="Supprimer définitivement"
-                className="flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 p-1.5 text-red-500 transition hover:bg-red-500/15"
-              >
+              <button onClick={() => onDelete(user.id)} className="flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 p-1.5 text-red-500 transition hover:bg-red-500/15">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </>
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-export default function AdminPage() {
-  const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [actionId, setActionId] = useState<string | null>(null);
-
-  const currentUser = getUser();
-
-  useEffect(() => {
-    if (!currentUser?.is_admin) {
-      router.replace("/");
-      return;
-    }
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function fetchUsers() {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/users`, { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error();
-      setUsers(await res.json());
-    } catch {
-      setError("Impossible de charger les utilisateurs.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleApprove(id: string) {
-    setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}/approve`, { method: "PATCH", headers: getAuthHeaders() });
-    await fetchUsers();
-    setActionId(null);
-  }
-
-  async function handleReject(id: string) {
-    setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}/reject`, { method: "PATCH", headers: getAuthHeaders() });
-    await fetchUsers();
-    setActionId(null);
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm(`Supprimer définitivement ${users.find(u => u.id === id)?.email} ?`)) return;
-    setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE", headers: getAuthHeaders() });
-    await fetchUsers();
-    setActionId(null);
-  }
-
-  const pending = users.filter(u => !u.is_approved && !u.is_admin);
-  const approved = users.filter(u => u.is_approved && !u.is_admin);
-  const admins = users.filter(u => u.is_admin);
-
-  return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-3xl space-y-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-foreground/[0.05]">
-              <ShieldCheck className="h-5 w-5 text-foreground/70" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">Gestion des accès</h1>
-              <p className="text-xs text-muted-foreground">Connecté en tant que {currentUser?.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={fetchUsers}
-              disabled={loading}
-              title="Rafraîchir"
-              className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            </button>
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Retour
-            </button>
-            <button
-              onClick={logout}
-              className="flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-80"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Déconnexion
-            </button>
-          </div>
-        </div>
-
-        {/* Explication */}
-        <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] px-5 py-4 text-sm text-muted-foreground leading-relaxed">
-          <p className="font-medium text-foreground mb-1">Comment ça fonctionne ?</p>
-          Quand quelqu'un crée un compte, il est <span className="text-amber-600 font-medium">en attente</span> par défaut — il ne peut pas accéder aux outils.
-          Tu dois <span className="text-green-600 font-medium">donner l'accès</span> manuellement pour qu'il puisse se connecter et utiliser l'application.
-          Tu peux <span className="text-amber-600 font-medium">révoquer l'accès</span> à tout moment pour bloquer quelqu'un, ou <span className="text-red-500 font-medium">supprimer</span> son compte définitivement.
-        </div>
-
-        {error && (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-500">
-            {error}
-          </div>
-        )}
-
-        {/* Stats */}
-        {!loading && (
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard
-              icon={<Clock className="h-6 w-6" />}
-              label="En attente"
-              value={pending.length}
-              color={pending.length > 0 ? "border-amber-500/30 bg-amber-500/5" : "border-border/60"}
-            />
-            <StatCard
-              icon={<UserCheck className="h-6 w-6" />}
-              label="Accès accordé"
-              value={approved.length}
-              color="border-green-500/20 bg-green-500/5"
-            />
-            <StatCard
-              icon={<Users className="h-6 w-6" />}
-              label="Total comptes"
-              value={users.length}
-              color="border-border/60"
-            />
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            {/* Section : En attente */}
-            <section>
-              <div className="mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <h2 className="text-sm font-semibold">En attente d'approbation</h2>
-                {pending.length > 0 && (
-                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600">
-                    {pending.length}
-                  </span>
-                )}
-              </div>
-              {pending.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">
-                  Aucune demande en attente
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {pending.map(u => (
-                    <UserRow
-                      key={u.id}
-                      user={u}
-                      actionId={actionId}
-                      onApprove={handleApprove}
-                      onReject={handleReject}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Section : Accès accordé */}
-            <section>
-              <div className="mb-3 flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-green-500" />
-                <h2 className="text-sm font-semibold">Accès accordé</h2>
-                {approved.length > 0 && (
-                  <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600">
-                    {approved.length}
-                  </span>
-                )}
-              </div>
-              {approved.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">
-                  Aucun utilisateur approuvé
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {approved.map(u => (
-                    <UserRow
-                      key={u.id}
-                      user={u}
-                      actionId={actionId}
-                      onApprove={handleApprove}
-                      onReject={handleReject}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Section : Admins */}
-            {admins.length > 0 && (
-              <section>
-                <div className="mb-3 flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-foreground/60" />
-                  <h2 className="text-sm font-semibold">Administrateurs</h2>
-                </div>
-                <div className="space-y-2">
-                  {admins.map(u => (
-                    <div
-                      key={u.id}
-                      className="flex items-center justify-between rounded-xl border border-border/60 bg-foreground/[0.01] px-4 py-3"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{u.email}</p>
-                          <span className="rounded-full bg-foreground/[0.08] px-2 py-0.5 text-xs text-muted-foreground">Admin</span>
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Accès complet — ne peut pas être modifié ici
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 }

@@ -214,6 +214,20 @@ export function getDownloadUrl(sessionId: string): string {
   return `${API_BASE}/api/theme/download/${sessionId}`;
 }
 
+export async function downloadTheme(sessionId: string, filename = "theme.zip"): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/api/theme/download/${sessionId}`);
+  if (!res.ok) throw new Error("Erreur lors du téléchargement du thème.");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export async function previewTexts(sessionId: string): Promise<Record<string, Record<string, string>>> {
   const res = await apiFetch(`${API_BASE}/api/theme/preview/${sessionId}`);
   if (!res.ok) throw new Error("Erreur lors du chargement de l'apercu");

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { getDownloadUrl } from "@/lib/api-theme";
+import { downloadTheme } from "@/lib/api-theme";
 import { Download, CheckCircle2, RotateCcw } from "lucide-react";
 
 interface DownloadSectionProps {
@@ -11,13 +11,7 @@ interface DownloadSectionProps {
 
 export function DownloadSection({ sessionId, onReset }: DownloadSectionProps) {
   const handleDownload = () => {
-    const url = getDownloadUrl(sessionId);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    downloadTheme(sessionId).catch(() => alert("Erreur lors du téléchargement. Veuillez réessayer."));
   };
 
   return (

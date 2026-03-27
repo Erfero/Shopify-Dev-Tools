@@ -14,7 +14,7 @@ import {
   uploadTheme,
   generateTheme,
   applyTheme,
-  getDownloadUrl,
+  downloadTheme,
   type UploadResponse,
   type GenerationStep,
 } from "@/lib/api-theme";
@@ -536,14 +536,13 @@ export default function ThemePage() {
                   </p>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
-                    <a
-                      href={getDownloadUrl(uploadData.session_id)}
-                      download
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 12, background: "var(--primary)", color: "white", textDecoration: "none", fontWeight: 700, fontSize: 15, boxShadow: "0 4px 14px rgba(99,102,241,0.3)" }}
+                    <button
+                      onClick={() => downloadTheme(uploadData.session_id).catch(() => alert("Erreur lors du téléchargement. Veuillez réessayer."))}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 12, background: "var(--primary)", color: "white", textDecoration: "none", fontWeight: 700, fontSize: 15, boxShadow: "0 4px 14px rgba(99,102,241,0.3)", border: "none", cursor: "pointer", fontFamily: "inherit" }}
                     >
                       <Download size={16} />
                       Télécharger le thème
-                    </a>
+                    </button>
                     <button
                       onClick={() => setAppStep("preview")}
                       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 24px", borderRadius: 12, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit" }}

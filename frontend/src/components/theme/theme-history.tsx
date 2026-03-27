@@ -21,7 +21,7 @@ function formatDate(iso: string) {
   }
 }
 
-export function ThemeHistoryPanel({ onClose }: { onClose: () => void }) {
+export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () => void; isAdmin?: boolean }) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -117,6 +117,11 @@ export function ThemeHistoryPanel({ onClose }: { onClose: () => void }) {
                       {entry.store_name || entry.filename}
                     </p>
                     <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{formatDate(entry.created_at)}</p>
+                    {isAdmin && entry.user_email && (
+                      <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 1, opacity: 0.7 }}>
+                        👤 {entry.user_email}
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                     {entry.available ? (

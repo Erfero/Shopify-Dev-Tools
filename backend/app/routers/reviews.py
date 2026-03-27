@@ -427,8 +427,12 @@ async def delete_session(session_id: str):
 # --- History endpoints ---
 
 @router.get("/reviews/history")
-async def get_history():
-    return {"entries": await database.get_all_history()}
+async def get_history(current_user: dict = Depends(verify_token)):
+    """Return reviews history — user sees their own, admin sees all."""
+    is_admin = current_user.get("is_admin", False)
+    user_email = current_user.get("email", "inconnu")
+    entries = await database.get_all_history(user_email=None if is_admin else user_email)
+    return {"entries": entries}
 
 
 @router.post("/reviews/history/{session_id}/mark-downloaded")
@@ -438,17 +442,23 @@ async def mark_downloaded_route(session_id: str):
 
 
 @router.delete("/reviews/history/{session_id}")
-async def delete_history_route(session_id: str):
+async def delete_history_route(session_id: str, current_user: dict = Depends(verify_token)):
+    """Delete a review history entry — owner or admin only."""
+    entries = await database.get_all_history()
+    entry = next((e for e in entries if e["sessionId"] == session_id), None)
+    if entry and not current_user.get("is_admin") and entry.get("userEmail") != current_user.get("email"):
+        raise HTTPException(status_code=403, detail="Accès refusé.")
     await database.delete_review_history(session_id)
     return {"ok": True}
 
 
 @router.post("/reviews/history/add")
-async def add_history_entry(data: dict):
+async def add_history_entry(data: dict, current_user: dict = Depends(verify_token)):
     await database.add_history_entry(
         data["sessionId"],
         data["productName"],
         data["brandName"],
         data["reviewCount"],
+        user_email=current_user.get("email", "inconnu"),
     )
     return {"ok": True}

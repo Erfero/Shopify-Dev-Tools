@@ -264,7 +264,7 @@ async def get_session(session_id: str) -> dict | None:
 
 # ── Review history functions ───────────────────────────────────────────────────
 
-async def add_history_entry(session_id: str, product_name: str, brand_name: str, review_count: int) -> None:
+async def add_history_entry(session_id: str, product_name: str, brand_name: str, review_count: int, user_email: str = "inconnu") -> None:
     async with _engine.begin() as conn:
         result = await conn.execute(
             text("SELECT id FROM review_history WHERE session_id = :session_id"),
@@ -276,20 +276,21 @@ async def add_history_entry(session_id: str, product_name: str, brand_name: str,
                 text("""
                 UPDATE review_history
                 SET product_name = :product_name, brand_name = :brand_name,
-                    review_count = :review_count, status = 'pending', downloaded_at = NULL
+                    review_count = :review_count, status = 'pending', downloaded_at = NULL,
+                    user_email = :user_email
                 WHERE session_id = :session_id
                 """),
                 {"product_name": product_name, "brand_name": brand_name,
-                 "review_count": review_count, "session_id": session_id},
+                 "review_count": review_count, "session_id": session_id, "user_email": user_email},
             )
         else:
             await conn.execute(
                 text("""
-                INSERT INTO review_history (session_id, product_name, brand_name, review_count, status)
-                VALUES (:session_id, :product_name, :brand_name, :review_count, 'pending')
+                INSERT INTO review_history (session_id, product_name, brand_name, review_count, status, user_email)
+                VALUES (:session_id, :product_name, :brand_name, :review_count, 'pending', :user_email)
                 """),
                 {"session_id": session_id, "product_name": product_name,
-                 "brand_name": brand_name, "review_count": review_count},
+                 "brand_name": brand_name, "review_count": review_count, "user_email": user_email},
             )
 
 
@@ -302,11 +303,15 @@ async def mark_downloaded(session_id: str) -> None:
         )
 
 
-async def get_all_history() -> list[dict]:
+async def get_all_history(user_email: str | None = None) -> list[dict]:
+    q = "SELECT session_id, product_name, brand_name, review_count, status, created_at, downloaded_at, user_email FROM review_history"
+    params: dict = {}
+    if user_email:
+        q += " WHERE user_email = :email"
+        params["email"] = user_email
+    q += " ORDER BY created_at DESC"
     async with _engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT session_id, product_name, brand_name, review_count, status, created_at, downloaded_at FROM review_history ORDER BY created_at DESC")
-        )
+        result = await conn.execute(text(q), params)
         return [
             {
                 "sessionId": row[0],
@@ -316,6 +321,7 @@ async def get_all_history() -> list[dict]:
                 "status": row[4],
                 "createdAt": str(row[5]),
                 "downloadedAt": str(row[6]) if row[6] else None,
+                "userEmail": row[7] if row[7] else "inconnu",
             }
             for row in result
         ]
@@ -338,23 +344,27 @@ async def delete_review_history(session_id: str) -> None:
 async def theme_history_add(entry: dict) -> None:
     async with _engine.begin() as conn:
         await conn.execute(
-            text("INSERT INTO theme_history (id, filename, store_name, created_at, zip_path) VALUES (:id, :filename, :store_name, :created_at, :zip_path)"),
+            text("INSERT INTO theme_history (id, filename, store_name, created_at, zip_path, user_email) VALUES (:id, :filename, :store_name, :created_at, :zip_path, :user_email)"),
             entry,
         )
 
 
-async def theme_history_list() -> list[dict]:
+async def theme_history_list(user_email: str | None = None) -> list[dict]:
+    q = "SELECT id, filename, store_name, created_at, zip_path, user_email FROM theme_history"
+    params: dict = {}
+    if user_email:
+        q += " WHERE user_email = :email"
+        params["email"] = user_email
+    q += " ORDER BY created_at DESC"
     async with _engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT id, filename, store_name, created_at, zip_path FROM theme_history ORDER BY created_at DESC")
-        )
+        result = await conn.execute(text(q), params)
         return [dict(row._mapping) for row in result]
 
 
 async def theme_history_get(history_id: str) -> dict | None:
     async with _engine.connect() as conn:
         result = await conn.execute(
-            text("SELECT id, filename, store_name, created_at, zip_path FROM theme_history WHERE id = :id"),
+            text("SELECT id, filename, store_name, created_at, zip_path, user_email FROM theme_history WHERE id = :id"),
             {"id": history_id},
         )
         row = result.fetchone()

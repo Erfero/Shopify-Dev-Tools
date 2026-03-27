@@ -531,9 +531,11 @@ async def delete_session(session_id: str):
 # ── History endpoints ─────────────────────────────────────────────────────────
 
 @router.get("/history")
-async def get_history():
-    """Return list of all generated themes (most recent first)."""
-    entries = await theme_history_list()
+async def get_history(current_user: dict = Depends(verify_token)):
+    """Return themes for current user (admin sees all)."""
+    is_admin = current_user.get("is_admin", False)
+    user_email = current_user.get("email", "inconnu")
+    entries = await theme_history_list(user_email=None if is_admin else user_email)
     cached_ids = await list_theme_output_zip_ids()
     return [
         {
@@ -542,6 +544,7 @@ async def get_history():
             "store_name": e["store_name"],
             "created_at": e["created_at"],
             "available": Path(e["zip_path"]).exists() or e["id"] in cached_ids,
+            **({"user_email": e.get("user_email", "inconnu")} if is_admin else {}),
         }
         for e in entries
     ]
@@ -553,6 +556,9 @@ async def download_history_item(history_id: str, current_user: dict = Depends(ve
     entry = await theme_history_get(history_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Fichier non trouvé dans l'historique.")
+    # Non-admin can only download their own themes
+    if not current_user.get("is_admin") and entry.get("user_email") != current_user.get("email"):
+        raise HTTPException(status_code=403, detail="Accès refusé.")
     zip_path = Path(entry["zip_path"])
     if not zip_path.exists():
         result = await get_theme_output_zip(history_id)
@@ -566,11 +572,13 @@ async def download_history_item(history_id: str, current_user: dict = Depends(ve
 
 
 @router.delete("/history/{history_id}")
-async def delete_history_item(history_id: str):
-    """Delete a single history entry and its ZIP file."""
+async def delete_history_item(history_id: str, current_user: dict = Depends(verify_token)):
+    """Delete a single history entry — owner or admin only."""
     entry = await theme_history_get(history_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Entrée non trouvée.")
+    if not current_user.get("is_admin") and entry.get("user_email") != current_user.get("email"):
+        raise HTTPException(status_code=403, detail="Accès refusé.")
     zip_path = Path(entry["zip_path"])
     zip_path.unlink(missing_ok=True)
     await theme_history_delete(history_id)
@@ -582,16 +590,23 @@ async def delete_history_item(history_id: str):
 
 
 @router.delete("/history")
-async def clear_history():
-    """Delete all history entries and their ZIP files."""
-    entries = await theme_history_list()
+async def clear_history(current_user: dict = Depends(verify_token)):
+    """Delete history — user clears only their own, admin clears all."""
+    is_admin = current_user.get("is_admin", False)
+    user_email = current_user.get("email", "inconnu")
+    entries = await theme_history_list(user_email=None if is_admin else user_email)
     for entry in entries:
         Path(entry["zip_path"]).unlink(missing_ok=True)
-    await theme_history_clear()
-    try:
-        await clear_all_theme_output_zips()
-    except Exception:
-        pass
+        await theme_history_delete(entry["id"])
+        try:
+            await delete_theme_output_zip(entry["id"])
+        except Exception:
+            pass
+    if is_admin:
+        try:
+            await clear_all_theme_output_zips()
+        except Exception:
+            pass
     return {"status": "cleared"}
 
 
@@ -687,8 +702,10 @@ async def regenerate_section(
 
 
 @router.get("/analytics")
-async def get_analytics():
-    """Return analytics summary for the theme generator."""
+async def get_analytics(current_user: dict = Depends(verify_token)):
+    """Return analytics summary — admin only."""
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur.")
     try:
         summary = await analytics_get_summary()
         return summary

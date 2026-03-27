@@ -19,6 +19,7 @@ import {
   type GenerationStep,
 } from "@/lib/api-theme";
 import Link from "next/link";
+import { getUser } from "@/lib/auth";
 
 type AppStep = "upload" | "configure" | "generating" | "preview" | "done";
 
@@ -37,6 +38,8 @@ const sv = {
 };
 
 export default function ThemePage() {
+  const currentUser = getUser();
+  const isAdmin = currentUser?.is_admin ?? false;
   const [appStep, setAppStep] = useState<AppStep>("upload");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -238,15 +241,17 @@ export default function ThemePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowAnalytics(true)}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
-            >
-              <Sparkles size={14} />
-              Analytics
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAnalytics(true)}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
+              >
+                <Sparkles size={14} />
+                Analytics
+              </button>
+            )}
             <button
               onClick={() => setShowHistory(true)}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
@@ -573,7 +578,7 @@ export default function ThemePage() {
 
       {/* History slide-in panel */}
       <AnimatePresence>
-        {showHistory && <ThemeHistoryPanel onClose={() => setShowHistory(false)} />}
+        {showHistory && <ThemeHistoryPanel onClose={() => setShowHistory(false)} isAdmin={isAdmin} />}
       </AnimatePresence>
 
       {/* Analytics panel */}

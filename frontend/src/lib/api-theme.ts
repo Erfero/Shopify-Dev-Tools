@@ -252,6 +252,7 @@ export interface HistoryEntry {
   store_name: string;
   created_at: string;
   available: boolean;
+  user_email?: string;
 }
 
 export async function getHistory(): Promise<HistoryEntry[]> {

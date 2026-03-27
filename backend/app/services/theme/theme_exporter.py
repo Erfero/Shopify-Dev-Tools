@@ -32,8 +32,8 @@ def export_theme(session_id: str, theme_root: Path, modified_files: set[str], st
         Path to the generated ZIP file
     """
     import re
-    safe_name = re.sub(r"[^\w\-]", "_", store_name).strip("_").lower() if store_name else session_id[:8]
-    zip_path = settings.temp_path / f"theme_story_{safe_name}.zip"
+    safe_name = re.sub(r"[^\w\-]", "_", store_name).strip("_") if store_name else session_id[:8]
+    zip_path = settings.temp_path / f"Theme_Story_{safe_name}.zip"
     _create_zip(theme_root, zip_path)
     return zip_path
 

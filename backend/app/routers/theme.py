@@ -71,6 +71,7 @@ def _save_session_meta(session_id: str, session: dict) -> None:
         "marketing_angles": session.get("marketing_angles"),
         "generated_texts": session.get("generated_texts"),
         "zip_path": session.get("zip_path"),
+        "history_id": session.get("history_id"),
         "created_at": session.get("created_at", datetime.now().isoformat()),
     }
     with open(path, "w", encoding="utf-8") as f:
@@ -125,6 +126,7 @@ async def _restore_session(session_id: str) -> dict | None:
             "return_policy_days": meta.get("return_policy_days", "30"),
             "marketing_angles": meta.get("marketing_angles"),
             "zip_path": meta.get("zip_path"),
+            "history_id": meta.get("history_id"),
             "created_at": meta.get("created_at", datetime.now().isoformat()),
         }
         _save_session_meta(session_id, session)
@@ -158,6 +160,7 @@ async def _restore_session(session_id: str) -> dict | None:
         "return_policy_days": meta.get("return_policy_days", "30"),
         "marketing_angles": meta.get("marketing_angles"),
         "zip_path": meta.get("zip_path"),
+        "history_id": meta.get("history_id"),
         "created_at": meta.get("created_at"),
     }
 
@@ -459,6 +462,9 @@ async def apply_theme(
         session["zip_path"] = str(zip_path)
 
         history_id = str(uuid.uuid4())
+        session["history_id"] = history_id
+        # Save meta now so zip_path + history_id survive server restarts
+        _save_session_meta(session_id, session)
 
         # Persist output ZIP in DB so it survives server restarts (5-day retention)
         try:
@@ -501,8 +507,19 @@ async def download_theme(session_id: str):
         raise HTTPException(status_code=404, detail="Theme non trouve. Veuillez regenerer.")
 
     zip_path = Path(session["zip_path"])
+
+    # If the file is missing (e.g. server restarted), restore from DB output cache
     if not zip_path.exists():
-        raise HTTPException(status_code=404, detail="Fichier ZIP non trouve.")
+        history_id = session.get("history_id")
+        if history_id:
+            result = await get_theme_output_zip(history_id)
+            if result:
+                _, zip_bytes = result
+                zip_path.parent.mkdir(parents=True, exist_ok=True)
+                zip_path.write_bytes(zip_bytes)
+
+    if not zip_path.exists():
+        raise HTTPException(status_code=404, detail="Fichier ZIP introuvable. Veuillez regenerer.")
 
     return FileResponse(
         path=zip_path,

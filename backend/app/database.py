@@ -697,30 +697,38 @@ def _display_name_from_email(email: str) -> str:
 # ── Activity log functions ─────────────────────────────────────────────────────
 
 async def _migrate_add_columns() -> None:
-    """Add missing columns to existing tables (safe to run multiple times)."""
+    """Add missing columns to existing tables — each in its own transaction.
+
+    IMPORTANT: on PostgreSQL, a failed statement in a transaction puts the whole
+    transaction in 'aborted' state.  Running each ALTER TABLE in a separate
+    _engine.begin() block ensures one failure never poisons the others.
+    """
     migrations = [
         "ALTER TABLE theme_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
         "ALTER TABLE review_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
         "ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''",
     ]
-    async with _engine.begin() as conn:
-        for stmt in migrations:
-            try:
+    for stmt in migrations:
+        try:
+            async with _engine.begin() as conn:
                 await conn.execute(text(stmt))
-            except Exception:
-                pass  # Column already exists — ignore
+        except Exception:
+            pass  # Column already exists — this transaction is rolled back; others continue
 
     # Populate display_name for existing users who don't have one
-    async with _engine.begin() as conn:
-        rows = (await conn.execute(
-            text("SELECT id, email FROM users WHERE display_name IS NULL OR display_name = ''")
-        )).fetchall()
-        for row in rows:
-            dn = _display_name_from_email(row[1])
-            await conn.execute(
-                text("UPDATE users SET display_name = :dn WHERE id = :id"),
-                {"dn": dn, "id": row[0]},
-            )
+    try:
+        async with _engine.begin() as conn:
+            rows = (await conn.execute(
+                text("SELECT id, email FROM users WHERE display_name IS NULL OR display_name = ''")
+            )).fetchall()
+            for row in rows:
+                dn = _display_name_from_email(row[1])
+                await conn.execute(
+                    text("UPDATE users SET display_name = :dn WHERE id = :id"),
+                    {"dn": dn, "id": row[0]},
+                )
+    except Exception as e:
+        _logger.warning("display_name population skipped: %s", e)
 
 
 async def log_activity(user_email: str, action: str, details: str | None = None, ip_address: str | None = None) -> None:

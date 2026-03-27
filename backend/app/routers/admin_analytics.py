@@ -6,6 +6,16 @@ from app.database import get_activity_log, get_activity_stats
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
+@router.get("/my-activity")
+async def my_activity(
+    limit: int = Query(default=50, le=200),
+    current_user: dict = Depends(verify_token),
+):
+    """Historique personnel de l'utilisateur connecté."""
+    logs = await get_activity_log(limit=limit, user_email=current_user["email"])
+    return logs
+
+
 def _require_admin(current_user: dict = Depends(verify_token)) -> dict:
     if not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur.")

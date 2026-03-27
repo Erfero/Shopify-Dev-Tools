@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck } from "lucide-react";
+import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck, BarChart2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer, staggerItem, float } from "@/lib/motion";
 import { getUser, logout } from "@/lib/auth";
@@ -141,6 +141,13 @@ export default function Home() {
         >
           <span className="text-xs text-muted-foreground/40">Propulsé par OpenRouter AI</span>
           <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:bg-muted"
+            >
+              <BarChart2 className="h-3.5 w-3.5" />
+              Mon historique
+            </Link>
             {user?.is_admin && (
               <Link
                 href="/admin"

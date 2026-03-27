@@ -6,6 +6,7 @@ import {
   Loader2, CheckCircle, XCircle, Trash2, LogOut, ShieldCheck,
   Clock, Users, UserCheck, RefreshCw, ArrowLeft, Activity,
   BarChart3, Paintbrush, Star, Download, LogIn, UserPlus, Wifi,
+  Crown, CrownOff,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -117,12 +118,29 @@ export default function AdminPage() {
   }
   async function handleDelete(id: string) {
     const u = users.find(u => u.id === id);
-    if (!confirm(`Supprimer définitivement ${u?.email} ?`)) return;
+    if (!confirm(`Supprimer définitivement ${u?.email} ?\n\nCette action est irréversible.`)) return;
     setActionId(id);
-    await fetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE}/api/auth/users/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+    if (!res.ok) { const d = await res.json(); alert(d.detail); }
+    await fetchAll(); setActionId(null);
+  }
+  async function handlePromote(id: string) {
+    const u = users.find(u => u.id === id);
+    if (!confirm(`Promouvoir ${u?.email} en administrateur ?\n\nCet utilisateur aura accès à toutes les données et pourra gérer les accès.`)) return;
+    setActionId(id);
+    await fetch(`${API_BASE}/api/auth/users/${id}/promote`, { method: "PATCH", headers: getAuthHeaders() });
+    await fetchAll(); setActionId(null);
+  }
+  async function handleDemote(id: string) {
+    const u = users.find(u => u.id === id);
+    if (!confirm(`Retirer le rôle d'admin à ${u?.email} ?`)) return;
+    setActionId(id);
+    const res = await fetch(`${API_BASE}/api/auth/users/${id}/demote`, { method: "PATCH", headers: getAuthHeaders() });
+    if (!res.ok) { const d = await res.json(); alert(d.detail); }
     await fetchAll(); setActionId(null);
   }
 
+  const admins   = users.filter(u => u.is_admin);
   const pending  = users.filter(u => !u.is_approved && !u.is_admin);
   const approved = users.filter(u => u.is_approved && !u.is_admin);
 
@@ -170,7 +188,7 @@ export default function AdminPage() {
           {([
             ["overview",  <BarChart3 className="h-4 w-4" />,  "Aperçu"],
             ["activity",  <Activity className="h-4 w-4" />,   "Activité"],
-            ["users",     <Users className="h-4 w-4" />,      `Utilisateurs${pending.length > 0 ? ` (${pending.length})` : ""}`],
+            ["users",     <Users className="h-4 w-4" />,      `Utilisateurs${pending.length > 0 ? ` · ${pending.length} en attente` : ""}`],
           ] as [Tab, React.ReactNode, string][]).map(([id, icon, label]) => (
             <button
               key={id}
@@ -332,44 +350,69 @@ export default function AdminPage() {
                 {/* Explication */}
                 <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] px-5 py-4 text-sm text-muted-foreground leading-relaxed">
                   <span className="font-medium text-foreground">Comment ça fonctionne : </span>
-                  Après inscription, un utilisateur est <span className="text-amber-600 font-medium">en attente</span>. Donne-lui l&apos;accès pour qu&apos;il puisse utiliser les outils. Tu peux <span className="text-amber-600 font-medium">révoquer</span> à tout moment sans supprimer le compte, ou <span className="text-red-500 font-medium">supprimer</span> définitivement.
+                  Après inscription, un utilisateur est <span className="text-amber-600 font-medium">en attente</span>. Donne-lui l&apos;accès pour qu&apos;il puisse utiliser les outils. Tu peux le <span className="text-purple-600 font-medium">promouvoir Admin</span> pour qu&apos;il puisse aussi gérer les accès, <span className="text-amber-600 font-medium">révoquer</span> son accès, ou <span className="text-red-500 font-medium">supprimer</span> définitivement son compte.
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <StatCard label="En attente" value={pending.length} icon={<Clock className="h-5 w-5" />} highlight={pending.length > 0} />
-                  <StatCard label="Accès accordé" value={approved.length} icon={<UserCheck className="h-5 w-5" />} />
+                  <StatCard label="Utilisateurs actifs" value={approved.length} icon={<UserCheck className="h-5 w-5" />} />
+                  <StatCard label="Administrateurs" value={admins.length} icon={<Crown className="h-5 w-5" />} />
                   <StatCard label="Total comptes" value={users.length} icon={<Users className="h-5 w-5" />} />
                 </div>
+
+                {/* Admins */}
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-purple-500" />
+                    <h2 className="text-sm font-semibold">Administrateurs</h2>
+                    <span className="rounded-full bg-purple-500/15 px-2 py-0.5 text-xs font-medium text-purple-600">{admins.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {admins.map(u => (
+                      <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
+                        onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
+                        onPromote={handlePromote} onDemote={handleDemote} />
+                    ))}
+                  </div>
+                </section>
 
                 {/* Pending */}
                 <section>
                   <div className="mb-3 flex items-center gap-2">
                     <Clock className="h-4 w-4 text-amber-500" />
-                    <h2 className="text-sm font-semibold">En attente d'approbation</h2>
+                    <h2 className="text-sm font-semibold">En attente d&apos;approbation</h2>
                     {pending.length > 0 && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600">{pending.length}</span>}
                   </div>
                   {pending.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">Aucune demande en attente</p>
                   ) : (
                     <div className="space-y-2">
-                      {pending.map(u => <UserRow key={u.id} user={u} actionId={actionId} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} />)}
+                      {pending.map(u => (
+                        <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
+                          onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
+                          onPromote={handlePromote} onDemote={handleDemote} />
+                      ))}
                     </div>
                   )}
                 </section>
 
-                {/* Approved */}
+                {/* Approved users */}
                 <section>
                   <div className="mb-3 flex items-center gap-2">
                     <UserCheck className="h-4 w-4 text-green-500" />
-                    <h2 className="text-sm font-semibold">Accès accordé</h2>
+                    <h2 className="text-sm font-semibold">Utilisateurs avec accès</h2>
                     {approved.length > 0 && <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-600">{approved.length}</span>}
                   </div>
                   {approved.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-border/60 py-6 text-center text-sm text-muted-foreground">Aucun utilisateur approuvé</p>
                   ) : (
                     <div className="space-y-2">
-                      {approved.map(u => <UserRow key={u.id} user={u} actionId={actionId} onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete} />)}
+                      {approved.map(u => (
+                        <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
+                          onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
+                          onPromote={handlePromote} onDemote={handleDemote} />
+                      ))}
                     </div>
                   )}
                 </section>
@@ -384,44 +427,76 @@ export default function AdminPage() {
 
 // ── UserRow component ─────────────────────────────────────────────────────────
 
-function UserRow({ user, actionId, onApprove, onReject, onDelete }: {
-  user: User; actionId: string | null;
+function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete, onPromote, onDemote }: {
+  user: User; actionId: string | null; currentUserId: string;
   onApprove: (id: string) => void; onReject: (id: string) => void; onDelete: (id: string) => void;
+  onPromote: (id: string) => void; onDemote: (id: string) => void;
 }) {
+  const isSelf = user.email === currentUserId;
+  const isLoading = actionId === user.id;
+
   return (
-    <div className="flex items-center justify-between rounded-xl border border-border/60 bg-foreground/[0.01] px-4 py-3 transition hover:bg-foreground/[0.03]">
+    <div className={`flex items-center justify-between rounded-xl border px-4 py-3 transition hover:bg-foreground/[0.03] ${user.is_admin ? "border-purple-500/20 bg-purple-500/[0.02]" : "border-border/60 bg-foreground/[0.01]"}`}>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-medium">{user.email}</p>
-          {user.is_admin && <span className="rounded-full bg-foreground/[0.08] px-2 py-0.5 text-xs font-medium text-foreground/60">Admin</span>}
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${user.is_approved ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"}`}>
-            {user.is_approved ? "Accès accordé" : "En attente"}
-          </span>
+          {user.is_admin && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-medium text-purple-600">
+              <Crown className="h-3 w-3" /> Admin{isSelf ? " (vous)" : ""}
+            </span>
+          )}
+          {!user.is_admin && (
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${user.is_approved ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"}`}>
+              {user.is_approved ? "Accès accordé" : "En attente"}
+            </span>
+          )}
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Inscrit le {new Date(user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
-      {!user.is_admin && (
-        <div className="ml-4 flex shrink-0 items-center gap-2">
-          {actionId === user.id ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : (
-            <>
-              {!user.is_approved ? (
-                <button onClick={() => onApprove(user.id)} className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15">
-                  <CheckCircle className="h-3.5 w-3.5" /> Donner l&apos;accès
-                </button>
-              ) : (
-                <button onClick={() => onReject(user.id)} className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15">
-                  <XCircle className="h-3.5 w-3.5" /> Révoquer
-                </button>
-              )}
-              <button onClick={() => onDelete(user.id)} className="flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 p-1.5 text-red-500 transition hover:bg-red-500/15">
+
+      <div className="ml-4 flex shrink-0 items-center gap-2">
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <>
+            {/* Admin actions */}
+            {user.is_admin && !isSelf && (
+              <button onClick={() => onDemote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
+                <CrownOff className="h-3.5 w-3.5" /> Retirer admin
+              </button>
+            )}
+
+            {/* Regular user actions */}
+            {!user.is_admin && (
+              <>
+                {!user.is_approved ? (
+                  <button onClick={() => onApprove(user.id)} className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15">
+                    <CheckCircle className="h-3.5 w-3.5" /> Donner l&apos;accès
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => onPromote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
+                      <Crown className="h-3.5 w-3.5" /> Promouvoir Admin
+                    </button>
+                    <button onClick={() => onReject(user.id)} className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15">
+                      <XCircle className="h-3.5 w-3.5" /> Révoquer
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Delete — everyone except self */}
+            {!isSelf && (
+              <button onClick={() => onDelete(user.id)} className="flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 p-1.5 text-red-500 transition hover:bg-red-500/15" title="Supprimer le compte">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
-            </>
-          )}
-        </div>
-      )}
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

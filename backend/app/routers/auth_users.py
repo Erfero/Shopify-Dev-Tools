@@ -116,7 +116,23 @@ async def reject_user(user_id: str, current_user: dict = Depends(_require_admin)
     return {"status": "rejected"}
 
 
+@router.patch("/users/{user_id}/promote")
+async def promote_user(user_id: str, current_user: dict = Depends(_require_admin)):
+    await update_user_status(user_id, is_admin=True, is_approved=True)
+    return {"status": "promoted"}
+
+
+@router.patch("/users/{user_id}/demote")
+async def demote_user(user_id: str, current_user: dict = Depends(_require_admin)):
+    if current_user.get("sub") == user_id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous retirer vous-même le rôle d'admin.")
+    await update_user_status(user_id, is_admin=False)
+    return {"status": "demoted"}
+
+
 @router.delete("/users/{user_id}")
 async def remove_user(user_id: str, current_user: dict = Depends(_require_admin)):
+    if current_user.get("sub") == user_id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte depuis l'admin.")
     await delete_user(user_id)
     return {"status": "deleted"}

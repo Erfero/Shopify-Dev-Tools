@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     # ── Auth (JWT) ──────────────────────────────────────────────────────────
     jwt_secret: str = "change-me-in-production-use-a-long-random-string"
     admin_email: str = ""             # This email is auto-approved as admin on registration
+    cors_origins: str = ""            # Extra allowed CORS origins, comma-separated
 
     # ── Email (SMTP) — optional, for approval notifications ─────────────────
     smtp_host: str = ""

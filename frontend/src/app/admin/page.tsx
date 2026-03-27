@@ -13,7 +13,7 @@ import {
   ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { API_BASE } from "@/lib/config";
-import { getAuthHeaders, getUser, logout } from "@/lib/auth";
+import { getUser, logout } from "@/lib/auth";
 import { apiFetch } from "@/lib/api-fetch";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";

@@ -10,17 +10,21 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: IMGBB_API_KEY
+        sync: false
       - key: FRONTEND_URL
         value: https://shopify-dev-tools.vercel.app
       - key: AI_PRESET
-        value: best
+        value: paid_premium
       - key: USE_MOCK
         value: false
       - key: TEMP_DIR
         value: /tmp/shopify-theme-temp
       - key: SESSION_TTL_SECONDS
         value: 14400
-      - key: IMGBB_API_KEY
-        value: fbf73d5df50aaa2f61f11a8ae662419f
       - key: BACKEND_URL
         value: https://shopify-dev-tools.onrender.com

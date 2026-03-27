@@ -76,7 +76,7 @@ async def analyze_product_images(images_data: List[bytes], images_mime: List[str
     headers = {
         "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": settings.frontend_url,
         "X-Title": "Loox Review Generator",
     }
 
@@ -189,7 +189,7 @@ async def generate_review_batch(
     headers = {
         "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": settings.frontend_url,
         "X-Title": "Loox Review Generator",
     }
 

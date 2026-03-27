@@ -186,6 +186,19 @@ async def _get_session(session_id: str) -> dict | None:
     return session
 
 
+def evict_expired_sessions() -> int:
+    """Remove expired sessions from the in-memory store. Returns number evicted."""
+    now = datetime.now()
+    expired = [
+        sid for sid, s in list(_sessions.items())
+        if (ts := s.get("created_at", ""))
+        and (now - datetime.fromisoformat(ts)).total_seconds() > settings.session_ttl_seconds
+    ]
+    for sid in expired:
+        _sessions.pop(sid, None)
+    return len(expired)
+
+
 @router.post("/upload", response_model=UploadResponse, dependencies=[Depends(upload_limiter)])
 async def upload_theme(theme_file: UploadFile = File(...)):
     """Upload a Shopify theme ZIP file and parse its structure."""

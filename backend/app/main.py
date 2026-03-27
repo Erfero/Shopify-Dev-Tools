@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db, cleanup_old_output_zips
 from app.routers import health, reviews, theme
+from app.routers.theme import evict_expired_sessions
 from app.routers.auth_users import router as auth_router
 from app.routers.admin_analytics import router as admin_analytics_router
 
@@ -51,6 +52,12 @@ async def _cleanup_temp_loop() -> None:
                 logger.info("Cleanup: removed %d expired output ZIP(s) from DB", deleted)
         except Exception as e:
             logger.error("Output ZIP cleanup error: %s", e)
+        try:
+            evicted = evict_expired_sessions()
+            if evicted:
+                logger.info("Cleanup: evicted %d expired theme session(s) from memory", evicted)
+        except Exception as e:
+            logger.error("Session eviction error: %s", e)
 
 
 @asynccontextmanager
@@ -86,10 +93,7 @@ def _build_origins() -> list[str]:
     }
     if settings.frontend_url:
         origins.add(settings.frontend_url)
-    # Support CORS_ORIGINS env var: comma-separated list of extra allowed origins
-    import os
-    extra = os.getenv("CORS_ORIGINS", "")
-    for o in extra.split(","):
+    for o in settings.cors_origins.split(","):
         o = o.strip()
         if o:
             origins.add(o)

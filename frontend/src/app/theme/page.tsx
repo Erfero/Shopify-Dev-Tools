@@ -240,28 +240,28 @@ export default function ThemePage() {
               <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Personnalisation IA de thème Shopify</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isAdmin && (
               <button
                 onClick={() => setShowAnalytics(true)}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
               >
                 <Sparkles size={14} />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
               </button>
             )}
             <button
               onClick={() => setShowHistory(true)}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 10, border: "1.5px solid var(--border)", background: "white", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "inherit", transition: "all 0.15s" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
             >
               <History size={14} />
-              Historique
+              <span className="hidden sm:inline">Historique</span>
             </button>
-            <div style={{ padding: "4px 10px", borderRadius: 8, background: "oklch(0.97 0 0)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text-muted)" }}>
+            <div className="hidden sm:flex" style={{ padding: "4px 10px", borderRadius: 8, background: "oklch(0.97 0 0)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text-muted)", alignItems: "center" }}>
               <Sparkles size={10} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
               Propulsé par OpenRouter AI
             </div>
@@ -334,7 +334,7 @@ export default function ThemePage() {
                       </svg>
                     ) : i + 1}
                   </motion.div>
-                  <span style={{
+                  <span className="step-indicator-label" style={{
                     fontSize: 10, fontWeight: isActive ? 700 : 500,
                     color: isActive ? "var(--primary)" : isDone ? "var(--text-secondary)" : "var(--text-muted)",
                     whiteSpace: "nowrap",
@@ -344,7 +344,8 @@ export default function ThemePage() {
                 </div>
                 {i < STEPS.length - 1 && (
                   <div style={{
-                    width: 48, height: 2, marginBottom: 18, marginLeft: 2, marginRight: 2,
+                    width: "clamp(16px, 4vw, 48px)", height: 2, marginBottom: 18,
+                    marginLeft: "clamp(1px, 0.5vw, 2px)", marginRight: "clamp(1px, 0.5vw, 2px)",
                     background: isDone ? "var(--primary)" : "oklch(0.91 0 0)",
                     transition: "background 0.4s",
                     borderRadius: 1,
@@ -362,7 +363,7 @@ export default function ThemePage() {
             {/* Upload */}
             {appStep === "upload" && (
               <motion.div key="upload" variants={sv} initial="initial" animate="animate" exit="exit">
-                <div className="card" style={{ padding: "32px" }}>
+                <div className="card" style={{ padding: "clamp(16px, 4vw, 32px)" }}>
                   <div style={{ marginBottom: 24, textAlign: "center" }}>
                     <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text)", marginBottom: 6 }}>
                       Importer votre thème
@@ -384,7 +385,7 @@ export default function ThemePage() {
             {/* Configure */}
             {appStep === "configure" && uploadData && (
               <motion.div key="configure" variants={sv} initial="initial" animate="animate" exit="exit">
-                <div className="card" style={{ padding: "32px" }}>
+                <div className="card" style={{ padding: "clamp(16px, 4vw, 32px)" }}>
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                       <button
@@ -421,7 +422,7 @@ export default function ThemePage() {
             {/* Generating */}
             {appStep === "generating" && (
               <motion.div key="generating" variants={sv} initial="initial" animate="animate" exit="exit">
-                <div className="card" style={{ padding: "32px" }}>
+                <div className="card" style={{ padding: "clamp(16px, 4vw, 32px)" }}>
                   <div style={{ marginBottom: 24, textAlign: "center" }}>
                     <h2 style={{ fontWeight: 700, fontSize: 18, color: "var(--text)", marginBottom: 6 }}>
                       Génération en cours
@@ -459,7 +460,7 @@ export default function ThemePage() {
             {/* Preview / Edit */}
             {appStep === "preview" && previewData && (
               <motion.div key="preview" variants={sv} initial="initial" animate="animate" exit="exit">
-                <div className="card" style={{ padding: "32px" }}>
+                <div className="card" style={{ padding: "clamp(16px, 4vw, 32px)" }}>
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                       <button

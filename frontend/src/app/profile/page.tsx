@@ -72,7 +72,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="text-base font-semibold leading-none">Mon profil</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground">{currentUser?.email}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground hidden sm:block">{currentUser?.email}</p>
             </div>
           </div>
           <button

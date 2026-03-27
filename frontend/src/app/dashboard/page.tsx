@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Activity, ArrowLeft, Download, LogIn, Paintbrush, RefreshCw, Star, UserPlus, User } from "lucide-react";
+import { Activity, ArrowLeft, Download, LogIn, LogOut as LogOutIcon, Paintbrush, RefreshCw, Star, UserPlus, User } from "lucide-react";
 import { getUser, logout } from "@/lib/auth";
 import { apiFetch } from "@/lib/api-fetch";
 import { API_BASE } from "@/lib/config";
@@ -117,7 +117,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <h1 className="text-base font-semibold leading-none">{user?.display_name || "Mon historique"}</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground">{user?.email}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground hidden sm:block">{user?.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -132,19 +132,19 @@ export default function DashboardPage() {
               onClick={() => router.push("/profile")}
               className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
             >
-              <User className="h-3.5 w-3.5" /> Profil
+              <User className="h-3.5 w-3.5" /><span className="hidden sm:inline">Profil</span>
             </button>
             <button
               onClick={() => router.push("/")}
               className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Accueil
+              <ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Accueil</span>
             </button>
             <button
               onClick={logout}
               className="flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-80"
             >
-              Déconnexion
+              <LogOutIcon className="h-3.5 w-3.5 sm:hidden" /><span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
         </div>

@@ -242,10 +242,10 @@ export default function AdminPage() {
             </div>
             <div>
               <h1 className="text-base font-semibold leading-none">Dashboard Admin</h1>
-              <p className="mt-0.5 text-xs text-muted-foreground">{currentUser?.email}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground hidden sm:block">{currentUser?.email}</p>
             </div>
             {stats && (
-              <span className="ml-2 flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-600">
+              <span className="hidden sm:flex ml-2 items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-600">
                 <Wifi className="h-3 w-3" />
                 {stats.active_users.length} actif{stats.active_users.length > 1 ? "s" : ""}
               </span>
@@ -256,10 +256,10 @@ export default function AdminPage() {
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
             <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted">
-              <ArrowLeft className="h-3.5 w-3.5" /> Retour
+              <ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Retour</span>
             </button>
             <button onClick={logout} className="flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-sm font-medium text-background shadow-sm transition hover:opacity-80">
-              <LogOut className="h-3.5 w-3.5" /> Déconnexion
+              <LogOut className="h-3.5 w-3.5" /><span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
         </div>
@@ -267,16 +267,16 @@ export default function AdminPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
         {/* Tabs */}
-        <div className="flex gap-1 rounded-2xl border border-border/60 bg-foreground/[0.02] p-1 w-fit">
+        <div className="flex gap-1 rounded-2xl border border-border/60 bg-foreground/[0.02] p-1 w-full sm:w-fit overflow-x-auto no-scrollbar">
           {([
-            ["overview",  <BarChart3 className="h-4 w-4" />,  "Aperçu"],
-            ["activity",  <Activity className="h-4 w-4" />,   "Activité"],
-            ["users",     <Users className="h-4 w-4" />,      `Utilisateurs${pending.length > 0 ? ` · ${pending.length} en attente` : ""}`],
-          ] as [Tab, React.ReactNode, string][]).map(([id, icon, label]) => (
+            ["overview" as Tab, <BarChart3 className="h-4 w-4" />, "Aperçu"],
+            ["activity" as Tab, <Activity className="h-4 w-4" />, "Activité"],
+            ["users" as Tab, <Users className="h-4 w-4" />, <span className="flex items-center gap-1">Utilisateurs{pending.length > 0 && <span className="inline-flex items-center justify-center h-4 min-w-[1rem] rounded-full bg-amber-500 text-white text-[10px] font-bold px-1">{pending.length}</span>}</span>],
+          ] as [Tab, React.ReactNode, React.ReactNode][]).map(([id, icon, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition ${tab === id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 sm:px-4 py-2 text-sm font-medium transition whitespace-nowrap ${tab === id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
               {icon}{label}
             </button>
@@ -569,15 +569,15 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
         </p>
       </div>
 
-      <div className="ml-4 flex shrink-0 items-center gap-2">
+      <div className="ml-2 sm:ml-4 flex shrink-0 flex-wrap items-center justify-end gap-1.5">
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
         ) : (
           <>
             {/* Admin actions */}
             {user.is_admin && !isSelf && (
-              <button onClick={() => onDemote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
-                <Crown className="h-3.5 w-3.5 opacity-50" /> Retirer admin
+              <button onClick={() => onDemote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
+                <Crown className="h-3.5 w-3.5 opacity-50" /><span className="hidden sm:inline">Retirer </span>admin
               </button>
             )}
 
@@ -585,15 +585,15 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
             {!user.is_admin && (
               <>
                 {!user.is_approved ? (
-                  <button onClick={() => onApprove(user.id)} className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15">
-                    <CheckCircle className="h-3.5 w-3.5" /> Donner l&apos;accès
+                  <button onClick={() => onApprove(user.id)} className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-green-600 transition hover:bg-green-500/15">
+                    <CheckCircle className="h-3.5 w-3.5" /><span className="hidden sm:inline">Donner l&apos;</span>accès
                   </button>
                 ) : (
                   <>
-                    <button onClick={() => onPromote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
-                      <Crown className="h-3.5 w-3.5" /> Promouvoir Admin
+                    <button onClick={() => onPromote(user.id)} className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-purple-600 transition hover:bg-purple-500/15">
+                      <Crown className="h-3.5 w-3.5" /><span className="hidden sm:inline">Promouvoir </span>Admin
                     </button>
-                    <button onClick={() => onReject(user.id)} className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15">
+                    <button onClick={() => onReject(user.id)} className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15">
                       <XCircle className="h-3.5 w-3.5" /> Révoquer
                     </button>
                   </>

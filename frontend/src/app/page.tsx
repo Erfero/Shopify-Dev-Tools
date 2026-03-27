@@ -135,18 +135,18 @@ export default function Home() {
 
         {/* Footer */}
         <motion.div
-          className="mt-10 flex items-center justify-between"
+          className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
           variants={fadeUp}
           custom={5}
         >
-          <span className="text-xs text-muted-foreground/40">Propulsé par OpenRouter AI</span>
-          <div className="flex items-center gap-2">
+          <span className="hidden sm:block text-xs text-muted-foreground/40">Propulsé par OpenRouter AI</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
             <Link
               href="/dashboard"
               className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:bg-muted"
             >
               <BarChart2 className="h-3.5 w-3.5" />
-              Mon historique
+              <span className="hidden sm:inline">Mon </span>Historique
             </Link>
             {user?.is_admin && (
               <Link
@@ -154,7 +154,8 @@ export default function Home() {
                 className="flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-xs font-semibold text-background shadow-sm transition hover:opacity-80"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Gérer les accès
+                <span className="hidden sm:inline">Gérer les accès</span>
+                <span className="sm:hidden">Admin</span>
               </Link>
             )}
             <button
@@ -162,7 +163,7 @@ export default function Home() {
               className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:bg-muted"
             >
               <LogOut className="h-3.5 w-3.5" />
-              Déconnexion
+              <span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
         </motion.div>

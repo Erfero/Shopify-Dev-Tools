@@ -391,3 +391,8 @@
 ::-webkit-scrollbar-track { background: #F3F4F6; }
 ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* ── Responsive: step indicator labels hidden on small screens ────────────── */
+@media (max-width: 639px) {
+  .step-indicator-label { display: none; }
+}

@@ -67,7 +67,7 @@ const FILTER_ACTIONS: Record<string, string[]> = {
 // Actions counted for "Actions totales" stat
 const TOTAL_ACTIONS = ["login", "logout", "theme_generate", "theme_download", "csv_generate", "csv_download", "register"];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 6;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -90,18 +90,8 @@ export default function DashboardPage() {
 
   async function fetchTotals() {
     try {
-      // Fetch a large slice to count totals; server filters to relevant actions
-      const params = new URLSearchParams({ limit: "500", offset: "0" });
-      for (const a of TOTAL_ACTIONS) params.append("actions", a);
-      const res = await apiFetch(`${API_BASE}/api/admin/my-activity?${params}`);
-      if (res.ok) {
-        const data: ActivityEntry[] = await res.json();
-        const counts: Record<string, number> = {};
-        for (const entry of data) {
-          counts[entry.action] = (counts[entry.action] ?? 0) + 1;
-        }
-        setTotalCounts(counts);
-      }
+      const res = await apiFetch(`${API_BASE}/api/admin/my-stats`);
+      if (res.ok) setTotalCounts(await res.json());
     } catch { /* handled */ }
   }
 

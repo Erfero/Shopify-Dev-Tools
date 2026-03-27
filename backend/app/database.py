@@ -743,6 +743,15 @@ async def log_activity(user_email: str, action: str, details: str | None = None,
         _logger.warning("Failed to log activity (%s / %s): %s", user_email, action, e)
 
 
+async def get_my_action_counts(user_email: str) -> dict:
+    """Counts per action type for a single user — no pagination limit."""
+    async with _engine.connect() as conn:
+        rows = (await conn.execute(text(
+            "SELECT action, COUNT(*) as cnt FROM activity_log WHERE user_email = :email GROUP BY action"
+        ), {"email": user_email})).fetchall()
+    return {r[0]: r[1] for r in rows}
+
+
 async def get_activity_log(limit: int = 200, user_email: str | None = None, offset: int = 0, actions: list[str] | None = None) -> list[dict]:
     base = (
         "SELECT a.id, a.user_email, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name, "

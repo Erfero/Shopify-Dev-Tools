@@ -1,9 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.auth import verify_token
-from app.database import get_activity_log, get_activity_stats
+from app.database import get_activity_log, get_activity_stats, get_my_action_counts
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+
+@router.get("/my-stats")
+async def my_stats(current_user: dict = Depends(verify_token)):
+    """Counts per action type for the current user (no pagination)."""
+    return await get_my_action_counts(current_user["email"])
 
 
 @router.get("/my-activity")

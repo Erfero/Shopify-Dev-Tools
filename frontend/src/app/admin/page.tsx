@@ -9,7 +9,7 @@ import {
   Crown,
 } from "lucide-react";
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { API_BASE } from "@/lib/config";
@@ -92,7 +92,7 @@ export default function AdminPage() {
   }>({ open: false, title: "", onConfirm: () => {} });
 
   const currentUser = getUser();
-  const ACTIVITY_PAGE_SIZE = 30;
+  const ACTIVITY_PAGE_SIZE = 6;
 
   const fetchAll = useCallback(async (page = 0) => {
     setLoading(true);
@@ -219,6 +219,13 @@ export default function AdminPage() {
   const pending  = users.filter(u => !u.is_approved && !u.is_admin);
   const approved = users.filter(u => u.is_approved && !u.is_admin);
 
+  const activeUserNames = stats
+    ? stats.active_users.map(email => {
+        const u = users.find(u => u.email === email);
+        return u?.display_name || email.split("@")[0];
+      }).join(", ")
+    : "";
+
   const pieData = stats ? Object.entries(stats.by_action).map(([name, value]) => ({
     name: ACTION_LABELS[name]?.label ?? name, value,
   })) : [];
@@ -303,7 +310,7 @@ export default function AdminPage() {
                   <StatCard label="Thèmes générés"        value={stats.by_action.theme_generate ?? 0} icon={<Paintbrush className="h-5 w-5" />} />
                   <StatCard label="CSV générés"           value={stats.by_action.csv_generate ?? 0}   icon={<Star className="h-5 w-5" />} />
                   <StatCard label="Actifs maintenant"     value={stats.active_users.length}        icon={<Wifi className="h-5 w-5" />} highlight={stats.active_users.length > 0}
-                    sub={stats.active_users.length > 0 ? stats.active_users.join(", ") : "Personne en ce moment"} />
+                    sub={stats.active_users.length > 0 ? `🛜 ${activeUserNames}` : "Personne en ce moment"} />
                 </div>
 
                 {/* Charts row 1: activity over time */}
@@ -313,17 +320,18 @@ export default function AdminPage() {
                     <p className="py-8 text-center text-sm text-muted-foreground">Pas encore de données</p>
                   ) : (
                     <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={stats.by_day}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
-                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <BarChart data={stats.by_day} barCategoryGap="30%">
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} axisLine={false} tickLine={false} />
                         <Tooltip
-                          contentStyle={{ borderRadius: 12, fontSize: 12 }}
+                          contentStyle={{ borderRadius: 12, fontSize: 12, border: "1px solid hsl(var(--border))" }}
+                          cursor={{ fill: "hsl(var(--border))", opacity: 0.5 }}
                           labelFormatter={d => `Le ${d}`}
                           formatter={(v: number) => [v, "actions"]}
                         />
-                        <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} dot={false} />
-                      </LineChart>
+                        <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                      </BarChart>
                     </ResponsiveContainer>
                   )}
                 </div>
@@ -351,12 +359,13 @@ export default function AdminPage() {
                     {pieData.length === 0 ? (
                       <p className="py-6 text-center text-sm text-muted-foreground">Pas encore de données</p>
                     ) : (
-                      <ResponsiveContainer width="100%" height={180}>
+                      <ResponsiveContainer width="100%" height={220}>
                         <PieChart>
-                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="45%" outerRadius={65} innerRadius={30}>
                             {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                           </Pie>
-                          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: "1px solid hsl(var(--border))" }} formatter={(v: number, name: string) => [v, name]} />
+                          <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 4 }} formatter={(value) => <span style={{ color: "hsl(var(--muted-foreground))" }}>{value}</span>} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}

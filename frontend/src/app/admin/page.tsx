@@ -22,10 +22,10 @@ interface ActivityEntry { id: number; user_email: string; display_name: string; 
 interface Stats {
   by_action: Record<string, number>;
   by_day: { date: string; count: number }[];
-  top_users: { email: string; count: number }[];
+  top_users: { email: string; count: number; display_name: string }[];
   active_users: string[];
-  themes_by_user: { email: string; count: number }[];
-  csv_by_user: { email: string; count: number }[];
+  themes_by_user: { email: string; count: number; display_name: string }[];
+  csv_by_user: { email: string; count: number; display_name: string }[];
   total: number;
 }
 
@@ -248,7 +248,7 @@ export default function AdminPage() {
                       <ResponsiveContainer width="100%" height={180}>
                         <BarChart data={stats.top_users} layout="vertical">
                           <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                          <YAxis type="category" dataKey="email" tick={{ fontSize: 10 }} width={120} tickFormatter={e => e.split("@")[0]} />
+                          <YAxis type="category" dataKey="display_name" tick={{ fontSize: 10 }} width={120} />
                           <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [v, "actions"]} />
                           <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} />
                         </BarChart>
@@ -281,7 +281,7 @@ export default function AdminPage() {
                       <div className="space-y-2">
                         {stats.themes_by_user.map(u => (
                           <div key={u.email} className="flex items-center justify-between text-sm">
-                            <span className="truncate text-muted-foreground">{u.email}</span>
+                            <span className="truncate font-medium">{u.display_name}</span>
                             <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
                           </div>
                         ))}
@@ -294,7 +294,7 @@ export default function AdminPage() {
                       <div className="space-y-2">
                         {stats.csv_by_user.map(u => (
                           <div key={u.email} className="flex items-center justify-between text-sm">
-                            <span className="truncate text-muted-foreground">{u.email}</span>
+                            <span className="truncate font-medium">{u.display_name}</span>
                             <span className="ml-2 shrink-0 font-semibold">{u.count}</span>
                           </div>
                         ))}

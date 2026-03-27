@@ -8,7 +8,8 @@ import {
   clearHistory,
   type HistoryEntry,
 } from "@/lib/api-theme";
-import { History, Download, Trash2, FileArchive, X } from "lucide-react";
+import { getToken } from "@/lib/auth";
+import { History, Download, Trash2, FileArchive, X, Loader2 } from "lucide-react";
 
 function formatDate(iso: string) {
   try {
@@ -24,6 +25,7 @@ function formatDate(iso: string) {
 export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () => void; isAdmin?: boolean }) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,13 +36,28 @@ export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () =>
 
   useEffect(() => { load(); }, [load]);
 
-  const handleDownload = (entry: HistoryEntry) => {
-    const a = document.createElement("a");
-    a.href = getHistoryDownloadUrl(entry.id);
-    a.download = entry.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async (entry: HistoryEntry) => {
+    setDownloading(entry.id);
+    try {
+      const token = getToken();
+      const res = await fetch(getHistoryDownloadUrl(entry.id), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) { alert("Fichier introuvable ou expiré."); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = entry.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Erreur lors du téléchargement.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -127,12 +144,13 @@ export function ThemeHistoryPanel({ onClose, isAdmin = false }: { onClose: () =>
                     {entry.available ? (
                       <button
                         onClick={() => handleDownload(entry)}
+                        disabled={downloading === entry.id}
                         title="Télécharger"
-                        style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: "oklch(0.97 0 0)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "oklch(0.94 0 0)"; }}
+                        style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: "oklch(0.97 0 0)", cursor: downloading === entry.id ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", opacity: downloading === entry.id ? 0.5 : 1 }}
+                        onMouseEnter={(e) => { if (downloading !== entry.id) e.currentTarget.style.background = "oklch(0.94 0 0)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "oklch(0.97 0 0)"; }}
                       >
-                        <Download size={14} />
+                        {downloading === entry.id ? <Loader2 size={13} style={{ animation: "spin 0.7s linear infinite" }} /> : <Download size={14} />}
                       </button>
                     ) : (
                       <span style={{ fontSize: 10, color: "var(--text-muted)", padding: "0 4px" }}>Expiré</span>

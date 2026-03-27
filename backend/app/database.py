@@ -758,9 +758,11 @@ async def get_activity_stats() -> dict:
 
         # Top users by activity
         top_rows = (await conn.execute(text(
-            "SELECT user_email, COUNT(*) as cnt FROM activity_log GROUP BY user_email ORDER BY cnt DESC LIMIT 10"
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
+            "GROUP BY a.user_email ORDER BY cnt DESC LIMIT 10"
         ))).fetchall()
-        top_users = [{"email": r[0], "count": r[1]} for r in top_rows]
+        top_users = [{"email": r[0], "count": r[1], "display_name": r[2]} for r in top_rows]
 
         # Active users (last 15 min)
         if _IS_SQLITE:
@@ -777,17 +779,19 @@ async def get_activity_stats() -> dict:
 
         # Theme generations per user
         theme_rows = (await conn.execute(text(
-            "SELECT user_email, COUNT(*) as cnt FROM activity_log WHERE action = 'theme_generate' "
-            "GROUP BY user_email ORDER BY cnt DESC"
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
+            "WHERE a.action = 'theme_generate' GROUP BY a.user_email ORDER BY cnt DESC"
         ))).fetchall()
-        themes_by_user = [{"email": r[0], "count": r[1]} for r in theme_rows]
+        themes_by_user = [{"email": r[0], "count": r[1], "display_name": r[2]} for r in theme_rows]
 
         # CSV generations per user
         csv_rows = (await conn.execute(text(
-            "SELECT user_email, COUNT(*) as cnt FROM activity_log WHERE action = 'csv_generate' "
-            "GROUP BY user_email ORDER BY cnt DESC"
+            "SELECT a.user_email, COUNT(*) as cnt, COALESCE(NULLIF(u.display_name,''), a.user_email) as display_name "
+            "FROM activity_log a LEFT JOIN users u ON u.email = a.user_email "
+            "WHERE a.action = 'csv_generate' GROUP BY a.user_email ORDER BY cnt DESC"
         ))).fetchall()
-        csv_by_user = [{"email": r[0], "count": r[1]} for r in csv_rows]
+        csv_by_user = [{"email": r[0], "count": r[1], "display_name": r[2]} for r in csv_rows]
 
     return {
         "by_action": by_action,

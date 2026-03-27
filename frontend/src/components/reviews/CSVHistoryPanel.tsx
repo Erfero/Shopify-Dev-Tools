@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CSVEntry, markAsDownloaded, deleteEntry } from "@/lib/csvHistory";
 import { getDownloadUrl } from "@/lib/api-reviews";
+import { getToken } from "@/lib/auth";
 
 interface Props {
   entries: CSVEntry[];
@@ -43,7 +44,10 @@ export function CSVHistoryPanel({ entries, onClose, onRefresh }: Props) {
     setDownloading(key);
     setErrors((prev) => ({ ...prev, [sessionId]: "" }));
     try {
-      const resp = await fetch(getDownloadUrl(sessionId, format));
+      const token = getToken();
+      const resp = await fetch(getDownloadUrl(sessionId, format), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!resp.ok) {
         if (resp.status === 404) {
           setErrors((prev) => ({

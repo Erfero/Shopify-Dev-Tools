@@ -124,12 +124,12 @@ export default function DashboardPage() {
     fetchLogs(0, newFilter);
   }
 
-  const themesGenerated = totalCounts?.["theme_generate"] ?? null;
-  const csvGenerated    = totalCounts?.["csv_generate"] ?? null;
-  const downloads       = totalCounts
+  const themesGenerated = totalCounts !== null ? (totalCounts["theme_generate"] ?? 0) : null;
+  const csvGenerated    = totalCounts !== null ? (totalCounts["csv_generate"] ?? 0) : null;
+  const downloads       = totalCounts !== null
     ? (totalCounts["theme_download"] ?? 0) + (totalCounts["csv_download"] ?? 0)
     : null;
-  const totalAll        = totalCounts
+  const totalAll        = totalCounts !== null
     ? Object.values(totalCounts).reduce((s, v) => s + v, 0)
     : null;
 

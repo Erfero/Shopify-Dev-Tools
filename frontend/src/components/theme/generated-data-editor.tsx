@@ -336,13 +336,40 @@ const FIELD_LABELS: Record<string, string> = {
 };
 const EDITABLE_FIELDS = ["background", "background_secondary", "text", "text_secondary", "accent-1", "accent-2"];
 
+const DEFAULT_SCHEME_SETTINGS = {
+  background: "#FFFFFF",
+  background_secondary: "#F5F5F5",
+  text: "#111111",
+  text_secondary: "#666666",
+  "accent-1": "#CC6600",
+  "accent-2": "#222222",
+};
+
 function NuancierEditor({
   colorSchemes,
   onChange,
+  onAdd,
+  onDelete,
 }: {
   colorSchemes: Record<string, { settings?: Record<string, string> }>;
   onChange: (schemeKey: string, field: string, value: string) => void;
+  onAdd: (key: string) => void;
+  onDelete: (key: string) => void;
 }) {
+  const [newName, setNewName] = useState("");
+  const [nameError, setNameError] = useState("");
+
+  const handleAdd = () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (!key) { setNameError("Nom invalide"); return; }
+    if (colorSchemes[key]) { setNameError("Ce nom existe déjà"); return; }
+    onAdd(key);
+    setNewName("");
+    setNameError("");
+  };
+
   const entries = Object.entries(colorSchemes);
 
   return (
@@ -351,7 +378,19 @@ function NuancierEditor({
         const settings = scheme?.settings || {};
         return (
           <div key={key} className="rounded-md border p-3 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">{key}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">{key}</p>
+              <button
+                type="button"
+                onClick={() => onDelete(key)}
+                title="Supprimer ce nuancier"
+                className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            </div>
             <div className="space-y-2">
               {EDITABLE_FIELDS.map((field) => {
                 const val = settings[field] || "#000000";
@@ -380,6 +419,31 @@ function NuancierEditor({
           </div>
         );
       })}
+
+      {/* ── Add new nuancier ─────────────────────────────── */}
+      <div className="rounded-md border border-dashed p-3 space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ajouter un nuancier</p>
+        <div className="flex gap-2">
+          <Input
+            value={newName}
+            onChange={(e) => { setNewName(e.target.value); setNameError(""); }}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="Nom du nuancier (ex: rose-elegance)"
+            className="text-sm flex-1"
+          />
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={!newName.trim()}
+            className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium border border-border bg-background hover:bg-muted transition-colors disabled:opacity-40"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+        {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+        <p className="text-xs text-muted-foreground">Le nom devient la clé du nuancier (espaces → tirets, minuscules uniquement).</p>
+      </div>
     </div>
   );
 }
@@ -474,6 +538,28 @@ export function GeneratedDataEditor({
                 onChange={(schemeKey, field, value) =>
                   update(["colors", "color_schemes", schemeKey, "settings", field], value)
                 }
+                onAdd={(key) => {
+                  setEditData((prev) => {
+                    const clone = deepClone(prev);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const colors = ((clone.colors as any) || {}) as Record<string, unknown>;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const cs = (colors.color_schemes as any) || {};
+                    cs[key] = { settings: { ...DEFAULT_SCHEME_SETTINGS } };
+                    colors.color_schemes = cs;
+                    clone.colors = colors;
+                    return clone;
+                  });
+                }}
+                onDelete={(key) => {
+                  setEditData((prev) => {
+                    const clone = deepClone(prev);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const cs = (clone.colors as any)?.color_schemes as Record<string, unknown> | undefined;
+                    if (cs) delete cs[key];
+                    return clone;
+                  });
+                }}
               />
             </AccordionContent>
           </AccordionItem>

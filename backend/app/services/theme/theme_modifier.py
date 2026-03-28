@@ -112,7 +112,8 @@ def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
     """Apply user-edited color_schemes to config/settings_data.json.
 
     colors_data format: {"color_schemes": {"background-1": {"settings": {...}}, ...}}
-    Only updates the 6 editable color fields per scheme; gradient fields are preserved.
+    Updates existing schemes and creates new ones (inheriting gradient/non-editable
+    fields from the first existing scheme as a base).
     Uses JSON write — must be called BEFORE text surgery on settings_data.json.
     """
     rel = "config/settings_data.json"
@@ -133,9 +134,16 @@ def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
     editable_fields = {"background", "background_secondary", "text", "text_secondary", "accent-1", "accent-2"}
     modified = False
 
+    # Pre-compute base settings for new schemes (copy from first existing scheme)
+    base_settings: dict = {}
+    if theme_schemes:
+        first_key = next(iter(theme_schemes))
+        base_settings = dict(theme_schemes[first_key].get("settings", {}))
+
     for key, user_scheme in user_schemes.items():
         if key not in theme_schemes:
-            continue
+            # New scheme: inherit gradient/non-editable fields from first existing scheme
+            theme_schemes[key] = {"settings": dict(base_settings)}
         user_settings = user_scheme.get("settings", {})
         theme_settings = theme_schemes[key].setdefault("settings", {})
         for field, value in user_settings.items():

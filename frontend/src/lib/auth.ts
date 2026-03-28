@@ -55,3 +55,25 @@ export function logout(): void {
   clearAuth();
   window.location.href = "/login";
 }
+
+// ── Session inactivity timeout (4 hours) ─────────────────────────────────────
+
+const ACTIVITY_KEY = "sdt_last_activity";
+export const SESSION_TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+export function updateActivity(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
+}
+
+export function isSessionExpired(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!isAuthenticated()) return false;
+  const raw = localStorage.getItem(ACTIVITY_KEY);
+  if (!raw) {
+    // First access after login — initialise and don't expire yet
+    updateActivity();
+    return false;
+  }
+  return Date.now() - parseInt(raw, 10) > SESSION_TIMEOUT_MS;
+}

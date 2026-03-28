@@ -20,6 +20,7 @@ import {
 } from "@/lib/api-theme";
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
+import { useSessionTimeout } from "@/lib/useSessionTimeout";
 
 type AppStep = "upload" | "configure" | "generating" | "preview" | "done";
 
@@ -40,6 +41,7 @@ const sv = {
 export default function ThemePage() {
   const currentUser = getUser();
   const isAdmin = currentUser?.is_admin ?? false;
+  useSessionTimeout();
   const [appStep, setAppStep] = useState<AppStep>("upload");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

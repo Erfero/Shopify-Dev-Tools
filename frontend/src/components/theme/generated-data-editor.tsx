@@ -369,15 +369,6 @@ const FIELD_LABELS: Record<string, string> = {
 };
 const EDITABLE_FIELDS = ["background", "background_secondary", "text", "text_secondary", "accent-1", "accent-2"];
 
-const DEFAULT_SCHEME_SETTINGS = {
-  background: "#FFFFFF",
-  background_secondary: "#F5F5F5",
-  text: "#111111",
-  text_secondary: "#666666",
-  "accent-1": "#CC6600",
-  "accent-2": "#222222",
-};
-
 // ── Color picker popover (Shopify-style) ──────────────────────────────────────
 
 function ColorPickerPopover({
@@ -453,6 +444,15 @@ function ColorPickerPopover({
   );
 }
 
+const DEFAULT_SCHEME_SETTINGS = {
+  background: "#FFFFFF",
+  background_secondary: "#F5F5F5",
+  text: "#111111",
+  text_secondary: "#666666",
+  "accent-1": "#CC6600",
+  "accent-2": "#222222",
+};
+
 function NuancierEditor({
   colorSchemes,
   onChange,
@@ -464,8 +464,19 @@ function NuancierEditor({
   onAdd: (key: string) => void;
   onDelete: (key: string) => void;
 }) {
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [nameError, setNameError] = useState("");
+
+  const allUsedColors = Object.values(colorSchemes)
+    .flatMap((s) => Object.values(s?.settings || {}))
+    .filter((v): v is string => typeof v === "string" && /^#[0-9A-Fa-f]{6}$/i.test(v));
+
+  const entries = Object.entries(colorSchemes);
+
+  const safeHex = (v: string | undefined, fallback: string) =>
+    v && /^#[0-9A-Fa-f]{6}$/i.test(v) ? v : fallback;
 
   const handleAdd = () => {
     const trimmed = newName.trim();
@@ -474,100 +485,168 @@ function NuancierEditor({
     if (!key) { setNameError("Nom invalide"); return; }
     if (colorSchemes[key]) { setNameError("Ce nom existe déjà"); return; }
     onAdd(key);
+    setActiveKey(key);
+    setShowAddForm(false);
     setNewName("");
     setNameError("");
   };
 
-  // Collect all currently used colours for the picker swatches
-  const allUsedColors = Object.values(colorSchemes)
-    .flatMap((s) => Object.values(s?.settings || {}))
-    .filter((v): v is string => typeof v === "string" && /^#[0-9A-Fa-f]{6}$/i.test(v));
-
-  const entries = Object.entries(colorSchemes);
-
   return (
-    <div className="space-y-3">
-      {entries.map(([key, scheme], idx) => {
-        const settings = scheme?.settings || {};
-        return (
-          <div key={key} className="rounded-md border p-3 space-y-2 transition-shadow hover:shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">
+    <div className="space-y-4">
+      {/* ── Card grid ── */}
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+        {entries.map(([key, scheme], idx) => {
+          const s = scheme?.settings || {};
+          const bg   = safeHex(s.background, "#FFFFFF");
+          const txt  = safeHex(s.text, "#000000");
+          const txt2 = safeHex(s.text_secondary, "#888888");
+          const acc1 = safeHex(s["accent-1"], "#333333");
+          const acc2 = safeHex(s["accent-2"], "#666666");
+          const isActive = activeKey === key;
+          return (
+            <div
+              key={key}
+              role="button"
+              tabIndex={0}
+              onClick={() => { setActiveKey(isActive ? null : key); setShowAddForm(false); }}
+              onKeyDown={(e) => e.key === "Enter" && setActiveKey(isActive ? null : key)}
+              className={`cursor-pointer select-none rounded-xl border-2 p-3 text-center transition-all duration-200 ${
+                isActive
+                  ? "border-blue-500 shadow-md scale-[1.03]"
+                  : "border-border hover:border-foreground/30 hover:shadow-sm"
+              }`}
+              style={{ backgroundColor: bg }}
+            >
+              <p className="text-xl font-bold leading-none" style={{ color: txt }}>Aa</p>
+              <div className="flex justify-center gap-1 mt-2 mb-1.5">
+                <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: acc1 }} />
+                <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: acc2 }} />
+              </div>
+              <p className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: txt2 }}>
                 Nuance {idx + 1}
-                <span className="ml-2 font-normal normal-case opacity-50">({key})</span>
               </p>
-              <button
-                type="button"
-                onClick={() => onDelete(key)}
-                title="Supprimer ce nuancier"
-                className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                </svg>
-              </button>
             </div>
-            <div className="space-y-2">
-              {EDITABLE_FIELDS.map((field) => {
-                const val = settings[field] || "#000000";
-                return (
-                  <div key={field} className="flex items-center gap-2">
-                    <ColorPickerPopover
-                      value={val}
-                      onChange={(v) => onChange(key, field, v)}
-                      currentlyUsed={allUsedColors}
-                    />
-                    <Input
-                      value={val}
-                      onChange={(e) => onChange(key, field, e.target.value)}
-                      className="w-28 font-mono text-xs"
-                      placeholder="#000000"
-                      maxLength={7}
-                    />
-                    <span className="text-xs text-muted-foreground">{FIELD_LABELS[field] || field}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
 
-      {/* ── Add new nuancier ─────────────────────────────── */}
-      <div className="rounded-md border border-dashed p-3 space-y-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ajouter un nuancier</p>
-        <div className="flex gap-2">
-          <Input
-            value={newName}
-            onChange={(e) => { setNewName(e.target.value); setNameError(""); }}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder="Nom du nuancier (ex: rose-elegance)"
-            className="text-sm flex-1"
-          />
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={!newName.trim()}
-            className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium border border-border bg-background hover:bg-muted transition-colors disabled:opacity-40"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Ajouter
-          </button>
+        {/* ── Add card ── */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => { setShowAddForm(true); setActiveKey(null); }}
+          onKeyDown={(e) => e.key === "Enter" && setShowAddForm(true)}
+          className="cursor-pointer select-none rounded-xl border-2 border-dashed border-blue-300 p-3 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all duration-200"
+        >
+          <p className="text-2xl leading-none text-blue-400">+</p>
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-blue-500 mt-2.5">Ajouter</p>
         </div>
-        {nameError && <p className="text-xs text-destructive">{nameError}</p>}
-        <p className="text-xs text-muted-foreground">Le nom devient la clé du nuancier (espaces → tirets, minuscules uniquement).</p>
       </div>
+
+      {/* ── Selected scheme editor ── */}
+      {activeKey && colorSchemes[activeKey] && (
+        <div className="rounded-xl border bg-muted/20 p-4 space-y-2.5 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Nuance {entries.findIndex(([k]) => k === activeKey) + 1}
+              <span className="ml-1.5 font-normal normal-case opacity-50">({activeKey})</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => { onDelete(activeKey); setActiveKey(null); }}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              </svg>
+              Supprimer
+            </button>
+          </div>
+          <div className="space-y-2">
+            {EDITABLE_FIELDS.map((field) => {
+              const val = colorSchemes[activeKey]?.settings?.[field] || "#000000";
+              return (
+                <div key={field} className="flex items-center gap-2">
+                  <ColorPickerPopover
+                    value={val}
+                    onChange={(v) => onChange(activeKey, field, v)}
+                    currentlyUsed={allUsedColors}
+                  />
+                  <Input
+                    value={val}
+                    onChange={(e) => onChange(activeKey, field, e.target.value)}
+                    className="w-28 font-mono text-xs"
+                    placeholder="#000000"
+                    maxLength={7}
+                  />
+                  <span className="text-xs text-muted-foreground">{FIELD_LABELS[field] || field}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Add form ── */}
+      {showAddForm && (
+        <div className="rounded-xl border bg-muted/20 p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nouveau nuancier</p>
+          <div className="flex gap-2">
+            <Input
+              value={newName}
+              onChange={(e) => { setNewName(e.target.value); setNameError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              placeholder="ex: rose-elegance"
+              className="text-sm flex-1"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={!newName.trim()}
+              className="flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium border border-border bg-background hover:bg-muted transition-colors disabled:opacity-40"
+            >
+              Créer
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(false); setNewName(""); setNameError(""); }}
+              className="rounded px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+          <p className="text-xs text-muted-foreground">Espaces → tirets, minuscules uniquement.</p>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Section wrapper ────────────────────────────────────────────────────────────
+// ── Collapsible sub-section ────────────────────────────────────────────────────
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-md bg-muted/30 p-3 space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      {children}
+    <div className="rounded-md border overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+      >
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+        <svg
+          className={`h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="p-3 space-y-3">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

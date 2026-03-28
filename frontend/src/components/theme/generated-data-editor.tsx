@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { HexColorPicker } from "react-colorful";
 import {
   Accordion,
   AccordionContent,
@@ -202,8 +203,37 @@ function RichTextField({
   );
 }
 
-// ── CSS named colours ──────────────────────────────────────────────────────────
+// ── Tailwind colour palette ────────────────────────────────────────────────────
+const TAILWIND_SHADES = ["50","100","200","300","400","500","600","700","800","900","950"];
+const TAILWIND_FAMILIES: [string, string[]][] = [
+  ["slate",   ["#F8FAFC","#F1F5F9","#E2E8F0","#CBD5E1","#94A3B8","#64748B","#475569","#334155","#1E293B","#0F172A","#020617"]],
+  ["gray",    ["#F9FAFB","#F3F4F6","#E5E7EB","#D1D5DB","#9CA3AF","#6B7280","#4B5563","#374151","#1F2937","#111827","#030712"]],
+  ["zinc",    ["#FAFAFA","#F4F4F5","#E4E4E7","#D4D4D8","#A1A1AA","#71717A","#52525B","#3F3F46","#27272A","#18181B","#09090B"]],
+  ["neutral", ["#FAFAFA","#F5F5F5","#E5E5E5","#D4D4D4","#A3A3A3","#737373","#525252","#404040","#262626","#171717","#0A0A0A"]],
+  ["stone",   ["#FAFAF9","#F5F5F4","#E7E5E4","#D6D3D1","#A8A29E","#78716C","#57534E","#44403C","#292524","#1C1917","#0C0A09"]],
+  ["red",     ["#FEF2F2","#FEE2E2","#FECACA","#FCA5A5","#F87171","#EF4444","#DC2626","#B91C1C","#991B1B","#7F1D1D","#450A0A"]],
+  ["orange",  ["#FFF7ED","#FFEDD5","#FED7AA","#FDBA74","#FB923C","#F97316","#EA580C","#C2410C","#9A3412","#7C2D12","#431407"]],
+  ["amber",   ["#FFFBEB","#FEF3C7","#FDE68A","#FCD34D","#FBBF24","#F59E0B","#D97706","#B45309","#92400E","#78350F","#451A03"]],
+  ["yellow",  ["#FEFCE8","#FEF9C3","#FEF08A","#FDE047","#FACC15","#EAB308","#CA8A04","#A16207","#854D0E","#713F12","#422006"]],
+  ["lime",    ["#F7FEE7","#ECFCCB","#D9F99D","#BEF264","#A3E635","#84CC16","#65A30D","#4D7C0F","#3F6212","#365314","#1A2E05"]],
+  ["green",   ["#F0FDF4","#DCFCE7","#BBF7D0","#86EFAC","#4ADE80","#22C55E","#16A34A","#15803D","#166534","#14532D","#052E16"]],
+  ["emerald", ["#ECFDF5","#D1FAE5","#A7F3D0","#6EE7B7","#34D399","#10B981","#059669","#047857","#065F46","#064E3B","#022C22"]],
+  ["teal",    ["#F0FDFA","#CCFBF1","#99F6E4","#5EEAD4","#2DD4BF","#14B8A6","#0D9488","#0F766E","#115E59","#134E4A","#042F2E"]],
+  ["cyan",    ["#ECFEFF","#CFFAFE","#A5F3FC","#67E8F9","#22D3EE","#06B6D4","#0891B2","#0E7490","#155E75","#164E63","#083344"]],
+  ["sky",     ["#F0F9FF","#E0F2FE","#BAE6FD","#7DD3FC","#38BDF8","#0EA5E9","#0284C7","#0369A1","#075985","#0C4A6E","#082F49"]],
+  ["blue",    ["#EFF6FF","#DBEAFE","#BFDBFE","#93C5FD","#60A5FA","#3B82F6","#2563EB","#1D4ED8","#1E40AF","#1E3A8A","#172554"]],
+  ["indigo",  ["#EEF2FF","#E0E7FF","#C7D2FE","#A5B4FC","#818CF8","#6366F1","#4F46E5","#4338CA","#3730A3","#312E81","#1E1B4B"]],
+  ["violet",  ["#F5F3FF","#EDE9FE","#DDD6FE","#C4B5FD","#A78BFA","#8B5CF6","#7C3AED","#6D28D9","#5B21B6","#4C1D95","#2E1065"]],
+  ["purple",  ["#FAF5FF","#F3E8FF","#E9D5FF","#D8B4FE","#C084FC","#A855F7","#9333EA","#7E22CE","#6B21A8","#581C87","#3B0764"]],
+  ["fuchsia", ["#FDF4FF","#FAE8FF","#F5D0FE","#F0ABFC","#E879F9","#D946EF","#C026D3","#A21CAF","#86198F","#701A75","#4A044E"]],
+  ["pink",    ["#FDF2F8","#FCE7F3","#FBCFE8","#F9A8D4","#F472B6","#EC4899","#DB2777","#BE185D","#9D174D","#831843","#500724"]],
+  ["rose",    ["#FFF1F2","#FFE4E6","#FECDD3","#FDA4AF","#FB7185","#F43F5E","#E11D48","#BE123C","#9F1239","#881337","#4C0519"]],
+];
+const TAILWIND_COLORS = TAILWIND_FAMILIES.flatMap(([family, hexes]) =>
+  hexes.map((hex, i) => ({ name: `${family}-${TAILWIND_SHADES[i]}`, hex }))
+);
 
+// ── CSS named colours ──────────────────────────────────────────────────────────
 const CSS_NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "aliceblue", hex: "#F0F8FF" }, { name: "antiquewhite", hex: "#FAEBD7" },
   { name: "aqua", hex: "#00FFFF" }, { name: "aquamarine", hex: "#7FFFD4" },
@@ -283,8 +313,11 @@ function ColorSearch() {
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
 
-  const results = query.trim().length >= 2
-    ? CSS_NAMED_COLORS.filter((c) => c.name.includes(query.trim().toLowerCase())).slice(0, 24)
+  const q = query.trim().toLowerCase();
+  const results = q.length >= 2
+    ? [...CSS_NAMED_COLORS, ...TAILWIND_COLORS]
+        .filter((c) => c.name.includes(q))
+        .slice(0, 36)
     : [];
 
   const copy = (hex: string) => {
@@ -345,6 +378,81 @@ const DEFAULT_SCHEME_SETTINGS = {
   "accent-2": "#222222",
 };
 
+// ── Color picker popover (Shopify-style) ──────────────────────────────────────
+
+function ColorPickerPopover({
+  value,
+  onChange,
+  currentlyUsed = [],
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  currentlyUsed?: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const safe = /^#[0-9A-Fa-f]{6}$/.test(value) ? value : "#000000";
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const uniqueUsed = [...new Set(currentlyUsed.filter((c) => /^#[0-9A-Fa-f]{6}$/i.test(c)))].slice(0, 18);
+
+  return (
+    <div ref={containerRef} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="h-7 w-7 rounded border border-border shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
+        style={{ backgroundColor: safe }}
+        title="Choisir une couleur"
+      />
+      {open && (
+        <div className="absolute z-50 top-9 left-0 w-60 rounded-xl border bg-white shadow-2xl p-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <HexColorPicker color={safe} onChange={onChange} style={{ width: "100%", height: 160 }} />
+          <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+            <span className="text-xs font-mono text-muted-foreground">#</span>
+            <input
+              type="text"
+              value={value.replace(/^#/, "")}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9A-Fa-f]/g, "").slice(0, 6);
+                onChange(`#${v}`);
+              }}
+              className="flex-1 font-mono text-xs uppercase outline-none bg-transparent"
+              placeholder="000000"
+              maxLength={6}
+            />
+          </div>
+          {uniqueUsed.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">Couleurs utilisées</p>
+              <div className="flex flex-wrap gap-1.5">
+                {uniqueUsed.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => onChange(c)}
+                    className="h-5 w-5 rounded border border-black/10 transition-transform hover:scale-125 cursor-pointer"
+                    style={{ backgroundColor: c }}
+                    title={c}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NuancierEditor({
   colorSchemes,
   onChange,
@@ -370,6 +478,11 @@ function NuancierEditor({
     setNameError("");
   };
 
+  // Collect all currently used colours for the picker swatches
+  const allUsedColors = Object.values(colorSchemes)
+    .flatMap((s) => Object.values(s?.settings || {}))
+    .filter((v): v is string => typeof v === "string" && /^#[0-9A-Fa-f]{6}$/i.test(v));
+
   const entries = Object.entries(colorSchemes);
 
   return (
@@ -377,7 +490,7 @@ function NuancierEditor({
       {entries.map(([key, scheme], idx) => {
         const settings = scheme?.settings || {};
         return (
-          <div key={key} className="rounded-md border p-3 space-y-2">
+          <div key={key} className="rounded-md border p-3 space-y-2 transition-shadow hover:shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">
                 Nuance {idx + 1}
@@ -397,15 +510,12 @@ function NuancierEditor({
             <div className="space-y-2">
               {EDITABLE_FIELDS.map((field) => {
                 const val = settings[field] || "#000000";
-                const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(val);
                 return (
                   <div key={field} className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={isValidHex ? val : "#000000"}
-                      onChange={(e) => onChange(key, field, e.target.value)}
-                      className="h-7 w-7 flex-shrink-0 cursor-pointer rounded border border-border bg-transparent p-0.5"
-                      title={FIELD_LABELS[field] || field}
+                    <ColorPickerPopover
+                      value={val}
+                      onChange={(v) => onChange(key, field, v)}
+                      currentlyUsed={allUsedColors}
                     />
                     <Input
                       value={val}
@@ -522,10 +632,12 @@ export function GeneratedDataEditor({
   const gt = (editData.global_texts || {}) as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const colorSchemes = ((editData.colors as any)?.color_schemes || {}) as Record<string, { settings?: Record<string, string> }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rv = ((editData.reviews as any)?.reviews || []) as any[];
 
   return (
     <div className="space-y-6">
-      <Accordion type="multiple" className="w-full space-y-2">
+      <Accordion type="single" collapsible className="w-full space-y-2">
 
         {/* ── Colors ─────────────────────────────────────────────────────── */}
         {Object.keys(colorSchemes).length > 0 && (
@@ -564,6 +676,38 @@ export function GeneratedDataEditor({
                   });
                 }}
               />
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* ── Reviews ────────────────────────────────────────────────────── */}
+        {rv.length > 0 && (
+          <AccordionItem value="reviews" className="rounded-lg border px-4">
+            <AccordionTrigger className="text-sm font-medium">
+              Avis clients
+              <Badge variant="secondary" className="ml-auto mr-2 text-xs">{rv.length} avis</Badge>
+              {sessionId && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerate("reviews"); }} disabled={!!regeneratingSection} className="ml-1 mr-1 flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border border-border/60 bg-background hover:bg-muted transition-colors disabled:opacity-50">
+                  {regeneratingSection === "reviews" ? <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg> : <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>}
+                  Régénérer
+                </button>
+              )}
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-4">
+              {rv.map((r: { name: string; age: string; rating: number; title: string; text: string; response?: string }, i: number) => (
+                <div key={i} className="rounded-md border p-3 space-y-2 transition-shadow hover:shadow-sm">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Avis {i + 1}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field label="Nom" value={r.name || ""} onChange={(v) => update(["reviews", "reviews", i, "name"], v)} />
+                    <Field label="Âge" value={r.age || ""} onChange={(v) => update(["reviews", "reviews", i, "age"], v)} />
+                  </div>
+                  <Field label="Titre" value={r.title || ""} onChange={(v) => update(["reviews", "reviews", i, "title"], v)} />
+                  <Field label="Texte" value={r.text || ""} multiline onChange={(v) => update(["reviews", "reviews", i, "text"], v)} />
+                  {r.response !== undefined && (
+                    <Field label="Réponse boutique" value={r.response || ""} multiline onChange={(v) => update(["reviews", "reviews", i, "response"], v)} />
+                  )}
+                </div>
+              ))}
             </AccordionContent>
           </AccordionItem>
         )}

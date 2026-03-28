@@ -60,6 +60,11 @@ function getHighlight(sectionKey: string, data: Record<string, unknown>): string
       const d = data as any;
       return d.page_heading || null;
     }
+    if (sectionKey === "reviews") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reviews = (data as any)?.reviews;
+      if (Array.isArray(reviews) && reviews.length > 0) return reviews[0].title || reviews[0].name || null;
+    }
     if (sectionKey === "global_texts") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const d = data as any;
@@ -145,41 +150,35 @@ function PreviewData({
 }
 
 function ColorsPreview({ data }: { data: Record<string, unknown> }) {
-  const palettes = (data.palettes || data.palette) as Array<Record<string, unknown>> | Record<string, unknown> | undefined;
+  // New format: { color_schemes: { "background-1": { settings: { background: "#...", ... } } } }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const colorSchemes = (data as any)?.color_schemes as Record<string, { settings?: Record<string, string> }> | undefined;
 
-  if (!palettes) return <GenericPreview data={data} depth={0} />;
-
-  const paletteArray = Array.isArray(palettes) ? palettes : [palettes];
-
-  return (
-    <div className="space-y-4">
-      {paletteArray.map((palette, i) => {
-        const colors = (palette.colors || palette) as Record<string, string>;
-        return (
-          <div key={i} className="space-y-2">
-            {typeof palette.name === "string" && (
-              <p className="text-xs font-medium text-muted-foreground">
-                {palette.name}
-              </p>
-            )}
-            <div className="flex gap-2">
-              {Object.entries(colors)
-                .filter(([, v]) => typeof v === "string" && v.startsWith("#"))
-                .map(([key, color]) => (
-                  <div key={key} className="flex flex-col items-center gap-1">
-                    <div
-                      className="h-8 w-8 rounded-lg border border-border/40"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">{key}</span>
+  if (colorSchemes && typeof colorSchemes === "object") {
+    return (
+      <div className="space-y-3">
+        {Object.entries(colorSchemes).map(([key, scheme], idx) => {
+          const settings = scheme?.settings || {};
+          const colorEntries = Object.entries(settings).filter(([, v]) => typeof v === "string" && v.startsWith("#"));
+          return (
+            <div key={key} className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">Nuance {idx + 1} <span className="opacity-50">({key})</span></p>
+              <div className="flex flex-wrap gap-1.5">
+                {colorEntries.map(([field, color]) => (
+                  <div key={field} className="flex flex-col items-center gap-0.5">
+                    <div className="h-7 w-7 rounded-lg border border-border/40" style={{ backgroundColor: color }} />
+                    <span className="text-[9px] text-muted-foreground">{field.replace("background_secondary", "bg2").replace("background", "bg").replace("text_secondary", "txt2").replace("text", "txt")}</span>
                   </div>
                 ))}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+          );
+        })}
+      </div>
+    );
+  }
+
+  return <GenericPreview data={data} depth={0} />;
 }
 
 function ReviewsPreview({ data }: { data: Record<string, unknown> }) {

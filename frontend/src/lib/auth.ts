@@ -22,7 +22,7 @@ export function setToken(token: string, remember = true): void {
 
 export function getUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(USER_KEY);
+  const raw = localStorage.getItem(USER_KEY) ?? sessionStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as AuthUser;
@@ -31,14 +31,20 @@ export function getUser(): AuthUser | null {
   }
 }
 
-export function setUser(user: AuthUser): void {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+export function setUser(user: AuthUser, remember = true): void {
+  const json = JSON.stringify(user);
+  if (remember) {
+    localStorage.setItem(USER_KEY, json);
+  } else {
+    sessionStorage.setItem(USER_KEY, json);
+  }
 }
 
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
 }
 
 export function isAuthenticated(): boolean {

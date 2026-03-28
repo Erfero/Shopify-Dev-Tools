@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
         return;
       }
       setToken(data.access_token, remember);
-      setUser({ email, is_admin: data.is_admin, display_name: data.display_name ?? "" });
+      setUser({ email, is_admin: data.is_admin, display_name: data.display_name ?? "" }, remember);
       router.replace("/");
     } catch {
       setError("Impossible de contacter le serveur. Veuillez réessayer dans quelques secondes.");

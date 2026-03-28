@@ -307,7 +307,88 @@ const CSS_NAMED_COLORS: { name: string; hex: string }[] = [
   { name: "yellow", hex: "#FFFF00" }, { name: "yellowgreen", hex: "#9ACD32" },
 ];
 
+// ── Traductions françaises des couleurs CSS ───────────────────────────────────
+
+const CSS_FR_NAMES: Record<string, string> = {
+  aliceblue: "bleu alice", antiquewhite: "blanc antique", aqua: "aqua",
+  aquamarine: "aigue-marine", azure: "azur", beige: "beige", bisque: "bisque",
+  black: "noir", blanchedalmond: "blanc amande", blue: "bleu",
+  blueviolet: "bleu violet", brown: "brun", burlywood: "bois flotté",
+  cadetblue: "bleu cadet", chartreuse: "chartreuse", chocolate: "chocolat",
+  coral: "corail", cornflowerblue: "bleuet", cornsilk: "soie de maïs",
+  crimson: "cramoisi", cyan: "cyan", darkblue: "bleu foncé",
+  darkcyan: "cyan foncé", darkgoldenrod: "verge d'or foncé",
+  darkgray: "gris foncé", darkgreen: "vert foncé", darkkhaki: "kaki foncé",
+  darkmagenta: "magenta foncé", darkolivegreen: "vert olive foncé",
+  darkorange: "orange foncé", darkorchid: "orchidée foncé",
+  darkred: "rouge foncé", darksalmon: "saumon foncé",
+  darkseagreen: "vert mer foncé", darkslateblue: "bleu ardoise foncé",
+  darkslategray: "gris ardoise foncé", darkturquoise: "turquoise foncé",
+  darkviolet: "violet foncé", deeppink: "rose vif", deepskyblue: "bleu ciel vif",
+  dimgray: "gris terne", dodgerblue: "bleu dodger", firebrick: "brique",
+  floralwhite: "blanc floral", forestgreen: "vert forêt", fuchsia: "fuchsia",
+  gainsboro: "gainsboro", ghostwhite: "blanc fantôme", gold: "or",
+  goldenrod: "verge d'or", gray: "gris", green: "vert",
+  greenyellow: "vert jaune", honeydew: "miel", hotpink: "rose chaud",
+  indianred: "rouge indien", indigo: "indigo", ivory: "ivoire",
+  khaki: "kaki", lavender: "lavande", lavenderblush: "lavande rosée",
+  lawngreen: "vert pelouse", lemonchiffon: "mousseline citron",
+  lightblue: "bleu clair", lightcoral: "corail clair", lightcyan: "cyan clair",
+  lightgoldenrodyellow: "jaune doré clair", lightgray: "gris clair",
+  lightgreen: "vert clair", lightpink: "rose clair", lightsalmon: "saumon clair",
+  lightseagreen: "vert mer clair", lightskyblue: "bleu ciel clair",
+  lightslategray: "gris ardoise clair", lightsteelblue: "bleu acier clair",
+  lightyellow: "jaune clair", lime: "vert lime", limegreen: "vert citron",
+  linen: "lin", magenta: "magenta", maroon: "bordeaux",
+  mediumaquamarine: "aigue-marine moyen", mediumblue: "bleu moyen",
+  mediumorchid: "orchidée moyen", mediumpurple: "pourpre moyen",
+  mediumseagreen: "vert mer moyen", mediumslateblue: "bleu ardoise moyen",
+  mediumspringgreen: "vert printemps moyen", mediumturquoise: "turquoise moyen",
+  mediumvioletred: "rouge violet moyen", midnightblue: "bleu nuit",
+  mintcream: "crème menthe", mistyrose: "rose brumeux", moccasin: "mocassin",
+  navajowhite: "blanc navajo", navy: "bleu marine", oldlace: "dentelle ancienne",
+  olive: "olive", olivedrab: "vert olive terne", orange: "orange",
+  orangered: "rouge orangé", orchid: "orchidée", palegoldenrod: "verge d'or pâle",
+  palegreen: "vert pâle", paleturquoise: "turquoise pâle",
+  palevioletred: "rouge violet pâle", papayawhip: "papaye",
+  peachpuff: "pêche", peru: "pérou", pink: "rose", plum: "prune",
+  powderblue: "bleu poudre", purple: "pourpre", red: "rouge",
+  rosybrown: "brun rosé", royalblue: "bleu royal", saddlebrown: "brun selle",
+  salmon: "saumon", sandybrown: "brun sable", seagreen: "vert mer",
+  seashell: "coquillage", sienna: "terre de sienne", silver: "argent",
+  skyblue: "bleu ciel", slateblue: "bleu ardoise", slategray: "gris ardoise",
+  snow: "neige", springgreen: "vert printemps", steelblue: "bleu acier",
+  tan: "beige bronzé", teal: "sarcelle", thistle: "chardon",
+  tomato: "tomate", turquoise: "turquoise", violet: "violet",
+  wheat: "blé", white: "blanc", whitesmoke: "blanc fumée",
+  yellow: "jaune", yellowgreen: "jaune vert",
+};
+
+// ── Traductions françaises des familles Tailwind ──────────────────────────────
+
+const TAILWIND_FR_FAMILIES: Record<string, string> = {
+  slate: "ardoise", gray: "gris", zinc: "zinc", neutral: "neutre",
+  stone: "pierre", red: "rouge", orange: "orange", amber: "ambre",
+  yellow: "jaune", lime: "citron vert", green: "vert", emerald: "émeraude",
+  teal: "sarcelle", cyan: "cyan", sky: "ciel", blue: "bleu",
+  indigo: "indigo", violet: "violet", purple: "pourpre", fuchsia: "fuchsia",
+  pink: "rose", rose: "rose pâle",
+};
+
 // ── Color name search ─────────────────────────────────────────────────────────
+
+// Build a unified searchable list with French display names
+const ALL_COLORS_FR = [
+  ...CSS_NAMED_COLORS.map((c) => ({
+    hex: c.hex,
+    display: CSS_FR_NAMES[c.name] || c.name,
+  })),
+  ...TAILWIND_COLORS.map((c) => {
+    const [family, shade] = c.name.split("-");
+    const frFamily = TAILWIND_FR_FAMILIES[family] || family;
+    return { hex: c.hex, display: `${frFamily}-${shade}` };
+  }),
+];
 
 function ColorSearch() {
   const [query, setQuery] = useState("");
@@ -315,9 +396,7 @@ function ColorSearch() {
 
   const q = query.trim().toLowerCase();
   const results = q.length >= 2
-    ? [...CSS_NAMED_COLORS, ...TAILWIND_COLORS]
-        .filter((c) => c.name.includes(q))
-        .slice(0, 36)
+    ? ALL_COLORS_FR.filter((c) => c.display.toLowerCase().includes(q)).slice(0, 36)
     : [];
 
   const copy = (hex: string) => {
@@ -328,18 +407,18 @@ function ColorSearch() {
 
   return (
     <div className="space-y-2">
-      <Label className="text-xs text-muted-foreground">Recherche par nom (coral, navy, pink…)</Label>
+      <Label className="text-xs text-muted-foreground">Rechercher une couleur en français</Label>
       <Input
-        placeholder="Tapez un nom de couleur en anglais…"
+        placeholder="ex: rouge, bleu marine, corail, ardoise-500…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="text-sm"
       />
       {results.length > 0 && (
         <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto pr-0.5">
-          {results.map(({ name, hex }) => (
+          {results.map(({ display, hex }) => (
             <button
-              key={name}
+              key={`${display}-${hex}`}
               type="button"
               onClick={() => copy(hex)}
               title={`Copier ${hex}`}
@@ -347,7 +426,7 @@ function ColorSearch() {
             >
               <span className="h-4 w-4 flex-shrink-0 rounded border border-black/10" style={{ backgroundColor: hex }} />
               <span className="font-mono text-xs">{hex}</span>
-              <span className="truncate text-xs text-muted-foreground">{name}</span>
+              <span className="truncate text-xs text-muted-foreground">{display}</span>
               {copied === hex && <span className="ml-auto text-xs text-green-600">✓</span>}
             </button>
           ))}

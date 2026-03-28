@@ -387,6 +387,19 @@ async def generate_theme(
                 pass
             return
 
+        # Inject the actual theme color_schemes for the nuancier editor.
+        # Colors are NOT AI-generated — we read them directly from the uploaded
+        # theme's settings_data.json so the user edits real theme values.
+        try:
+            sd_entry = session["structure"].parsed_files.get("config/settings_data.json")
+            if sd_entry:
+                sd_data, _, _ = sd_entry
+                cs = sd_data.get("current", {}).get("color_schemes", {})
+                if cs:
+                    all_results["colors"] = {"color_schemes": cs}
+        except Exception:
+            pass
+
         session["generated_texts"] = all_results
         _save_session_meta(session_id, session)
 

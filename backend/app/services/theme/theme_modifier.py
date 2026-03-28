@@ -109,11 +109,11 @@ def _sanitize_richtext(value: str) -> str:
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
-    """Apply the selected AI palette to all color_schemes in config/settings_data.json.
+    """Apply user-edited color_schemes to config/settings_data.json.
 
-    Derives 6 Shopify nuanciers from 1 selected palette (background, background_secondary,
-    text, text_secondary, accent1, accent2). Uses JSON write — must be called BEFORE any
-    text surgery on settings_data.json to avoid overwriting cart/UI text changes.
+    colors_data format: {"color_schemes": {"background-1": {"settings": {...}}, ...}}
+    Only updates the 6 editable color fields per scheme; gradient fields are preserved.
+    Uses JSON write — must be called BEFORE text surgery on settings_data.json.
     """
     rel = "config/settings_data.json"
     entry = pf.get(rel)
@@ -121,73 +121,26 @@ def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
         return False
 
     data, comment, is_compact = entry
-    palettes = colors_data.get("palettes", [])
-    try:
-        selected_index = int(colors_data.get("selected_palette_index", 0))
-    except (TypeError, ValueError):
-        selected_index = 0
-
-    if not palettes or selected_index >= len(palettes):
-        return False
-
-    palette = palettes[selected_index]
-    c = palette.get("colors", {})
-
-    bg   = c.get("background", "")
-    bg2  = c.get("background_secondary", "")
-    text = c.get("text", "")
-    text2 = c.get("text_secondary", "") or text
-    acc1 = c.get("accent1", "")
-    acc2 = c.get("accent2", "")
-
-    if not all([bg, bg2, text, acc1, acc2]):
+    user_schemes = colors_data.get("color_schemes", {})
+    if not user_schemes:
         return False
 
     cur = data.get("current", {})
-    schemes = cur.get("color_schemes", {})
-    if not schemes:
+    theme_schemes = cur.get("color_schemes", {})
+    if not theme_schemes:
         return False
 
-    def _lum(hex_color: str) -> float:
-        """Relative luminance (0=black, 1=white)."""
-        h = hex_color.lstrip("#")
-        if len(h) != 6:
-            return 1.0
-        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-        return (0.299 * r + 0.587 * g + 0.114 * b) / 255
-
-    # Contrasting text on accent1 background
-    text_on_acc1 = "#ffffff" if _lum(acc1) < 0.5 else "#000000"
-
-    # Derive 6 nuanciers from the selected palette — mirrors Story theme scheme roles:
-    # background-1 = main light, background-2 = alt light, inverse = light+accent secondary,
-    # scheme = accent bg, scheme-dark = near-black bg, scheme-accent-alt = accent variant
-    scheme_configs = [
-        # 1. background-1 : main light scheme
-        {"background": bg,      "background_secondary": bg2,  "text": text,         "text_secondary": text2,        "accent-1": acc1, "accent-2": acc2},
-        # 2. background-2 : slightly tinted light
-        {"background": bg2,     "background_secondary": bg,   "text": text,         "text_secondary": text2,        "accent-1": acc1, "accent-2": acc2},
-        # 3. inverse : light bg, accent color as secondary background
-        {"background": bg,      "background_secondary": acc1, "text": text,         "text_secondary": text2,        "accent-1": acc1, "accent-2": acc2},
-        # 4. scheme : accent1 as main background, contrasting text
-        {"background": acc1,    "background_secondary": acc1, "text": text_on_acc1, "text_secondary": text_on_acc1, "accent-1": bg,   "accent-2": acc2},
-        # 5. scheme-dark : near-black background, light text
-        {"background": "#1a1a1a","background_secondary": bg,  "text": "#ffffff",    "text_secondary": "#ffffff",    "accent-1": acc1, "accent-2": acc2},
-        # 6. scheme-accent-alt : accent1 bg, bg_secondary as accent highlight
-        {"background": acc1,    "background_secondary": bg,   "text": text_on_acc1, "text_secondary": text_on_acc1, "accent-1": bg2,  "accent-2": acc2},
-    ]
-
-    color_fields = {"background", "background_secondary", "text", "text_secondary", "accent-1", "accent-2"}
-    scheme_keys = list(schemes.keys())
+    editable_fields = {"background", "background_secondary", "text", "text_secondary", "accent-1", "accent-2"}
     modified = False
 
-    for i, key in enumerate(scheme_keys):
-        if i >= len(scheme_configs):
-            break
-        s = schemes[key].setdefault("settings", {})
-        for field, value in scheme_configs[i].items():
-            if value and field in color_fields:
-                s[field] = value
+    for key, user_scheme in user_schemes.items():
+        if key not in theme_schemes:
+            continue
+        user_settings = user_scheme.get("settings", {})
+        theme_settings = theme_schemes[key].setdefault("settings", {})
+        for field, value in user_settings.items():
+            if field in editable_fields and isinstance(value, str) and value.startswith("#"):
+                theme_settings[field] = value
         modified = True
 
     if not modified:

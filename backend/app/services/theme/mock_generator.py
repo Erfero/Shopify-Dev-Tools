@@ -11,8 +11,7 @@ SCHEMA CONTRACT (shared with theme_modifier.py):
   reviews     → reviews[10]
   global_texts→ header (timer+marquee — empty for FR, translated for EN/DE),
                 footer (brand_text + conditionals)
-  colors      → palettes[3]
-  legal_pages → conditions_vente, mentions_legales, politique_expedition
+  colors      → color_schemes{6} (same format as settings_data.json current.color_schemes)
   story_page  → page_heading, page_subheading, timeline_events[5]
 
 ANNOUNCEMENT BAR POLICY:
@@ -151,64 +150,58 @@ def _gender_suffix(target_gender: str) -> str:
 # ── Colors ────────────────────────────────────────────────────────────────────
 
 def _mock_colors(store_name: str, lang: str = "fr") -> dict:
-    if lang.startswith("en"):
-        names = [
-            (f"{store_name} — Rose Elegance", "Soft palette with premium rosy and beige tones"),
-            (f"{store_name} — Minimalist White", "Clean palette in black and white with a golden touch"),
-            (f"{store_name} — Natural Luxury", "Natural tones, terracotta and cream"),
-        ]
-    elif lang.startswith("de"):
-        names = [
-            (f"{store_name} — Rosé-Eleganz", "Sanfte Palette in roséfarbenen und beigefarbenen Premiumtönen"),
-            (f"{store_name} — Minimalistisches Weiß", "Klare schwarz-weiße Palette mit goldenem Akzent"),
-            (f"{store_name} — Natürlicher Luxus", "Natürliche Töne, Terrakotta und Creme"),
-        ]
-    else:
-        names = [
-            (f"{store_name} — Élégance Rose", "Palette douce aux tons rosés et beiges premium"),
-            (f"{store_name} — Minimaliste Blanc", "Palette épurée blanc et noir avec touche dorée"),
-            (f"{store_name} — Naturel Luxe", "Palette aux tons naturels, terracotta et crème"),
-        ]
-
+    """Return mock color_schemes in the same format as settings_data.json current.color_schemes."""
     return {
-        "palettes": [
-            {
-                "name": names[0][0],
-                "description": names[0][1],
-                "colors": {
-                    "background": "#FFF8F6",
-                    "background_secondary": "#F5E8E4",
-                    "text": "#1A1A1A",
-                    "text_secondary": "#6B5E5A",
-                    "accent1": "#C96A6A",
-                    "accent2": "#2C2C2C",
-                },
-            },
-            {
-                "name": names[1][0],
-                "description": names[1][1],
-                "colors": {
-                    "background": "#FFFFFF",
-                    "background_secondary": "#F9F6F0",
-                    "text": "#111111",
-                    "text_secondary": "#777777",
-                    "accent1": "#B8956A",
-                    "accent2": "#222222",
-                },
-            },
-            {
-                "name": names[2][0],
-                "description": names[2][1],
-                "colors": {
-                    "background": "#FDF9F4",
-                    "background_secondary": "#EDE3D8",
-                    "text": "#2D2520",
-                    "text_secondary": "#7A6E68",
-                    "accent1": "#C07A55",
-                    "accent2": "#3D3330",
-                },
-            },
-        ]
+        "color_schemes": {
+            "background-1": {"settings": {
+                "background": "#FFF8F6",
+                "background_secondary": "#F5E8E4",
+                "text": "#1A1A1A",
+                "text_secondary": "#6B5E5A",
+                "accent-1": "#C96A6A",
+                "accent-2": "#2C2C2C",
+            }},
+            "background-2": {"settings": {
+                "background": "#FFFFFF",
+                "background_secondary": "#F9F6F0",
+                "text": "#111111",
+                "text_secondary": "#777777",
+                "accent-1": "#B8956A",
+                "accent-2": "#222222",
+            }},
+            "inverse": {"settings": {
+                "background": "#2C2C2C",
+                "background_secondary": "#1A1A1A",
+                "text": "#FFFFFF",
+                "text_secondary": "#CCCCCC",
+                "accent-1": "#C96A6A",
+                "accent-2": "#FFFFFF",
+            }},
+            "scheme": {"settings": {
+                "background": "#FDF9F4",
+                "background_secondary": "#EDE3D8",
+                "text": "#2D2520",
+                "text_secondary": "#7A6E68",
+                "accent-1": "#C07A55",
+                "accent-2": "#3D3330",
+            }},
+            "scheme-5f1cb6ba": {"settings": {
+                "background": "#F0EBE3",
+                "background_secondary": "#E8DDD5",
+                "text": "#332B27",
+                "text_secondary": "#7A6860",
+                "accent-1": "#A05C40",
+                "accent-2": "#332B27",
+            }},
+            "scheme-8025707e": {"settings": {
+                "background": "#FFF5F0",
+                "background_secondary": "#FFE8E0",
+                "text": "#1A1A1A",
+                "text_secondary": "#888888",
+                "accent-1": "#E05C5C",
+                "accent-2": "#1A1A1A",
+            }},
+        }
     }
 
 

@@ -165,7 +165,7 @@ export default function ThemePage() {
             setAppStep("preview");
           }
           if (step.status === "error") {
-            setGenerationError(step.message || null);
+            setGenerationError(step.message || "Une erreur est survenue lors de la génération.");
           }
         },
         controller.signal,

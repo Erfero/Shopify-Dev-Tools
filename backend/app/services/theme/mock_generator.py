@@ -80,8 +80,8 @@ def _build_mock_data(
         "colors":       _mock_colors(store_name, lang),
         "homepage":     homepage_data,
         "product_page": product_data,
+        "reviews":      reviews_data,
         "faq":          faq_data,
-        "legal_pages":  legal_data,
         "story_page":   story_data,
         "global_texts": _mock_global_texts(store_name, product, target_gender, lang),
     }
@@ -111,8 +111,8 @@ async def generate_mock_texts(
     )
 
     steps = [
-        "colors", "homepage", "product_page", "faq",
-        "legal_pages", "story_page", "global_texts",
+        "colors", "homepage", "product_page", "reviews",
+        "faq", "story_page", "global_texts",
     ]
     all_results = {}
 

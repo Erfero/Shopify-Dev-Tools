@@ -10,8 +10,8 @@ from app.config import settings
 from app.prompts.colors import build_colors_prompt
 from app.prompts.homepage import build_homepage_prompt
 from app.prompts.product_page import build_product_page_prompt
+from app.prompts.reviews import build_reviews_prompt
 from app.prompts.faq import build_faq_prompt
-from app.prompts.legal_pages import build_legal_pages_prompt
 from app.prompts.story_page import build_story_page_prompt
 from app.prompts.global_texts import build_global_texts_prompt
 
@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 VISION_STEPS = {"homepage", "product_page", "story_page", "global_texts"}
 
 GENERATION_STEPS = [
-    ("colors", "Palette de couleurs", build_colors_prompt),
-    ("homepage", "Textes page d'accueil", build_homepage_prompt),
-    ("product_page", "Textes page produit", build_product_page_prompt),
-    ("faq", "Questions frequentes", build_faq_prompt),
-    ("legal_pages", "Pages legales", build_legal_pages_prompt),
-    ("story_page", "Page Notre Histoire", build_story_page_prompt),
-    ("global_texts", "Textes globaux", build_global_texts_prompt),
+    ("colors",       "Palette de couleurs",       build_colors_prompt),
+    ("homepage",     "Textes page d'accueil",     build_homepage_prompt),
+    ("product_page", "Textes page produit",       build_product_page_prompt),
+    ("reviews",      "Avis clients",              build_reviews_prompt),
+    ("faq",          "Questions fréquentes",      build_faq_prompt),
+    ("story_page",   "Page Notre Histoire",       build_story_page_prompt),
+    ("global_texts", "Textes globaux",            build_global_texts_prompt),
 ]
 
 

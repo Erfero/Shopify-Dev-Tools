@@ -762,15 +762,15 @@ async def get_analytics(current_user: dict = Depends(verify_token)):
 def _step_message(step_id: str, status: str, data: dict | None = None) -> str:
     """Get a human-readable message for a generation step."""
     labels = {
-        "colors": "Palette de couleurs",
-        "homepage": "Textes page d'accueil",
+        "colors":       "Palette de couleurs",
+        "homepage":     "Textes page d'accueil",
         "product_page": "Textes page produit",
-        "faq": "Questions frequentes",
-        "legal_pages": "Pages legales",
-        "story_page": "Page Notre Histoire",
+        "reviews":      "Avis clients",
+        "faq":          "Questions fréquentes",
+        "story_page":   "Page Notre Histoire",
         "global_texts": "Textes globaux",
-        "preview": "Previsualisation",
-        "complete": "Generation terminee",
+        "preview":      "Prévisualisation",
+        "complete":     "Génération terminée",
     }
     label = labels.get(step_id, step_id)
     if status == "generating":

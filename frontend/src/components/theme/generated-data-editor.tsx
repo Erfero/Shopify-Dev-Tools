@@ -618,7 +618,15 @@ export function GeneratedDataEditor({
         </p>
       )}
 
-      <Button className="w-full" size="lg" onClick={() => onValidate(editData)} disabled={isApplying}>
+      <Button className="w-full" size="lg" onClick={() => {
+        const dataToSend = deepClone(editData);
+        // Embed the selected palette index so the backend knows which palette to apply
+        const colorsData = dataToSend.colors as Record<string, unknown> | undefined;
+        if (colorsData && Array.isArray(colorsData.palettes)) {
+          colorsData.selected_palette_index = selectedPalette;
+        }
+        onValidate(dataToSend);
+      }} disabled={isApplying}>
         {isApplying ? (
           <span className="flex items-center gap-2">
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

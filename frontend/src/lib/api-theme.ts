@@ -214,9 +214,12 @@ export function getDownloadUrl(sessionId: string): string {
   return `${API_BASE}/api/theme/download/${sessionId}`;
 }
 
-export async function downloadTheme(sessionId: string, filename = "theme.zip"): Promise<void> {
+export async function downloadTheme(sessionId: string): Promise<void> {
   const res = await apiFetch(`${API_BASE}/api/theme/download/${sessionId}`);
   if (!res.ok) throw new Error("Erreur lors du téléchargement du thème.");
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename[^;=\n]*=["']?([^"';\n]+)["']?/);
+  const filename = match?.[1]?.trim() ?? "Theme_Story.zip";
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

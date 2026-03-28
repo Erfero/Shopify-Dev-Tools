@@ -374,12 +374,15 @@ function NuancierEditor({
 
   return (
     <div className="space-y-3">
-      {entries.map(([key, scheme]) => {
+      {entries.map(([key, scheme], idx) => {
         const settings = scheme?.settings || {};
         return (
           <div key={key} className="rounded-md border p-3 space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">{key}</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">
+                Nuance {idx + 1}
+                <span className="ml-2 font-normal normal-case opacity-50">({key})</span>
+              </p>
               <button
                 type="button"
                 onClick={() => onDelete(key)}

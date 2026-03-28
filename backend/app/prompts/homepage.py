@@ -14,11 +14,13 @@ RÈGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (richtext et inline), tu DOI
 
 RÈGLE SLOGAN : Le slogan suit TOUJOURS le format : NomBoutique : Promesse courte et percutante. Exemple : Roselash : Révélez un Regard Magnétique, Sans Colle, Sans Limite.
 
-RÈGLE TITRES AVANTAGES : Chaque titre d'avantage doit être une phrase impérative vendeuse commençant par un verbe d'action fort (Obtenez, Sculptez, Retrouvez, Adoptez, Rayonnez, Transformez, Découvrez...) suivi d'un bénéfice spécifique et concret du produit. Le texte associé doit faire EXACTEMENT 2 phrases courtes maximum — chaque phrase de 10 à 15 mots max. PAS PLUS.
+RÈGLE TITRES AVANTAGES : Chaque titre d'avantage DOIT être une phrase impérative VENDEUSE et ÉMOTIONNELLEMENT PUISSANTE commençant par un verbe d'action fort et percutant (Obtenez, Sculptez, Retrouvez, Adoptez, Rayonnez, Transformez, Découvrez, Libérez, Révélez, Éliminez, Boostez, Reprenez...). Le titre doit promettre un RÉSULTAT CONCRET et DÉSIRÉ, idéalement avec un chiffre ou une précision (ex: "Obtenez des Résultats Visibles en 14 Jours", "Retrouvez une Peau Lissée à 90%", "Éliminez la Douleur Dès la 1ère Utilisation"). Le texte associé doit faire EXACTEMENT 2 phrases courtes — chaque phrase de 10 à 15 mots max. La 1ère phrase formule le problème résolu ou la transformation. La 2ème phrase renforce avec un bénéfice émotionnel ou une preuve.
 
 RÈGLE LONGUEUR STRICTE : Tous les champs "text" et "description" (sauf les titres) doivent être COURTS : maximum 2 phrases de 10-15 mots chacune. INTERDIT de faire des textes longs.
 
-RÈGLE COMPARISON FEATURES : Chaque champ "feature" du tableau comparatif doit être une expression COURTE et PRÉCISE de 3 à 5 mots MAXIMUM qui exprime un avantage concret, un bénéfice réel ou une caractéristique distinctive du produit. INTERDIT les expressions génériques et vagues (ex: "Qualité Premium", "Livraison rapide", "Très bon produit"). OBLIGATOIRE d'aller droit au but avec des expressions percutantes et spécifiques au produit (ex: "Résultats en 14 jours", "Sans sulfate ni parabène", "Certifié cruelty-free", "Tenue 24h garantie", "Ingrédients d'origine naturelle"). Chaque feature doit donner une raison forte et concrète d'acheter CE produit plutôt qu'un autre. Sois TRÈS spécifique au produit envoyé."""
+RÈGLE PERSUASION MAXIMALE : Les textes "advantages" doivent déclencher une ÉMOTION FORTE. Utilise des formules qui créent de l'urgence, de la désirabilité ou de la peur de manquer (FOMO). Évoque des transformations de vie réelles, des résultats mesurables, des douleurs résolues. Chaque avantage doit faire ressentir AU LECTEUR qu'il a BESOIN de ce produit.
+
+RÈGLE COMPARISON FEATURES : Chaque champ "feature" du tableau comparatif doit être une expression ULTRA-COURTE et ULTRA-PERCUTANTE de 2 à 5 mots MAXIMUM — JAMAIS plus de 5 mots, JAMAIS plus de 6 mots. Exprime un résultat chiffré, une composition distinctive, une certification ou un bénéfice unique du produit. INTERDIT les expressions génériques et vagues (ex: "Qualité Premium", "Livraison rapide", "Très bon produit", "Efficacité prouvée", "Grande qualité"). OBLIGATOIRE: expressions percutantes et SPÉCIFIQUES à CE produit exact (ex: "Résultats en 14 jours", "Sans sulfate ni parabène", "Certifié cruelty-free", "Tenue 24h garantie", "Formule brevetée", "Testé dermatologiquement", "-80% de douleur"). Chaque feature doit frapper l'esprit du lecteur et donner une raison forte et concrète d'acheter CE produit plutôt qu'un autre. Sois TRÈS spécifique au produit envoyé."""
 
     products = ", ".join(context["product_names"])
     gender = context.get("target_gender", "femme")
@@ -64,13 +66,13 @@ Génère tous les textes de la page d'accueil. Réponds en JSON avec ce schéma 
     {{"title": "Bénéfice clé 3 (texte simple)", "text": "Description inline avec <strong>mot fort</strong>"}}
   ],
   "advantages": [
-    {{"title": "Verbe d'action + Bénéfice chiffré (ex: Obtenez un Regard Intensifié en 3 Semaines)", "text": "<p>Phrase 1 courte vendeuse avec <strong>expression percutante</strong>. Phrase 2 courte complémentaire.</p>"}},
-    {{"title": "Verbe d'action + Avantage unique (ex: Sculptez un Ovale Parfait Sans Effort)", "text": "<p>Phrase 1 courte avec <strong>mot d'impact</strong>. Phrase 2 courte.</p>"}},
-    {{"title": "Verbe d'action + Résultat clé (ex: Retrouvez une Jeunesse Éclatante)", "text": "<p>Phrase 1 courte avec <strong>expression forte</strong>. Phrase 2 courte.</p>"}},
-    {{"title": "Verbe d'action + Bénéfice pratique (ex: Adoptez un Rituel Simple et Efficace)", "text": "<p>Phrase 1 courte avec <strong>mot percutant</strong>. Phrase 2 courte.</p>"}},
-    {{"title": "Verbe d'action + Bénéfice confiance (ex: Rayonnez de Confiance avec un Profil Sublime)", "text": "<p>Phrase 1 courte avec <strong>expression d'impact</strong>. Phrase 2 courte.</p>"}},
-    {{"title": "Verbe d'action + Promesse forte", "text": "<p>Phrase 1 courte avec <strong>mot fort</strong>. Phrase 2 courte.</p>"}},
-    {{"title": "Verbe d'action + Transformation finale (ex: Transformez votre Routine en Résultats)", "text": "<p>Phrase 1 courte avec <strong>tournure percutante</strong>. Phrase 2 courte.</p>"}}
+    {{"title": "Verbe d'action fort + Résultat CHIFFRÉ spécifique au produit (ex: Obtenez des Résultats Visibles en 14 Jours, Retrouvez une Peau Lissée à 90%, Éliminez la Douleur Dès la 1ère Utilisation)", "text": "<p>Phrase 1 : problème résolu ou transformation vécue avec <strong>bénéfice clé</strong>. Phrase 2 : renfort émotionnel ou preuve concrète.</p>"}},
+    {{"title": "Verbe fort + Avantage exclusif du produit (ex: Sculptez un Ovale Parfait en 3 Semaines, Libérez-vous de la Douleur Chronique, Révélez un Éclat Naturel Immédiat)", "text": "<p>Phrase 1 vendeuse avec <strong>expression d'impact</strong>. Phrase 2 courte complémentaire.</p>"}},
+    {{"title": "Verbe fort + Promesse de résultat concret (ex: Retrouvez l'Énergie de Vos 20 Ans, Transformez Votre Corps en 30 Jours, Boostez Votre Confiance en Quelques Semaines)", "text": "<p>Phrase 1 avec <strong>bénéfice transformatif</strong>. Phrase 2 courte de renfort.</p>"}},
+    {{"title": "Verbe fort + Facilité ou praticité (ex: Adoptez un Rituel de 5 Minutes Seulement, Utilisez Partout Sans Contrainte, Reprenez le Contrôle Facilement)", "text": "<p>Phrase 1 avec <strong>avantage pratique fort</strong>. Phrase 2 courte.</p>"}},
+    {{"title": "Verbe fort + Bénéfice émotionnel puissant (ex: Rayonnez de Confiance Chaque Jour, Retrouvez Votre Sérénité Perdue, Découvrez la Liberté que Vous Méritez)", "text": "<p>Phrase 1 émotionnelle avec <strong>expression percutante</strong>. Phrase 2 courte de preuve.</p>"}},
+    {{"title": "Verbe fort + Garantie ou sécurité (ex: Obtenez un Remboursement si Non Satisfait, Profitez d'une Technologie Certifiée, Bénéficiez d'une Formule Testée Cliniquement)", "text": "<p>Phrase 1 avec <strong>argument de confiance</strong>. Phrase 2 courte de réassurance.</p>"}},
+    {{"title": "Verbe fort + Transformation ultime (ex: Transformez Votre Quotidien Dès Maintenant, Rejoignez des Milliers de Clients Satisfaits, Vivez la Différence Dès J+1)", "text": "<p>Phrase 1 avec <strong>appel à l'action émotionnel</strong>. Phrase 2 courte de clôture persuasive.</p>"}}
   ],
   "comparison": {{
     "title": "Titre section comparaison (ex: Pourquoi choisir {store} ?)",
@@ -96,12 +98,12 @@ Génère tous les textes de la page d'accueil. Réponds en JSON avec ce schéma 
 
 CONTRAINTES :
 - Exactement 3 benefits, 7 advantages, 5 comparison.items, 4 specs.items
-- comparison.items[].feature : 3 à 5 mots MAXIMUM — avantage, bénéfice ou caractéristique SPÉCIFIQUE et CONCRET au produit. INTERDIT les expressions génériques vagues ("Qualité Premium", "Livraison rapide", "Produit naturel"). Chaque feature doit aller droit au but et donner une raison forte et précise d'acheter ce produit plutôt qu'un autre
+- comparison.items[].feature : 2 à 5 mots MAXIMUM, JAMAIS 6 mots ou plus — résultat chiffré, composition, certification ou bénéfice unique SPÉCIFIQUE à CE produit exact. INTERDIT ABSOLUMENT les expressions génériques ("Qualité Premium", "Livraison rapide", "Produit naturel", "Très efficace", "Meilleur produit")
+- Titres advantages : OBLIGATOIREMENT impératifs, vendeurs, avec résultat CONCRET ou chiffre (ex: "Obtenez des Résultats Visibles en 14 Jours", "Retrouvez une Peau Lissée à 90%"). INTERDIT les titres vagues ou génériques
+- Textes advantages : EXACTEMENT 2 phrases courtes (10-15 mots chacune MAX), ultra-vendeurs, avec <strong> sur les expressions d'impact. Phrase 1 = transformation/problème résolu. Phrase 2 = renfort émotionnel ou preuve
 - Chaque texte doit être unique et différent des autres
-- Sois spécifique au produit, pas générique
+- Sois TRÈS spécifique au produit envoyé, pas générique
 - Slogan OBLIGATOIREMENT au format : NomBoutique : Promesse percutante
-- Titres advantages OBLIGATOIREMENT sous forme impérative (commencer par un verbe d'action fort)
-- Textes advantages : EXACTEMENT 2 phrases courtes (10-15 mots chacune MAX), vendeurs, avec <strong>
 - Texte welcome : EXACTEMENT 2 phrases courtes
 - Descriptions benefits : 1 phrase courte MAX (10 mots)
 - specs.title OBLIGATOIREMENT au format : "Le [nom] qu'il vous faut"

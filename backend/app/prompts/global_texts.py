@@ -104,32 +104,16 @@ Génère les textes globaux du thème Shopify. Réponds en JSON avec ce schéma 
     {newsletter_instruction}
     {link_list_instruction}
   }},
-  "cart": {{
-    "button_text": "Texte bouton panier (ex: COMMANDER MAINTENANT)",
-    "upsell_title": "Titre upsell panier (ex: Complétez votre commande)",
-    "upsell_button_text": "Ajouter",
-    "protection_text": "Protection colis incluse",
-    "savings_text": "Vous économisez",
-    "subtotal_text": "Sous-Total",
-    "total_text": "Total",
-    "cart_footer_text": "Texte bas de panier avec emojis trust (ex: Paiement sécurisé | Livraison rapide)"
-  }},
-  "delivery": {{
-    "today_info": "Commande",
-    "ready_info": "Commande Prête",
-    "delivered_info": "Livraison"
-  }},
-  "settings": {{
-    "product_card_button_text": "Texte bouton fiche produit (ex: Ajouter au panier)",
-    "timer_timeout_text": "Offre expirée"
-  }}
+  "cart": {{}},
+  "delivery": {{}},
+  "settings": {{}}
 }}
 
 CONTRAINTES :
 - Respecte scrupuleusement la politique langue ci-dessus (vide pour FR, traduit pour EN/DE)
 - brand_text est du HTML avec <p> et plusieurs <strong> sur le nom de marque et les promesses clés
 - trust_badges.description utilisent uniquement <strong> (pas de <p>) — chaque badge doit avoir un <strong>
-- Les autres textes (cart, delivery, settings) sont du texte simple
+- Les champs cart, delivery, settings doivent rester VIDES (objets vides {{}}) — ils sont gérés par des traductions fixes côté serveur
 - Adapte le vocabulaire au produit : {products}"""
 
     return system, user

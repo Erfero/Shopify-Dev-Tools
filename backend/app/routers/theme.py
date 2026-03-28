@@ -444,6 +444,21 @@ async def apply_theme(
         language = session.get("language", "fr")
         target_gender = session.get("target_gender", "femme")
         store_name = session.get("store_name", "")
+
+        # Refresh parsed_files from current disk state before applying.
+        # This ensures re-apply works correctly: if the user goes back to preview
+        # and applies again, we need to read the already-modified files (not the
+        # original in-memory cache) so text surgery can find the current values.
+        for rel_path in EDITABLE_JSON_FILES:
+            file_path = structure.extract_dir / rel_path
+            if file_path.exists():
+                try:
+                    data, comment = read_theme_json(file_path)
+                    is_compact = detect_json_format(file_path)
+                    structure.parsed_files[rel_path] = (data, comment, is_compact)
+                except Exception:
+                    pass  # Keep stale cache entry if read fails
+
         modified_files = apply_generated_texts(structure, all_results, language=language, target_gender=target_gender, store_name=store_name)
 
         await translate_remaining_texts(

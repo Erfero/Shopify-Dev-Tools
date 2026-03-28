@@ -1138,12 +1138,20 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "it": "Aggiungi al carrello",
         "nl": "In winkelwagen",
     }
+    _cart_button = {
+        "fr": "COMMANDER MAINTENANT",
+        "en": "ORDER NOW",
+        "de": "JETZT BESTELLEN",
+        "es": "PEDIR AHORA",
+        "pt": "PEDIR AGORA",
+        "it": "ORDINA ORA",
+        "nl": "NU BESTELLEN",
+    }
 
     timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
     today, ready, delivered = _delivery_labels.get(_lang2, _delivery_labels["en"])
 
     reps: list[tuple[str, str, str]] = []
-    cart = gt.get("cart", {})
     settings_txt = gt.get("settings", {})
     cur = data.get("current", {})
 
@@ -1155,29 +1163,29 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
          str(cur.get("timer_timeout_text", "")),
          settings_txt.get("timer_timeout_text") or _timeout.get(_lang2, _timeout["en"]))
 
-    # Cart-drawer section
+    # Cart-drawer section — always use hardcoded translations for reliability.
+    # AI-generated cart values are unreliable (often wrong language).
     for _, sec in cur.get("sections", {}).items():
         if sec.get("type") != "cart-drawer":
             continue
         s = sec.get("settings", {})
 
-        # Cart settings: use AI data if available, else fixed translation
+        _rep(reps, "cart_button_text",       str(s.get("cart_button_text", "")),
+             _cart_button.get(_lang2, _cart_button["en"]))
         _rep(reps, "cart_upsell_title",      str(s.get("cart_upsell_title", "")),
-             cart.get("upsell_title") or _upsell_titles.get(_lang2, _upsell_titles["en"]))
+             _upsell_titles.get(_lang2, _upsell_titles["en"]))
         _rep(reps, "cart_upsell_button_text", str(s.get("cart_upsell_button_text", "")),
-             cart.get("upsell_button_text") or _upsell_btn.get(_lang2, _upsell_btn["en"]))
+             _upsell_btn.get(_lang2, _upsell_btn["en"]))
         _rep(reps, "cart_protection_text",    str(s.get("cart_protection_text", "")),
-             cart.get("protection_text") or _protection.get(_lang2, _protection["en"]))
+             _protection.get(_lang2, _protection["en"]))
         _rep(reps, "cart_savings_text",       str(s.get("cart_savings_text", "")),
-             cart.get("savings_text") or _savings.get(_lang2, _savings["en"]))
+             _savings.get(_lang2, _savings["en"]))
         _rep(reps, "cart_subtotal_text",      str(s.get("cart_subtotal_text", "")),
-             cart.get("subtotal_text") or _subtotal.get(_lang2, _subtotal["en"]))
+             _subtotal.get(_lang2, _subtotal["en"]))
         _rep(reps, "cart_total_text",         str(s.get("cart_total_text", "")),
-             cart.get("total_text") or _total.get(_lang2, _total["en"]))
+             _total.get(_lang2, _total["en"]))
         _rep(reps, "cart_footer_text",        str(s.get("cart_footer_text", "")),
-             cart.get("cart_footer_text") or _cart_footer.get(_lang2, _cart_footer["en"]))
-        if cart.get("button_text"):
-            _rep(reps, "cart_button_text", str(s.get("cart_button_text", "")), cart["button_text"])
+             _cart_footer.get(_lang2, _cart_footer["en"]))
 
         # Blocks: timer text (fixed) + delivery estimation (fixed)
         for _, blk in _blocks_in_order(sec):

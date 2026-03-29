@@ -327,14 +327,8 @@ export default function ReviewsPage() {
   };
 
   const handleBack = () => {
-    // From download: go back to step 1 keeping all form data intact
     if (step === 5) {
-      setDone(false);
-      setEvents([]);
-      setProgress(0);
-      setError(null);
-      setIsGenerating(false);
-      setStep(1);
+      setStep(4);
       return;
     }
     if (step === 4 && isGenerating) { abortRef.current?.(); setIsGenerating(false); }

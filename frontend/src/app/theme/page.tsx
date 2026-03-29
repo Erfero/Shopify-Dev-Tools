@@ -469,6 +469,14 @@ export default function ThemePage() {
                         <RefreshCw size={13} /> Réessayer
                       </button>
                     )}
+                    {!isGenerating && previewData && !generationError && (
+                      <button
+                        onClick={() => setAppStep("preview")}
+                        style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: "var(--primary)", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "white", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        Voir la prévisualisation <ChevronRight size={13} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -481,10 +489,10 @@ export default function ThemePage() {
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                       <button
-                        onClick={() => setAppStep("configure")}
+                        onClick={() => setAppStep("generating")}
                         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
                       >
-                        <ChevronLeft size={14} /> Modifier la configuration
+                        <ChevronLeft size={14} /> Retour
                       </button>
                       {(historyStack.length > 1) && (
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>

@@ -20,7 +20,7 @@ const STEPS_MULTI = [
 export function StepIndicator({ currentStep, multi = false }: { currentStep: number; multi?: boolean }) {
   const STEPS = multi ? STEPS_MULTI : STEPS_SINGLE;
   return (
-    <div className="flex items-start justify-center gap-0 mb-10 px-1 w-full overflow-hidden">
+    <div className="flex items-start justify-center gap-0 mb-10 px-4 pt-3 w-full">
       {STEPS.map((step, index) => {
         const done = step.id < currentStep;
         const active = step.id === currentStep;

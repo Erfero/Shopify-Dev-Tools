@@ -1368,7 +1368,7 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     """Switch the theme's default storefront locale to the chosen language.
 
     Storefront locale files (*.json):
-      1. Demote en.default.json → en.json
+      1. Demote ALL existing *.default.json → *.json  (Shopify allows only one)
       2. Promote {lang}.json → {lang}.default.json
 
     Schema locale files (*.schema.json — theme EDITOR admin labels):
@@ -1388,14 +1388,56 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if not locales_dir.exists():
         return
 
-    # Try exact code, then primary subtag (e.g. "fr" from "fr-FR")
-    # Also accept when target is already the default (e.g. fr.default.json exists)
+    # ── Build a case-insensitive map of all available locale files ────────────
+    # On Linux (Render), filenames are case-sensitive. The theme uses mixed-case
+    # codes like pt-BR.json, zh-CN.json, bg-BG.json — we must match robustly.
+    #
+    # Map: lowercase_stem → real_filename  (e.g. "pt-br" → "pt-BR")
+    _locale_map: dict[str, str] = {}
+    for f in locales_dir.iterdir():
+        if not f.name.endswith(".json"):
+            continue
+        if ".schema" in f.name:
+            continue
+        # Strip .json and .default suffixes to get the language code
+        stem = f.name
+        if stem.endswith(".default.json"):
+            stem = stem[: -len(".default.json")]
+        else:
+            stem = stem[: -len(".json")]
+        _locale_map[stem.lower()] = stem  # key=lowercase, value=real case
+
+    # ── Known code aliases (our LANGUAGES list vs theme locale file names) ────
+    # e.g. user picks "no" but theme has "nb.json" (Norwegian Bokmål)
+    #      user picks "zh" but theme has "zh-CN.json"
+    _ALIASES: dict[str, list[str]] = {
+        "no":    ["nb", "no"],          # Norwegian → Bokmål
+        "zh":    ["zh-CN", "zh"],       # Chinese Simplified → zh-CN
+        "pt":    ["pt-PT", "pt-BR", "pt"],  # generic Portuguese
+        "bg":    ["bg-BG", "bg"],
+        "hr":    ["hr-HR", "hr"],
+        "lt":    ["lt-LT", "lt"],
+        "ro":    ["ro-RO", "ro"],
+        "sk":    ["sk-SK", "sk"],
+        "sl":    ["sl-SI", "sl"],
+    }
+
+    # ── Find the real locale code in the theme ────────────────────────────────
+    # Priority order:
+    #   1. Exact match (case-insensitive)
+    #   2. Alias list for this code
+    #   3. Primary subtag prefix (e.g. "pt-br" → "pt")
     target_code: str | None = None
-    codes_to_try = [lang, lang.split("-")[0]] if "-" in lang else [lang]
+
+    codes_to_try: list[str] = [lang]
+    codes_to_try += [a.lower() for a in _ALIASES.get(lang, [])]
+    if "-" in lang:
+        codes_to_try.append(lang.split("-")[0])  # "pt-br" → "pt"
+
     for code in codes_to_try:
-        if ((locales_dir / f"{code}.json").exists()
-                or (locales_dir / f"{code}.default.json").exists()):
-            target_code = code
+        real = _locale_map.get(code.lower())
+        if real:
+            target_code = real
             break
 
     if not target_code:

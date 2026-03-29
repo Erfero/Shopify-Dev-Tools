@@ -693,9 +693,70 @@ async def get_user_by_id(id: str) -> dict | None:
 async def get_all_users() -> list[dict]:
     async with _engine.connect() as conn:
         rows = (await conn.execute(
-            text("SELECT id, email, is_approved, is_admin, created_at, display_name FROM users ORDER BY created_at DESC")
+            text("SELECT id, email, is_approved, is_admin, created_at, display_name, last_login FROM users ORDER BY created_at DESC")
         )).fetchall()
-    return [{"id": r[0], "email": r[1], "is_approved": bool(r[2]), "is_admin": bool(r[3]), "created_at": str(r[4]), "display_name": r[5] or ""} for r in rows]
+    return [{"id": r[0], "email": r[1], "is_approved": bool(r[2]), "is_admin": bool(r[3]), "created_at": str(r[4]), "display_name": r[5] or "", "last_login": str(r[6]) if r[6] else None} for r in rows]
+
+
+async def get_users_detailed() -> list[dict]:
+    """Return all users enriched with per-user action counts from activity_log."""
+    async with _engine.connect() as conn:
+        # All users
+        user_rows = (await conn.execute(
+            text("SELECT id, email, is_approved, is_admin, created_at, display_name, last_login FROM users ORDER BY created_at DESC")
+        )).fetchall()
+
+        # Action counts per email
+        count_rows = (await conn.execute(
+            text("""
+            SELECT user_email,
+                   SUM(CASE WHEN action='theme_generate' THEN 1 ELSE 0 END) AS themes,
+                   SUM(CASE WHEN action='theme_download' THEN 1 ELSE 0 END) AS theme_downloads,
+                   SUM(CASE WHEN action='csv_generate'   THEN 1 ELSE 0 END) AS csvs,
+                   SUM(CASE WHEN action='csv_download'   THEN 1 ELSE 0 END) AS csv_downloads,
+                   COUNT(*) AS total_actions
+            FROM activity_log
+            GROUP BY user_email
+            """)
+        )).fetchall()
+
+    counts: dict[str, dict] = {}
+    for r in count_rows:
+        counts[r[0]] = {
+            "themes": int(r[1] or 0),
+            "theme_downloads": int(r[2] or 0),
+            "csvs": int(r[3] or 0),
+            "csv_downloads": int(r[4] or 0),
+            "total_actions": int(r[5] or 0),
+        }
+
+    result = []
+    for r in user_rows:
+        email = r[1]
+        c = counts.get(email, {"themes": 0, "theme_downloads": 0, "csvs": 0, "csv_downloads": 0, "total_actions": 0})
+        result.append({
+            "id": r[0],
+            "email": email,
+            "display_name": r[5] or "",
+            "is_approved": bool(r[2]),
+            "is_admin": bool(r[3]),
+            "created_at": str(r[4]),
+            "last_login": str(r[6]) if r[6] else None,
+            **c,
+        })
+    return result
+
+
+async def set_last_login(user_email: str) -> None:
+    """Update last_login timestamp for the given user."""
+    try:
+        async with _engine.begin() as conn:
+            await conn.execute(
+                text("UPDATE users SET last_login = :ts WHERE email = :email"),
+                {"ts": __import__("datetime").datetime.utcnow().isoformat(timespec="seconds"), "email": user_email},
+            )
+    except Exception as e:
+        _logger.warning("set_last_login failed for %s: %s", user_email, e)
 
 
 async def update_user_status(id: str, is_approved: bool | None = None, is_admin: bool | None = None) -> None:
@@ -782,6 +843,7 @@ async def _migrate_add_columns() -> None:
         "ALTER TABLE theme_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
         "ALTER TABLE review_history ADD COLUMN user_email TEXT DEFAULT 'inconnu'",
         "ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN last_login TEXT DEFAULT NULL",
     ]
     for stmt in migrations:
         try:

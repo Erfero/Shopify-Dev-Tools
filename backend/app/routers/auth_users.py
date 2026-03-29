@@ -16,7 +16,9 @@ from app.database import (
     admin_update_user,
     delete_user,
     log_activity,
+    set_last_login,
     _display_name_from_email,
+    get_users_detailed,
 )
 from app.email_utils import send_approval_email
 
@@ -105,6 +107,7 @@ async def login(req: LoginRequest):
         "is_approved": True,
     })
     await log_activity(user["email"], "login")
+    await set_last_login(user["email"])
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -168,6 +171,12 @@ def _require_admin(current_user: dict = Depends(verify_token)) -> dict:
 async def list_users(current_user: dict = Depends(_require_admin)):
     users = await get_all_users()
     return users
+
+
+@router.get("/users/detailed")
+async def list_users_detailed(current_user: dict = Depends(_require_admin)):
+    """Return all users with full stats: action counts, last_login, etc."""
+    return await get_users_detailed()
 
 
 @router.patch("/users/{user_id}/approve")

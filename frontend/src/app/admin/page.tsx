@@ -296,6 +296,9 @@ export default function AdminPage() {
             <button onClick={() => fetchAll(activityPage)} disabled={loading} className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40">
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
+            <button onClick={() => router.push("/admin/users")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted">
+              <Users className="h-3.5 w-3.5" /><span className="hidden sm:inline">Comptes détaillés</span>
+            </button>
             <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:bg-muted">
               <ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Retour</span>
             </button>

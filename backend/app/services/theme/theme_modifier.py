@@ -579,9 +579,9 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
 
     _lang2 = language[:2].lower()
     _gender_plural = {
-        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "da": "mænd", "sv": "män", "no": "menn", "fi": "miehiä", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen"},
-        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "da": "personer", "sv": "personer", "no": "personer", "fi": "henkilöä", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen"},
-    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "da": "kvinder", "sv": "kvinnor", "no": "kvinner", "fi": "naista", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen"})
+        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "da": "mænd", "sv": "män", "no": "menn", "fi": "miehiä", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen", "pl": "mężczyzn", "ru": "мужчин"},
+        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "da": "personer", "sv": "personer", "no": "personer", "fi": "henkilöä", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen", "pl": "osób", "ru": "человек"},
+    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "da": "kvinder", "sv": "kvinnor", "no": "kvinner", "fi": "naista", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen", "pl": "kobiet", "ru": "женщин"})
     _plural = _gender_plural.get(_lang2, _gender_plural["en"])
     _fixed = {
         "fr": ("Description", "Comment ça marche ?", f"+9860 {_plural} l'ont déjà adopté !"),
@@ -673,9 +673,9 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
     # Fixed accordion headings by language
     _lang = language[:2].lower()
     _gender_plural = {
-        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "da": "mænd", "sv": "män", "no": "menn", "fi": "miehiä", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen"},
-        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "da": "personer", "sv": "personer", "no": "personer", "fi": "henkilöä", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen"},
-    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "da": "kvinder", "sv": "kvinnor", "no": "kvinner", "fi": "naista", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen"})
+        "homme": {"fr": "hommes", "en": "men", "de": "Männer", "da": "mænd", "sv": "män", "no": "menn", "fi": "miehiä", "es": "hombres", "pt": "homens", "it": "uomini", "nl": "mannen", "pl": "mężczyzn", "ru": "мужчин"},
+        "mixte": {"fr": "personnes", "en": "people", "de": "Personen", "da": "personer", "sv": "personer", "no": "personer", "fi": "henkilöä", "es": "personas", "pt": "pessoas", "it": "persone", "nl": "mensen", "pl": "osób", "ru": "человек"},
+    }.get(target_gender.lower(), {"fr": "femmes", "en": "women", "de": "Frauen", "da": "kvinder", "sv": "kvinnor", "no": "kvinner", "fi": "naista", "es": "mujeres", "pt": "mulheres", "it": "donne", "nl": "vrouwen", "pl": "kobiet", "ru": "женщин"})
     _plural = _gender_plural.get(_lang, _gender_plural["en"])
     _fixed_headings = {
         "fr": ("Description", "Comment ça marche ?", f"+9860 {_plural} l'ont déjà adopté !"),
@@ -689,6 +689,8 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "pt": ("Descrição", "Como funciona?", f"+9860 {_plural} já adotaram!"),
         "it": ("Descrizione", "Come funziona?", f"+9860 {_plural} lo hanno già adottato!"),
         "nl": ("Beschrijving", "Hoe werkt het?", f"+9860 {_plural} hebben het al overgenomen!"),
+        "pl": ("Opis", "Jak to działa?", f"+9860 {_plural} już to wypróbowało!"),
+        "ru": ("Описание", "Как это работает?", f"+9860 {_plural} уже попробовали!"),
     }
     h1, h2, h3 = _fixed_headings.get(_lang, _fixed_headings["en"])
 
@@ -913,6 +915,8 @@ def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "pt": ("Rastrear meu pedido", "Insira o número do seu pedido para saber a sua localização atual.", "Rastrear", "Número de rastreamento do pedido"),
         "it": ("Traccia il mio ordine", "Inserisci il numero del tuo ordine per conoscere la sua posizione attuale.", "Traccia", "Numero di tracciamento dell'ordine"),
         "nl": ("Volg mijn bestelling", "Voer uw bestelnummer in om de huidige locatie te weten.", "Volgen", "Bestelling trackingnummer"),
+        "pl": ("Śledź moje zamówienie", "Wpisz numer zamówienia, aby poznać jego aktualną lokalizację.", "Śledź", "Numer śledzenia zamówienia"),
+        "ru": ("Отследить заказ", "Введите номер заказа, чтобы узнать его текущее местонахождение.", "Отследить", "Номер отслеживания заказа"),
     }
     heading, description, button, track = _texts.get(_lang2, _texts["en"])
 
@@ -956,6 +960,8 @@ def _apply_contact_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "pt": ("Número do Pedido", "Enviar"),
         "it": ("Numero Ordine", "Invia"),
         "nl": ("Bestelnummer", "Versturen"),
+        "pl": ("Numer Zamówienia", "Wyślij"),
+        "ru": ("Номер Заказа", "Отправить"),
     }
     order_number, button_text = _texts.get(_lang2, _texts["en"])
 
@@ -999,6 +1005,8 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
         "pt": "NOSSA OFERTA: COMPRE 1, O 2º A -50% POR",
         "it": "LA NOSTRA OFFERTA: ACQUISTA 1, IL 2° A -50% PER",
         "nl": "ONS AANBOD: KOOP 1, DE 2E VOOR -50% GEDURENDE",
+        "pl": "NASZA OFERTA: KUP 1, DRUGI ZA -50% PRZEZ",
+        "ru": "НАШЕ ПРЕДЛОЖЕНИЕ: КУПИ 1, ПОЛУЧИ 2-Й ЗА -50% В ТЕЧЕНИЕ",
     }
     _timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
 
@@ -1022,6 +1030,8 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
                     "pt": "MAIS DE 9860 PESSOAS NOS RECOMENDAM",
                     "it": "PIÙ DI 9860 PERSONE CI RACCOMANDANO",
                     "nl": "MEER DAN 9860 MENSEN BEVELEN ONS AAN",
+                    "pl": "PONAD 9860 OSÓB NAS POLECA",
+                    "ru": "БОЛЕЕ 9860 ЧЕЛОВЕК РЕКОМЕНДУЮТ НАС",
                 }
                 _rep(reps, "text", _s(blk, "text"),
                      _inline(_marquee_texts.get(_lang2, _marquee_texts["en"])))
@@ -1056,6 +1066,8 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
         "pt": f"JUNTE-SE À EQUIPE {_store_upper}!",
         "it": f"UNISCITI AL TEAM {_store_upper}!",
         "nl": f"WORD LID VAN HET TEAM {_store_upper}!",
+        "pl": f"DOŁĄCZ DO ZESPOŁU {_store_upper}!",
+        "ru": f"ПРИСОЕДИНЯЙТЕСЬ К КОМАНДЕ {_store_upper}!",
     }
     _newsletter_heading = _newsletter_headings.get(_lang2, _newsletter_headings["en"])
 
@@ -1162,6 +1174,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Aproveite 10% de desconto adicional por $time",
         "it": "Approfitta di uno sconto extra del 10% per $time",
         "nl": "Geniet van 10% extra korting gedurende $time",
+        "pl": "Skorzystaj z dodatkowego rabatu 10% przez $time",
+        "ru": "Получите дополнительную скидку 10% в течение $time",
     }
     _delivery_labels = {
         "fr": ("Commande", "Commande Prête", "Livraison"),
@@ -1175,6 +1189,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": ("Pedido", "Pedido Pronto", "Entrega"),
         "it": ("Ordine", "Ordine Pronto", "Consegna"),
         "nl": ("Bestelling", "Bestelling Klaar", "Levering"),
+        "pl": ("Zamówienie", "Zamówienie Gotowe", "Dostawa"),
+        "ru": ("Заказ", "Заказ Готов", "Доставка"),
     }
     _upsell_titles = {
         "fr": "Vous allez adorer cet article",
@@ -1188,6 +1204,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Você vai adorar este item",
         "it": "Amerai questo articolo",
         "nl": "Je zult dit artikel geweldig vinden",
+        "pl": "Pokochasz ten produkt",
+        "ru": "Вам понравится этот товар",
     }
     _savings = {
         "fr": "Vous économisez",
@@ -1201,6 +1219,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Você economiza",
         "it": "Risparmi",
         "nl": "U bespaart",
+        "pl": "Oszczędzasz",
+        "ru": "Вы экономите",
     }
     _subtotal = {
         "fr": "Sous-Total",
@@ -1214,6 +1234,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Subtotal",
         "it": "Subtotale",
         "nl": "Subtotaal",
+        "pl": "Suma częściowa",
+        "ru": "Промежуточный итог",
     }
     _total = {
         "fr": "Total",
@@ -1227,6 +1249,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Total",
         "it": "Totale",
         "nl": "Totaal",
+        "pl": "Łącznie",
+        "ru": "Итого",
     }
     _upsell_btn = {
         "fr": "Ajouter",
@@ -1240,6 +1264,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Adicionar",
         "it": "Aggiungi",
         "nl": "Toevoegen",
+        "pl": "Dodaj",
+        "ru": "Добавить",
     }
     _protection = {
         "fr": "Protégez votre commande contre les dommages, la perte ou le vol.",
@@ -1253,6 +1279,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Proteja seu pedido contra danos, perda ou roubo.",
         "it": "Proteggi il tuo ordine da danni, perdita o furto.",
         "nl": "Bescherm uw bestelling tegen schade, verlies of diefstal.",
+        "pl": "Chroń swoje zamówienie przed uszkodzeniem, utratą lub kradzieżą.",
+        "ru": "Защитите свой заказ от повреждений, потери или кражи.",
     }
     _cart_footer = {
         "fr": "<strong>⭐4.8/5 Trustpilot | 🔐 Paiement Sécurisé</strong>",
@@ -1266,6 +1294,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "<strong>⭐4.8/5 Trustpilot | 🔐 Pagamento Seguro</strong>",
         "it": "<strong>⭐4.8/5 Trustpilot | 🔐 Pagamento Sicuro</strong>",
         "nl": "<strong>⭐4.8/5 Trustpilot | 🔐 Veilige Betaling</strong>",
+        "pl": "<strong>⭐4.8/5 Trustpilot | 🔐 Bezpieczna Płatność</strong>",
+        "ru": "<strong>⭐4.8/5 Trustpilot | 🔐 Безопасная Оплата</strong>",
     }
     _timeout = {
         "fr": "Offre expirée",
@@ -1279,6 +1309,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Oferta expirada",
         "it": "Offerta scaduta",
         "nl": "Aanbieding verlopen",
+        "pl": "Oferta wygasła",
+        "ru": "Предложение истекло",
     }
     _product_card_btn = {
         "fr": "Ajouter au panier",
@@ -1292,6 +1324,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "Adicionar ao carrinho",
         "it": "Aggiungi al carrello",
         "nl": "In winkelwagen",
+        "pl": "Dodaj do koszyka",
+        "ru": "Добавить в корзину",
     }
     _cart_button = {
         "fr": "COMMANDER MAINTENANT",
@@ -1305,6 +1339,8 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "pt": "PEDIR AGORA",
         "it": "ORDINA ORA",
         "nl": "NU BESTELLEN",
+        "pl": "ZAMÓW TERAZ",
+        "ru": "ЗАКАЗАТЬ СЕЙЧАС",
     }
 
     timer_text = _timer_texts.get(_lang2, _timer_texts["en"])

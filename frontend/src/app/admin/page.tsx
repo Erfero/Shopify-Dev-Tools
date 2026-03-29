@@ -6,7 +6,7 @@ import {
   Loader2, CheckCircle, XCircle, Trash2, LogOut, ShieldCheck,
   Clock, Users, UserCheck, RefreshCw, ArrowLeft, Activity,
   BarChart3, Paintbrush, Star, Download, LogIn, UserPlus, Wifi,
-  Crown,
+  Crown, Pencil, Eye, EyeOff,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -90,6 +90,7 @@ export default function AdminPage() {
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean; title: string; description?: string; variant?: "danger" | "warning"; onConfirm: () => void;
   }>({ open: false, title: "", onConfirm: () => {} });
+  const [editModal, setEditModal] = useState<{ open: boolean; user: User | null }>({ open: false, user: null });
 
   const currentUser = getUser();
   const ACTIVITY_PAGE_SIZE = 6;
@@ -215,6 +216,27 @@ export default function AdminPage() {
     });
   }
 
+  function handleEdit(id: string) {
+    const u = users.find(u => u.id === id);
+    if (u) setEditModal({ open: true, user: u });
+  }
+
+  async function submitEdit(userId: string, data: { email?: string; display_name?: string; new_password?: string }) {
+    const res = await apiFetch(`${API_BASE}/api/auth/users/${userId}/edit`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      toast.error(d.detail ?? "Erreur lors de la modification.");
+      return false;
+    }
+    toast.success("Utilisateur modifié avec succès.");
+    await fetchAll(activityPage);
+    return true;
+  }
+
   const admins   = users.filter(u => u.is_admin);
   const pending  = users.filter(u => !u.is_approved && !u.is_admin);
   const approved = users.filter(u => u.is_approved && !u.is_admin);
@@ -241,6 +263,16 @@ export default function AdminPage() {
       onConfirm={confirmModal.onConfirm}
       onCancel={() => setConfirmModal(m => ({ ...m, open: false }))}
     />
+    {editModal.open && editModal.user && (
+      <EditUserModal
+        user={editModal.user}
+        onClose={() => setEditModal({ open: false, user: null })}
+        onSave={async (data) => {
+          const ok = await submitEdit(editModal.user!.id, data);
+          if (ok) setEditModal({ open: false, user: null });
+        }}
+      />
+    )}
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <div className="sticky top-0 z-10 border-b border-border/60 bg-background/90 backdrop-blur-sm px-4 py-3">
@@ -569,7 +601,7 @@ export default function AdminPage() {
                     {admins.map(u => (
                       <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
                         onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
-                        onPromote={handlePromote} onDemote={handleDemote} />
+                        onPromote={handlePromote} onDemote={handleDemote} onEdit={handleEdit} />
                     ))}
                   </div>
                 </section>
@@ -587,8 +619,8 @@ export default function AdminPage() {
                     <div className="space-y-2">
                       {pending.map(u => (
                         <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
-                          onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
-                          onPromote={handlePromote} onDemote={handleDemote} />
+                            onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
+                          onPromote={handlePromote} onDemote={handleDemote} onEdit={handleEdit} />
                       ))}
                     </div>
                   )}
@@ -607,8 +639,8 @@ export default function AdminPage() {
                     <div className="space-y-2">
                       {approved.map(u => (
                         <UserRow key={u.id} user={u} actionId={actionId} currentUserId={currentUser?.email ?? ""}
-                          onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
-                          onPromote={handlePromote} onDemote={handleDemote} />
+                            onApprove={handleApprove} onReject={handleReject} onDelete={handleDelete}
+                          onPromote={handlePromote} onDemote={handleDemote} onEdit={handleEdit} />
                       ))}
                     </div>
                   )}
@@ -660,10 +692,10 @@ function LanguageBreakdown({ title, icon, data, total, color }: {
 
 // ── UserRow component ─────────────────────────────────────────────────────────
 
-function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete, onPromote, onDemote }: {
+function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete, onPromote, onDemote, onEdit }: {
   user: User; actionId: string | null; currentUserId: string;
   onApprove: (id: string) => void; onReject: (id: string) => void; onDelete: (id: string) => void;
-  onPromote: (id: string) => void; onDemote: (id: string) => void;
+  onPromote: (id: string) => void; onDemote: (id: string) => void; onEdit: (id: string) => void;
 }) {
   const isSelf = user.email === currentUserId;
   const isLoading = actionId === user.id;
@@ -722,6 +754,11 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
               </>
             )}
 
+            {/* Edit — everyone */}
+            <button onClick={() => onEdit(user.id)} className="flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/5 p-1.5 text-blue-500 transition hover:bg-blue-500/15" title="Modifier le compte">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+
             {/* Delete — everyone except self */}
             {!isSelf && (
               <button onClick={() => onDelete(user.id)} className="flex items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 p-1.5 text-red-500 transition hover:bg-red-500/15" title="Supprimer le compte">
@@ -730,6 +767,99 @@ function UserRow({ user, actionId, currentUserId, onApprove, onReject, onDelete,
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── EditUserModal component ───────────────────────────────────────────────────
+
+function EditUserModal({ user, onClose, onSave }: {
+  user: User;
+  onClose: () => void;
+  onSave: (data: { email?: string; display_name?: string; new_password?: string }) => Promise<void>;
+}) {
+  const [email, setEmail] = useState(user.email);
+  const [displayName, setDisplayName] = useState(user.display_name);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const data: { email?: string; display_name?: string; new_password?: string } = {};
+    if (email.trim().toLowerCase() !== user.email) data.email = email.trim();
+    if (displayName.trim() !== user.display_name) data.display_name = displayName.trim();
+    if (newPassword) data.new_password = newPassword;
+    await onSave(data);
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+        <h2 className="mb-5 text-base font-semibold flex items-center gap-2">
+          <Pencil className="h-4 w-4 text-blue-500" /> Modifier le compte
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Nom affiché</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              Nouveau mot de passe <span className="text-muted-foreground/60">(laisser vide pour ne pas changer)</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min. 6 caractères"
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-xl border border-border py-2 text-sm font-medium transition hover:bg-muted"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-foreground py-2 text-sm font-medium text-background transition hover:opacity-80 disabled:opacity-50"
+            >
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Enregistrer
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

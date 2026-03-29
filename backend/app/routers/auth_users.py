@@ -13,6 +13,7 @@ from app.database import (
     get_all_users,
     update_user_status,
     update_user_profile,
+    admin_update_user,
     delete_user,
     log_activity,
     _display_name_from_email,
@@ -44,6 +45,12 @@ class LoginRequest(BaseModel):
 class UpdateProfileRequest(BaseModel):
     display_name: str | None = None
     current_password: str | None = None
+    new_password: str | None = None
+
+
+class AdminEditUserRequest(BaseModel):
+    email: str | None = None
+    display_name: str | None = None
     new_password: str | None = None
 
 
@@ -193,6 +200,42 @@ async def demote_user(user_id: str, current_user: dict = Depends(_require_admin)
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous retirer vous-même le rôle d'admin.")
     await update_user_status(user_id, is_admin=False)
     return {"status": "demoted"}
+
+
+@router.patch("/users/{user_id}/edit")
+async def edit_user(user_id: str, req: AdminEditUserRequest, current_user: dict = Depends(_require_admin)):
+    """Admin: update email, display_name, and/or password for any user."""
+    user = await get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+
+    new_email: str | None = None
+    new_display_name: str | None = None
+    new_password_hash: str | None = None
+
+    if req.email is not None:
+        stripped_email = req.email.strip().lower()
+        if stripped_email and stripped_email != user["email"]:
+            existing = await get_user_by_email(stripped_email)
+            if existing and existing["id"] != user_id:
+                raise HTTPException(status_code=400, detail="Cet email est déjà utilisé par un autre compte.")
+            new_email = stripped_email
+
+    if req.display_name is not None:
+        stripped_name = req.display_name.strip()
+        if stripped_name and stripped_name != user["display_name"]:
+            new_display_name = stripped_name
+
+    if req.new_password:
+        if len(req.new_password) < 6:
+            raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères.")
+        new_password_hash = _hash_password(req.new_password)
+
+    if new_email is None and new_display_name is None and new_password_hash is None:
+        raise HTTPException(status_code=400, detail="Aucune modification à effectuer.")
+
+    await admin_update_user(user_id, email=new_email, display_name=new_display_name, password_hash=new_password_hash)
+    return {"status": "updated"}
 
 
 @router.delete("/users/{user_id}")

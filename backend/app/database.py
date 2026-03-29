@@ -733,6 +733,25 @@ async def update_user_profile(user_id: str, display_name: str | None = None, pas
         await conn.execute(text(f"UPDATE users SET {', '.join(parts)} WHERE id = :id"), params)
 
 
+async def admin_update_user(user_id: str, email: str | None = None, display_name: str | None = None, password_hash: str | None = None) -> None:
+    """Admin-only: update email, display_name and/or password_hash for any user."""
+    parts = []
+    params: dict = {"id": user_id}
+    if email is not None:
+        parts.append("email = :email")
+        params["email"] = email.lower().strip()
+    if display_name is not None:
+        parts.append("display_name = :display_name")
+        params["display_name"] = display_name
+    if password_hash is not None:
+        parts.append("password_hash = :password_hash")
+        params["password_hash"] = password_hash
+    if not parts:
+        return
+    async with _engine.begin() as conn:
+        await conn.execute(text(f"UPDATE users SET {', '.join(parts)} WHERE id = :id"), params)
+
+
 # ── Display name helper ────────────────────────────────────────────────────────
 
 import re as _re

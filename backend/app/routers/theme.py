@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 _MAX_ZIP_BYTES = 150 * 1024 * 1024
 # Max products per generation request
 _MAX_PRODUCTS = 50
-from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary, log_activity
+from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary, log_activity, save_session_config, get_session_config
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
 from app.services.theme.text_mapper import extract_text_slots
@@ -77,6 +77,31 @@ def _save_session_meta(session_id: str, session: dict) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False)
 
+    # Also persist config fields to DB so they survive server restarts on Render
+    config_fields = {
+        "language": meta["language"],
+        "target_gender": meta["target_gender"],
+        "store_name": meta["store_name"],
+        "store_email": meta["store_email"],
+        "product_names": meta["product_names"],
+        "product_description": meta["product_description"],
+        "product_price": meta["product_price"],
+        "store_address": meta["store_address"],
+        "siret": meta["siret"],
+        "delivery_delay": meta["delivery_delay"],
+        "return_policy_days": meta["return_policy_days"],
+        "marketing_angles": meta["marketing_angles"],
+    }
+    import asyncio as _asyncio
+    try:
+        loop = _asyncio.get_event_loop()
+        if loop.is_running():
+            _asyncio.ensure_future(save_session_config(session_id, config_fields))
+        else:
+            loop.run_until_complete(save_session_config(session_id, config_fields))
+    except Exception:
+        pass
+
 
 async def _restore_session(session_id: str) -> dict | None:
     """Tente de restaurer une session depuis le disque, puis depuis la DB si besoin."""
@@ -108,6 +133,12 @@ async def _restore_session(session_id: str) -> dict | None:
             return None
         finally:
             tmp_zip.unlink(missing_ok=True)
+
+        # Disk meta was empty — try to restore config fields from DB
+        if not meta.get("language"):
+            db_config = await get_session_config(session_id) or {}
+            meta.update(db_config)
+
         session = {
             "structure": structure,
             "text_slots": extract_text_slots(structure.parsed_files),

@@ -96,6 +96,12 @@ CREATE TABLE IF NOT EXISTS theme_upload_cache (
     created_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS theme_session_config (
+    session_id  TEXT PRIMARY KEY,
+    config_json TEXT NOT NULL,
+    updated_at  TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS theme_output_cache (
     history_id TEXT PRIMARY KEY,
     filename   TEXT NOT NULL,
@@ -169,6 +175,12 @@ CREATE TABLE IF NOT EXISTS theme_upload_cache (
     filename   TEXT NOT NULL,
     zip_data   TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS theme_session_config (
+    session_id  TEXT PRIMARY KEY,
+    config_json TEXT NOT NULL,
+    updated_at  TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS theme_output_cache (
@@ -433,6 +445,50 @@ async def delete_theme_zip(session_id: str) -> None:
             text("DELETE FROM theme_upload_cache WHERE session_id = :sid"),
             {"sid": session_id},
         )
+
+
+# ── Session config persistence (survives server restarts) ─────────────────────
+
+async def save_session_config(session_id: str, config: dict) -> None:
+    """Persist session config fields (language, store_name, etc.) to DB."""
+    import json as _json
+    config_json = _json.dumps(config, ensure_ascii=False)
+    async with _engine.begin() as conn:
+        if _IS_SQLITE:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_session_config (session_id, config_json)
+                VALUES (:sid, :cfg)
+                ON CONFLICT(session_id) DO UPDATE SET config_json=excluded.config_json, updated_at=datetime('now')
+                """),
+                {"sid": session_id, "cfg": config_json},
+            )
+        else:
+            await conn.execute(
+                text("""
+                INSERT INTO theme_session_config (session_id, config_json)
+                VALUES (:sid, :cfg)
+                ON CONFLICT(session_id) DO UPDATE SET config_json=EXCLUDED.config_json, updated_at=NOW()
+                """),
+                {"sid": session_id, "cfg": config_json},
+            )
+
+
+async def get_session_config(session_id: str) -> dict | None:
+    """Retrieve persisted session config from DB. Returns None if not found."""
+    import json as _json
+    async with _engine.connect() as conn:
+        result = await conn.execute(
+            text("SELECT config_json FROM theme_session_config WHERE session_id = :sid"),
+            {"sid": session_id},
+        )
+        row = result.fetchone()
+    if row is None:
+        return None
+    try:
+        return _json.loads(row[0])
+    except Exception:
+        return None
 
 
 # ── Theme output ZIP cache (survive server restarts — 5-day retention) ────────

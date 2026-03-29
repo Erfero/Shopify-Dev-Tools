@@ -97,12 +97,13 @@ export default function ThemePage() {
     try {
       const saved = localStorage.getItem("theme_session");
       if (!saved) return;
-      const { uploadData: ud, appStep: as, previewData: pd } = JSON.parse(saved);
+      const { uploadData: ud, appStep: as, previewData: pd, lastConfig: lc } = JSON.parse(saved);
       if (ud?.session_id) {
         setUploadData(ud);
         // Never restore "generating" — it means the page was refreshed mid-flight
         setAppStep((as === "generating" ? "configure" : as) ?? "configure");
         if (pd) setPreviewData(pd);
+        if (lc) lastConfigRef.current = lc;
       }
     } catch {
       localStorage.removeItem("theme_session");
@@ -113,9 +114,13 @@ export default function ThemePage() {
   useEffect(() => {
     if (!uploadData) return;
     try {
+      // Serialize config without File objects (not serializable)
+      const serializableConfig = lastConfigRef.current
+        ? { ...lastConfigRef.current, product_images: [] }
+        : null;
       localStorage.setItem(
         "theme_session",
-        JSON.stringify({ uploadData, appStep, previewData }),
+        JSON.stringify({ uploadData, appStep, previewData, lastConfig: serializableConfig }),
       );
     } catch {
       // Storage full or unavailable — silently ignore
@@ -141,6 +146,15 @@ export default function ThemePage() {
   const handleGenerate = useCallback(async (config: StoreConfig) => {
     if (!uploadData) return;
     lastConfigRef.current = config;
+    // Persist config immediately (without File objects) for back-navigation
+    try {
+      const saved = localStorage.getItem("theme_session");
+      const parsed = saved ? JSON.parse(saved) : {};
+      localStorage.setItem("theme_session", JSON.stringify({
+        ...parsed,
+        lastConfig: { ...config, product_images: [] },
+      }));
+    } catch { /* ignore */ }
 
     generateAbortRef.current?.abort();
     const controller = new AbortController();
@@ -416,6 +430,7 @@ export default function ThemePage() {
                     themeName={uploadData.theme_name}
                     onSubmit={handleGenerate}
                     isGenerating={false}
+                    initialValues={lastConfigRef.current ?? undefined}
                   />
                 </div>
               </motion.div>

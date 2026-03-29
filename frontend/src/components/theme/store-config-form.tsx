@@ -31,30 +31,49 @@ interface StoreConfigFormProps {
   themeName: string;
   onSubmit: (config: StoreConfig) => void;
   isGenerating: boolean;
+  initialValues?: Partial<StoreConfig>;
 }
 
-export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConfigFormProps) {
-  const [storeName, setStoreName] = useState("");
-  const [storeEmail, setStoreEmail] = useState("");
+export function StoreConfigForm({ themeName, onSubmit, isGenerating, initialValues }: StoreConfigFormProps) {
+  const iv = initialValues ?? {};
+  const [storeName, setStoreName] = useState(iv.store_name ?? "");
+  const [storeEmail, setStoreEmail] = useState(iv.store_email ?? "");
   const [productInput, setProductInput] = useState("");
-  const [productNames, setProductNames] = useState<string[]>([]);
-  const [productDescription, setProductDescription] = useState("");
-  const [productImages, setProductImages] = useState<File[]>([]);
+  const [productNames, setProductNames] = useState<string[]>(iv.product_names ?? []);
+  const [productDescription, setProductDescription] = useState(iv.product_description ?? "");
+  const [productImages, setProductImages] = useState<File[]>(iv.product_images ?? []);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isDraggingImg, setIsDraggingImg] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-  const [language, setLanguage] = useState("fr");
+  const [language, setLanguage] = useState(iv.language ?? "fr");
   const [langSearch, setLangSearch] = useState("");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
-  const [targetGender, setTargetGender] = useState("femme");
-  const [productPrice, setProductPrice] = useState("");
-  const [storeAddress, setStoreAddress] = useState("");
-  const [siret, setSiret] = useState("");
-  const [deliveryDelay, setDeliveryDelay] = useState("3-5 jours ouvrés");
-  const [returnPolicyDays, setReturnPolicyDays] = useState("30");
+  const [targetGender, setTargetGender] = useState(iv.target_gender ?? "femme");
+  const [productPrice, setProductPrice] = useState(iv.product_price ?? "");
+  const [storeAddress, setStoreAddress] = useState(iv.store_address ?? "");
+  const [siret, setSiret] = useState(iv.siret ?? "");
+  const [deliveryDelay, setDeliveryDelay] = useState(iv.delivery_delay ?? "3-5 jours ouvrés");
+  const [returnPolicyDays, setReturnPolicyDays] = useState(iv.return_policy_days ?? "30");
   const [legalOpen, setLegalOpen] = useState(false);
-  const [marketingAngles, setMarketingAngles] = useState("");
+  const [marketingAngles, setMarketingAngles] = useState(iv.marketing_angles ?? "");
+
+  // Restore image previews when re-mounting with existing images
+  useEffect(() => {
+    if (!iv.product_images?.length) return;
+    const previews: string[] = [];
+    iv.product_images.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previews.push(e.target?.result as string);
+        if (previews.length === iv.product_images!.length) {
+          setImagePreviews([...previews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredLanguages = useMemo(() => {
     if (!langSearch.trim()) return LANGUAGES;

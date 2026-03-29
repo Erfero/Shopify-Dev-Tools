@@ -681,6 +681,10 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "fr": ("Description", "Comment ça marche ?", f"+9860 {_plural} l'ont déjà adopté !"),
         "en": ("Description", "How does it work?", f"+9860 {_plural} have already adopted it!"),
         "de": ("Beschreibung", "Wie funktioniert es?", f"+9860 {_plural} haben es bereits übernommen!"),
+        "da": ("Beskrivelse", "Hvordan virker det?", f"+9860 {_plural} har allerede brugt det!"),
+        "sv": ("Beskrivning", "Hur fungerar det?", f"+9860 {_plural} har redan använt det!"),
+        "no": ("Beskrivelse", "Hvordan fungerer det?", f"+9860 {_plural} har allerede brukt det!"),
+        "fi": ("Kuvaus", "Miten se toimii?", f"+9860 {_plural} on jo käyttänyt sitä!"),
         "es": ("Descripción", "¿Cómo funciona?", f"+9860 {_plural} ya lo han adoptado!"),
         "pt": ("Descrição", "Como funciona?", f"+9860 {_plural} já adotaram!"),
         "it": ("Descrizione", "Come funziona?", f"+9860 {_plural} lo hanno già adottato!"),
@@ -1397,11 +1401,19 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if not target_code:
         return
 
-    # Demote English storefront default (only if en is currently default)
-    en_def = locales_dir / "en.default.json"
-    en_dem = locales_dir / "en.json"
-    if en_def.exists() and not en_dem.exists():
-        en_def.rename(en_dem)
+    # Demote any existing storefront default (e.g. fr.default.json or en.default.json)
+    # — Shopify allows only ONE *.default.json; demote all that aren't our target.
+    for existing_def in locales_dir.glob("*.default.json"):
+        # Skip schema files and skip the target itself
+        stem = existing_def.stem  # e.g. "fr.default"
+        if stem.endswith(".schema"):
+            continue
+        lang_code = stem.replace(".default", "")  # e.g. "fr"
+        if lang_code == target_code:
+            continue  # already the target → keep as-is
+        demoted = locales_dir / f"{lang_code}.json"
+        if not demoted.exists():
+            existing_def.rename(demoted)
 
     # Promote target storefront locale to default (if not already done)
     t_json = locales_dir / f"{target_code}.json"

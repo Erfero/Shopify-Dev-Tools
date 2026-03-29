@@ -55,7 +55,10 @@ def apply_replacements(file_path: Path, replacements: list[tuple[str, str, str]]
     applied = 0
 
     for field, old_val, new_val in replacements:
-        if not old_val or old_val == new_val:
+        # Allow empty→non-empty replacements (needed for headings set for first time)
+        if old_val == new_val:
+            continue
+        if not new_val:
             continue
 
         old_enc = _encode(old_val)

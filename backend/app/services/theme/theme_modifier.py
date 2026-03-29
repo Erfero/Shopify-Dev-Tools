@@ -499,20 +499,17 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
 # ── Product page: JSON write for image-with-text (encoding-safe) ──────────────
 
 def _fix_product_image_with_text(ed: Path, pf: dict, hp: dict) -> bool:
-    """Directly write advantages[4] into image-before-after section (encoding-safe).
+    """Apply advantages[4] into image-before-after section via text surgery.
 
-    Must run BEFORE _apply_product_page / text surgery because the image-before-after
-    section may share heading values with image-with-text sections.
-    Text surgery would replace the wrong occurrence; JSON write targets the exact dict.
-
-    Updates pf in place so subsequent _apply_product_page sees new==old and skips reps.
+    Uses text surgery (not JSON write) to preserve the file format bit-for-bit.
+    Updates pf cache after surgery so subsequent text surgery sees updated values.
     """
     rel = "templates/product.json"
     entry = pf.get(rel)
     if not entry:
         return False
 
-    data, comment, is_compact = entry
+    data, _, _ = entry
     advantages = hp.get("advantages", [])
     if len(advantages) <= 4:
         return False
@@ -524,37 +521,49 @@ def _fix_product_image_with_text(ed: Path, pf: dict, hp: dict) -> bool:
     if not title and not text:
         return False
 
-    modified = False
-    # Apply advantages[4] to image-before-after ONLY
-    # Each image-with-text section gets its own advantage (see _apply_product_page)
+    reps: list[tuple[str, str, str]] = []
     for _, sec in _sections_by_type(data, "image-before-after"):
         for _, blk in _blocks_by_type(sec, "heading"):
-            s = blk.setdefault("settings", {})
-            if s.get("heading") != title:
-                s["heading"] = title
-                modified = True
+            s = blk.get("settings", {})
+            old_h = str(s.get("heading", ""))
+            if old_h != title and title:
+                reps.append(("heading", old_h, title))
             break
         for _, blk in _blocks_by_type(sec, "text"):
-            s = blk.setdefault("settings", {})
-            if s.get("description") != text:
-                s["description"] = text
-                modified = True
+            s = blk.get("settings", {})
+            old_d = str(s.get("description", ""))
+            if old_d != text and text:
+                reps.append(("description", old_d, text))
             break
+        break  # Only first image-before-after section
 
-    if modified:
-        write_theme_json(ed / rel, data, comment, is_compact)
-        pf[rel] = (data, comment, is_compact)
+    if not reps:
+        return False
 
-    return modified
+    file_path = ed / rel
+    n = apply_replacements(file_path, reps)
+
+    if n:
+        # Refresh in-memory cache so subsequent text surgery sees new values
+        from app.utils.json_handler import read_theme_json, detect_json_format
+        try:
+            new_data, new_comment = read_theme_json(file_path)
+            new_compact = detect_json_format(file_path)
+            pf[rel] = (new_data, new_comment, new_compact)
+        except Exception:
+            pass
+
+    return n > 0
 
 
 # ── Product page: JSON write for accordion headings (encoding-safe) ───────────
 
 def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", target_gender: str = "femme") -> bool:
-    """Directly write fixed accordion headings into description-faq block (JSON write).
+    """Set fixed accordion headings in description-faq block via text surgery.
 
-    Uses JSON write (not text surgery) so it works even when heading fields are empty.
-    Must run BEFORE _apply_product_page so text surgery sees old==new and skips them.
+    Uses text surgery (not JSON write) to preserve the file format bit-for-bit.
+    Handles empty→non-empty replacements since text_surgery now allows them.
+    Must run BEFORE _apply_product_page so subsequent surgery sees updated values.
     """
     rel = "templates/product.json"
     entry = pf.get(rel)
@@ -577,6 +586,11 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
         "pt": ("Descrição", "Como funciona?", f"+9860 {_plural} já adotaram!"),
         "it": ("Descrizione", "Come funziona?", f"+9860 {_plural} lo hanno già adottato!"),
         "nl": ("Beschrijving", "Hoe werkt het?", f"+9860 {_plural} hebben het al overgenomen!"),
+        "da": ("Beskrivelse", "Hvordan virker det?", f"+9860 {_plural} har allerede taget det til sig!"),
+        "sv": ("Beskrivning", "Hur fungerar det?", f"+9860 {_plural} har redan antagit det!"),
+        "no": ("Beskrivelse", "Hvordan fungerer det?", f"+9860 {_plural} har allerede tatt det i bruk!"),
+        "fi": ("Kuvaus", "Miten se toimii?", f"+9860 {_plural} on jo ottanut sen käyttöön!"),
+        "pl": ("Opis", "Jak to działa?", f"+9860 {_plural} już to przyjęło!"),
     }
     h1, h2, h3 = _fixed.get(_lang2, _fixed["en"])
 
@@ -585,20 +599,32 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
         return False
     _, msec = main
 
-    modified = False
+    reps: list[tuple[str, str, str]] = []
     for _, blk in _blocks_by_type(msec, "description-faq"):
-        s = blk.setdefault("settings", {})
+        s = blk.get("settings", {})
         for key, val in [("heading1", h1), ("heading2", h2), ("heading3", h3)]:
-            if s.get(key) != val:
-                s[key] = val
-                modified = True
+            old = str(s.get(key, ""))
+            if old != val:
+                reps.append((key, old, val))
         break
 
-    if modified:
-        write_theme_json(ed / rel, data, comment, is_compact)
-        pf[rel] = (data, comment, is_compact)
+    if not reps:
+        return False
 
-    return modified
+    file_path = ed / rel
+    n = apply_replacements(file_path, reps)
+
+    if n:
+        # Refresh in-memory cache so subsequent text surgery sees new values
+        from app.utils.json_handler import read_theme_json, detect_json_format
+        try:
+            new_data, new_comment = read_theme_json(file_path)
+            new_compact = detect_json_format(file_path)
+            pf[rel] = (new_data, new_comment, new_compact)
+        except Exception:
+            pass
+
+    return n > 0
 
 
 # ── Product page ──────────────────────────────────────────────────────────────

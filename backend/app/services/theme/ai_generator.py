@@ -12,7 +12,7 @@ from app.prompts.product_page import build_product_page_prompt
 from app.prompts.reviews import build_reviews_prompt
 from app.prompts.faq import build_faq_prompt
 from app.prompts.story_page import build_story_page_prompt
-from app.prompts.global_texts import build_global_texts_prompt
+from app.prompts.global_texts import build_global_texts_prompt, get_static_ui_translations
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +242,20 @@ async def generate_all_texts(
             step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
 
             result = await _call_with_retry(system_prompt, user_prompt, step_images)
+
+            # Inject static UI translations into global_texts (cart, delivery, settings)
+            if step_id == "global_texts":
+                static = get_static_ui_translations(
+                    context.get("language", "fr"),
+                    context.get("delivery_delay", ""),
+                )
+                for section, fields in static.items():
+                    if section not in result or not result[section]:
+                        result[section] = {}
+                    for key, val in fields.items():
+                        if not result[section].get(key):
+                            result[section][key] = val
+
             all_results[step_id] = result
             yield (step_id, "done", result)
         except Exception as e:
@@ -329,6 +343,19 @@ async def generate_single_section(
 
         step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
         result = await _call_with_retry(system_prompt, user_prompt, step_images)
+
+        if step_id == "global_texts":
+            static = get_static_ui_translations(
+                context.get("language", "fr"),
+                context.get("delivery_delay", ""),
+            )
+            for sec, fields in static.items():
+                if sec not in result or not result[sec]:
+                    result[sec] = {}
+                for key, val in fields.items():
+                    if not result[sec].get(key):
+                        result[sec][key] = val
+
         yield (step_id, "done", result)
     except Exception as e:
         logger.error(f"Section {step_id} regeneration failed: {e}")

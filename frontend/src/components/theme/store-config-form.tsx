@@ -63,6 +63,7 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
       (l) =>
         l.name.toLowerCase().includes(q) ||
         l.nameEn.toLowerCase().includes(q) ||
+        l.nameFr.toLowerCase().includes(q) ||
         l.code.toLowerCase().includes(q),
     );
   }, [langSearch]);
@@ -528,7 +529,7 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
           >
             <span>
               {selectedLang
-                ? `${selectedLang.name} — ${selectedLang.nameEn}`
+                ? `${selectedLang.nameFr} | ${selectedLang.nameEn}`
                 : "Selectionnez une langue"}
             </span>
             <svg
@@ -577,9 +578,9 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating }: StoreConf
                       }`}
                     >
                       <span className="flex-1">
-                        {lang.name}
+                        {lang.nameFr}
                         <span className="ml-2 text-muted-foreground">
-                          {lang.nameEn}
+                          | {lang.nameEn}
                         </span>
                       </span>
                       {language === lang.code && (

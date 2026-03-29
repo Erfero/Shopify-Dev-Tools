@@ -460,13 +460,33 @@ function ColorPickerPopover({
   currentlyUsed?: string[];
 }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const safe = /^#[0-9A-Fa-f]{6}$/.test(value) ? value : "#000000";
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const popupHeight = 280;
+      const popupWidth = 240;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow >= popupHeight ? rect.bottom + 6 : rect.top - popupHeight - 6;
+      const left = Math.min(rect.left, window.innerWidth - popupWidth - 8);
+      setPopupPos({ top, left });
+    }
+    setOpen((o) => !o);
+  };
 
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        popupRef.current && !popupRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -475,16 +495,21 @@ function ColorPickerPopover({
   const uniqueUsed = [...new Set(currentlyUsed.filter((c) => /^#[0-9A-Fa-f]{6}$/i.test(c)))].slice(0, 18);
 
   return (
-    <div ref={containerRef} className="relative flex-shrink-0">
+    <div className="relative flex-shrink-0">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={handleOpen}
         className="h-7 w-7 rounded border border-border shadow-sm transition-all hover:scale-110 hover:shadow-md cursor-pointer"
         style={{ backgroundColor: safe }}
         title="Choisir une couleur"
       />
       {open && (
-        <div className="absolute z-50 top-9 left-0 w-60 rounded-xl border bg-white shadow-2xl p-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div
+          ref={popupRef}
+          className="fixed z-[9999] w-60 rounded-xl border bg-white shadow-2xl p-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150"
+          style={{ top: popupPos.top, left: popupPos.left }}
+        >
           <HexColorPicker color={safe} onChange={onChange} style={{ width: "100%", height: 160 }} />
           <div className="flex items-center gap-2 rounded-md border px-2 py-1">
             <span className="text-xs font-mono text-muted-foreground">#</span>

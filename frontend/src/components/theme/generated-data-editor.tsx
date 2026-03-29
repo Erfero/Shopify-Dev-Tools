@@ -729,24 +729,36 @@ function NuancierEditor({
 
 // ── Collapsible sub-section ────────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function Section({
+  title,
+  children,
+  open: controlledOpen,
+  onToggle,
+}: {
+  title: string;
+  children: React.ReactNode;
+  open?: boolean;
+  onToggle?: () => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const handleToggle = onToggle ?? (() => setInternalOpen((o) => !o));
   return (
     <div className="rounded-md border overflow-hidden">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={handleToggle}
         className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
       >
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
         <svg
-          className={`h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
-      {open && (
+      {isOpen && (
         <div className="p-3 space-y-3">
           {children}
         </div>
@@ -768,6 +780,14 @@ export function GeneratedDataEditor({
   const [editData, setEditData] = useState<Record<string, unknown>>(deepClone(data));
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
   const regenAbortRef = useRef<AbortController | null>(null);
+  const [openHpSection, setOpenHpSection] = useState<string | null>(null);
+  const [openPpSection, setOpenPpSection] = useState<string | null>(null);
+  const [openGtSection, setOpenGtSection] = useState<string | null>(null);
+  const toggleSection = (
+    current: string | null,
+    setter: (v: string | null) => void,
+    key: string,
+  ) => setter(current === key ? null : key);
 
   function update(path: (string | number)[], value: string) {
     setEditData((prev) => setPath(prev, path, value));
@@ -912,12 +932,12 @@ export function GeneratedDataEditor({
               <Field label="Slogan bannière" value={hp.slogan || ""} onChange={(v) => update(["homepage", "slogan"], v)} />
               <Field label="Texte bouton CTA" value={hp.cta_button_text || ""} onChange={(v) => update(["homepage", "cta_button_text"], v)} />
 
-              <Section title="Section Bienvenue">
+              <Section title="Section Bienvenue" open={openHpSection === "welcome"} onToggle={() => toggleSection(openHpSection, setOpenHpSection, "welcome")}>
                 <Field label="Titre" value={hp.welcome?.title || ""} onChange={(v) => update(["homepage", "welcome", "title"], v)} />
                 <RichTextField label="Texte (HTML)" value={hp.welcome?.text || ""} onChange={(v) => update(["homepage", "welcome", "text"], v)} />
               </Section>
 
-              <Section title="Bénéfices (icônes)">
+              <Section title="Bénéfices (icônes)" open={openHpSection === "benefits"} onToggle={() => toggleSection(openHpSection, setOpenHpSection, "benefits")}>
                 {(hp.benefits || []).map((b: { title: string; text: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
                     <Field label={`Icône ${i + 1} — Titre`} value={b.title || ""} onChange={(v) => update(["homepage", "benefits", i, "title"], v)} />
@@ -926,7 +946,7 @@ export function GeneratedDataEditor({
                 ))}
               </Section>
 
-              <Section title="Avantages (images + texte)">
+              <Section title="Avantages (images + texte)" open={openHpSection === "advantages"} onToggle={() => toggleSection(openHpSection, setOpenHpSection, "advantages")}>
                 {(hp.advantages || []).map((a: { title: string; text: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
                     <Field label={`Avantage ${i + 1} — Titre`} value={a.title || ""} onChange={(v) => update(["homepage", "advantages", i, "title"], v)} />
@@ -935,7 +955,7 @@ export function GeneratedDataEditor({
                 ))}
               </Section>
 
-              <Section title="Comparaison">
+              <Section title="Comparaison" open={openHpSection === "comparison"} onToggle={() => toggleSection(openHpSection, setOpenHpSection, "comparison")}>
                 <Field label="Titre" value={hp.comparison?.title || ""} onChange={(v) => update(["homepage", "comparison", "title"], v)} />
                 <RichTextField label="Description" value={hp.comparison?.description || ""} onChange={(v) => update(["homepage", "comparison", "description"], v)} />
                 {(hp.comparison?.items || []).map((item: { feature: string; tooltip: string }, i: number) => (
@@ -946,7 +966,7 @@ export function GeneratedDataEditor({
                 ))}
               </Section>
 
-              <Section title="Spécifications">
+              <Section title="Spécifications" open={openHpSection === "specs"} onToggle={() => toggleSection(openHpSection, setOpenHpSection, "specs")}>
                 <Field label="Titre de section" value={hp.specs?.title || ""} onChange={(v) => update(["homepage", "specs", "title"], v)} />
                 {(hp.specs?.items || []).map((s: { title: string; description: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
@@ -974,7 +994,7 @@ export function GeneratedDataEditor({
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
 
-              <Section title="Icônes produit">
+              <Section title="Icônes produit" open={openPpSection === "benefits"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "benefits")}>
                 {(pp.product_benefits || []).map((b: { short_title: string; description: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
                     <Field label={`Icône ${i + 1} — Titre court`} value={b.short_title || ""} onChange={(v) => update(["product_page", "product_benefits", i, "short_title"], v)} />
@@ -983,22 +1003,22 @@ export function GeneratedDataEditor({
                 ))}
               </Section>
 
-              <Section title="Description produit">
+              <Section title="Description produit" open={openPpSection === "description"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "description")}>
                 <Field label="Titre" value={pp.product_description?.heading || ""} onChange={(v) => update(["product_page", "product_description", "heading"], v)} />
                 <RichTextField label="Texte" value={pp.product_description?.text || ""} onChange={(v) => update(["product_page", "product_description", "text"], v)} />
               </Section>
 
-              <Section title="Comment ça marche">
+              <Section title="Comment ça marche" open={openPpSection === "how"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "how")}>
                 <Field label="Titre" value={pp.how_it_works?.heading || ""} onChange={(v) => update(["product_page", "how_it_works", "heading"], v)} />
                 <RichTextField label="Texte" value={pp.how_it_works?.text || ""} onChange={(v) => update(["product_page", "how_it_works", "text"], v)} />
               </Section>
 
-              <Section title="Adoption (social proof)">
+              <Section title="Adoption (social proof)" open={openPpSection === "adoption"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "adoption")}>
                 <Field label="Titre (ex: +9860 personnes l'ont adopté)" value={pp.adoption?.heading || ""} onChange={(v) => update(["product_page", "adoption", "heading"], v)} />
                 <RichTextField label="Texte" value={pp.adoption?.text || ""} onChange={(v) => update(["product_page", "adoption", "text"], v)} />
               </Section>
 
-              <Section title="Mini-avis produit">
+              <Section title="Mini-avis produit" open={openPpSection === "mini_reviews"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "mini_reviews")}>
                 {(pp.mini_reviews || []).map((r: { name: string; age: string; text: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
                     <div className="flex gap-2">
@@ -1014,7 +1034,7 @@ export function GeneratedDataEditor({
                 ))}
               </Section>
 
-              <Section title="Spécifications produit">
+              <Section title="Spécifications produit" open={openPpSection === "specs"} onToggle={() => toggleSection(openPpSection, setOpenPpSection, "specs")}>
                 <Field label="Titre de section" value={pp.product_specs?.title || ""} onChange={(v) => update(["product_page", "product_specs", "title"], v)} />
                 {(pp.product_specs?.items || []).map((s: { title: string; description: string }, i: number) => (
                   <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
@@ -1099,7 +1119,7 @@ export function GeneratedDataEditor({
             <AccordionContent className="space-y-4 pb-4">
 
               {(gt.header?.announcement_timer || gt.header?.announcement_marquee) && (
-                <Section title="Barre d'annonce">
+                <Section title="Barre d'annonce" open={openGtSection === "header"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "header")}>
                   {gt.header?.announcement_timer !== undefined && (
                     <Field label="Texte timer" value={gt.header.announcement_timer || ""} onChange={(v) => update(["global_texts", "header", "announcement_timer"], v)} />
                   )}
@@ -1109,19 +1129,19 @@ export function GeneratedDataEditor({
                 </Section>
               )}
 
-              <Section title="Pied de page — À propos">
+              <Section title="Pied de page — À propos" open={openGtSection === "footer"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "footer")}>
                 <RichTextField label="Texte" value={gt.footer?.brand_text || ""} onChange={(v) => update(["global_texts", "footer", "brand_text"], v)} />
               </Section>
 
               {(gt.footer?.newsletter_heading || gt.footer?.newsletter_text) && (
-                <Section title="Newsletter">
+                <Section title="Newsletter" open={openGtSection === "newsletter"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "newsletter")}>
                   <Field label="Titre newsletter" value={gt.footer?.newsletter_heading || ""} onChange={(v) => update(["global_texts", "footer", "newsletter_heading"], v)} />
                   <RichTextField label="Texte newsletter" value={gt.footer?.newsletter_text || ""} onChange={(v) => update(["global_texts", "footer", "newsletter_text"], v)} />
                 </Section>
               )}
 
               {(gt.footer?.trust_badges || []).length > 0 && (
-                <Section title="Badges de confiance">
+                <Section title="Badges de confiance" open={openGtSection === "badges"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "badges")}>
                   {gt.footer.trust_badges.map((b: { heading: string; description: string }, i: number) => (
                     <div key={i} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
                       <Field label={`Badge ${i + 1} — Titre`} value={b.heading || ""} onChange={(v) => update(["global_texts", "footer", "trust_badges", i, "heading"], v)} />
@@ -1132,7 +1152,7 @@ export function GeneratedDataEditor({
               )}
 
               {gt.cart && (
-                <Section title="Panier">
+                <Section title="Panier" open={openGtSection === "cart"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "cart")}>
                   <Field label="Bouton commander" value={gt.cart?.button_text || ""} onChange={(v) => update(["global_texts", "cart", "button_text"], v)} />
                   <Field label="Titre upsell" value={gt.cart?.upsell_title || ""} onChange={(v) => update(["global_texts", "cart", "upsell_title"], v)} />
                   <Field label="Bouton upsell" value={gt.cart?.upsell_button_text || ""} onChange={(v) => update(["global_texts", "cart", "upsell_button_text"], v)} />
@@ -1145,7 +1165,7 @@ export function GeneratedDataEditor({
               )}
 
               {gt.delivery && (
-                <Section title="Livraison (étapes)">
+                <Section title="Livraison (étapes)" open={openGtSection === "delivery"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "delivery")}>
                   <Field label="Étape 1 — Commande" value={gt.delivery?.today_info || ""} onChange={(v) => update(["global_texts", "delivery", "today_info"], v)} />
                   <Field label="Étape 2 — Préparation" value={gt.delivery?.ready_info || ""} onChange={(v) => update(["global_texts", "delivery", "ready_info"], v)} />
                   <Field label="Étape 3 — Livraison" value={gt.delivery?.delivered_info || ""} onChange={(v) => update(["global_texts", "delivery", "delivered_info"], v)} />
@@ -1153,7 +1173,7 @@ export function GeneratedDataEditor({
               )}
 
               {gt.settings && (
-                <Section title="Paramètres">
+                <Section title="Paramètres" open={openGtSection === "settings"} onToggle={() => toggleSection(openGtSection, setOpenGtSection, "settings")}>
                   <Field label="Bouton carte produit" value={gt.settings?.product_card_button_text || ""} onChange={(v) => update(["global_texts", "settings", "product_card_button_text"], v)} />
                   <Field label="Texte timer expiré" value={gt.settings?.timer_timeout_text || ""} onChange={(v) => update(["global_texts", "settings", "timer_timeout_text"], v)} />
                 </Section>

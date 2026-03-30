@@ -1480,18 +1480,28 @@ def _switch_locale_files(ed: Path, language: str) -> None:
         return
 
     # Demote any existing storefront default (e.g. fr.default.json or en.default.json)
-    # — Shopify allows only ONE *.default.json; demote all that aren't our target.
+    # — Shopify allows only ONE *.default.json AND only ONE *.default.schema.json.
+    # We must demote BOTH the content file AND the schema file together.
     for existing_def in locales_dir.glob("*.default.json"):
-        # Skip schema files and skip the target itself
         stem = existing_def.stem  # e.g. "fr.default"
         if stem.endswith(".schema"):
             continue
         lang_code = stem.replace(".default", "")  # e.g. "fr"
         if lang_code == target_code:
             continue  # already the target → keep as-is
+        # Demote storefront content file: fr.default.json → fr.json
         demoted = locales_dir / f"{lang_code}.json"
         if not demoted.exists():
             existing_def.rename(demoted)
+        # CRITICAL: also demote schema file: fr.default.schema.json → fr.schema.json
+        # Without this, Shopify sees two "default" markers and invalidates the theme.
+        old_schema = locales_dir / f"{lang_code}.default.schema.json"
+        demoted_schema = locales_dir / f"{lang_code}.schema.json"
+        if old_schema.exists():
+            if demoted_schema.exists():
+                old_schema.unlink()  # fr.schema.json already exists → remove orphan
+            else:
+                old_schema.rename(demoted_schema)
 
     # Promote target storefront locale to default (if not already done)
     t_json = locales_dir / f"{target_code}.json"
@@ -1499,30 +1509,26 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if t_json.exists() and not t_def.exists():
         t_json.rename(t_def)
 
-    # Ensure {lang}.default.schema.json has ALL keys from the English schema.
-    # The target language schema (e.g. fr.schema.json) is often incomplete.
-    # Strategy:
-    #   • If the file doesn't exist yet → copy EN schema directly (all keys in EN).
-    #   • If it already exists → merge: keep existing FR labels, fill missing keys
-    #     from EN so Shopify admin never shows "missing translation: t:..." errors.
-    en_schema_path  = locales_dir / "en.default.schema.json"
-    en_schema_src   = locales_dir / "en.schema.json"   # after en was demoted
-    t_def_schema    = locales_dir / f"{target_code}.default.schema.json"
-    t_schema_src    = locales_dir / f"{target_code}.schema.json"  # might exist
+    # Promote target schema file: da.schema.json → da.default.schema.json
+    # This keeps the schema filename consistent with the content file.
+    t_def_schema = locales_dir / f"{target_code}.default.schema.json"
+    t_schema_src = locales_dir / f"{target_code}.schema.json"
+    if t_schema_src.exists() and not t_def_schema.exists():
+        t_schema_src.rename(t_def_schema)
 
-    # Resolve which EN and target schema files to use
-    _en_src  = en_schema_path if en_schema_path.exists() else en_schema_src
-    _tgt_src = t_def_schema if t_def_schema.exists() else t_schema_src
+    # Ensure {target}.default.schema.json has ALL keys from EN schema (fill gaps).
+    # If it doesn't exist yet (no schema file in theme for this lang) → copy EN.
+    # If it exists → merge EN into it so no "missing translation: t:..." in admin.
+    en_schema_path = locales_dir / "en.default.schema.json"
+    en_schema_src  = locales_dir / "en.schema.json"   # if en was demoted earlier
+    _en_src = en_schema_path if en_schema_path.exists() else en_schema_src
 
     if _en_src.exists():
         if not t_def_schema.exists():
-            # No FR schema yet → use EN directly
             import shutil as _shutil
             _shutil.copy2(_en_src, t_def_schema)
         else:
-            # FR schema exists but may be missing keys → merge EN into FR
-            _merge_schema_with_en(_tgt_src if _tgt_src.exists() else t_def_schema,
-                                  _en_src, t_def_schema)
+            _merge_schema_with_en(t_def_schema, _en_src, t_def_schema)
 
 
 def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:

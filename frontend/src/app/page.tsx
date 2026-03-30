@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck, BarChart2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer, staggerItem, float } from "@/lib/motion";
@@ -8,6 +9,16 @@ import { getUser, logout } from "@/lib/auth";
 
 export default function Home() {
   const user = getUser();
+  const router = useRouter();
+
+  function openTheme() {
+    localStorage.removeItem("theme_session");
+    router.push("/theme");
+  }
+
+  function openReviews() {
+    router.push("/reviews");
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
@@ -50,9 +61,9 @@ export default function Home() {
         <div className="grid gap-4 sm:grid-cols-2 order-3 sm:order-2">
           {/* Shopify Theme Customizer */}
           <motion.div variants={staggerItem}>
-            <Link
-              href="/theme"
-              className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm"
+            <div
+              onClick={openTheme}
+              className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm cursor-pointer"
             >
               <motion.div
                 className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05]"
@@ -87,14 +98,14 @@ export default function Home() {
                   <ArrowRight className="h-3 w-3" />
                 </motion.span>
               </div>
-            </Link>
+            </div>
           </motion.div>
 
           {/* Loox Review Generator */}
           <motion.div variants={staggerItem}>
-            <Link
-              href="/reviews"
-              className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm"
+            <div
+              onClick={openReviews}
+              className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm cursor-pointer"
             >
               <motion.div
                 className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05]"
@@ -129,7 +140,7 @@ export default function Home() {
                   <ArrowRight className="h-3 w-3" />
                 </motion.span>
               </div>
-            </Link>
+            </div>
           </motion.div>
         </div>
 

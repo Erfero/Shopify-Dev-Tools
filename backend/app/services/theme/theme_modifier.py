@@ -1582,10 +1582,9 @@ def _fill_missing_locale_keys(en_path: Path, target_path: Path) -> None:
     if merged == tgt_data:
         return  # Nothing to add
 
-    target_path.write_text(
-        _json.dumps(merged, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    # Write with LF line endings (Shopify runs on Linux — CRLF causes template parse errors)
+    content = _json.dumps(merged, ensure_ascii=False, indent=2).replace("\r\n", "\n").replace("\r", "\n")
+    target_path.write_bytes(content.encode("utf-8"))
 
 
 def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
@@ -1676,7 +1675,6 @@ def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
 
     merged = _deep_merge(merged, _HARDCODED_PATCHES)
 
-    out_path.write_text(
-        _json.dumps(merged, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    # Write with LF line endings (Shopify runs on Linux — CRLF breaks template parsing)
+    content = _json.dumps(merged, ensure_ascii=False, indent=2).replace("\r\n", "\n").replace("\r", "\n")
+    out_path.write_bytes(content.encode("utf-8"))

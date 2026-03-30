@@ -1509,6 +1509,17 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if t_json.exists() and not t_def.exists():
         t_json.rename(t_def)
 
+    # Fill missing storefront keys from EN into the target locale.
+    # Many Story-theme locale files (da, de, sv, etc.) are missing keys that only
+    # exist in en.default.json (custom keys added by Story theme, e.g. general.timer.*).
+    # Missing keys cause "translation missing: da.key" errors in the storefront.
+    # Strategy: deep-merge EN keys into target, keeping existing target translations.
+    en_locale_def = locales_dir / "en.default.json"
+    en_locale_src = locales_dir / "en.json"   # if en was demoted earlier
+    _en_locale = en_locale_def if en_locale_def.exists() else (en_locale_src if en_locale_src.exists() else None)
+    if _en_locale and t_def.exists():
+        _fill_missing_locale_keys(_en_locale, t_def)
+
     # Promote target schema file: da.schema.json → da.default.schema.json
     # This keeps the schema filename consistent with the content file.
     t_def_schema = locales_dir / f"{target_code}.default.schema.json"
@@ -1529,6 +1540,52 @@ def _switch_locale_files(ed: Path, language: str) -> None:
             _shutil.copy2(_en_src, t_def_schema)
         else:
             _merge_schema_with_en(t_def_schema, _en_src, t_def_schema)
+
+
+def _fill_missing_locale_keys(en_path: Path, target_path: Path) -> None:
+    """Fill missing storefront translation keys from EN into the target locale file.
+
+    Many non-English Story-theme locale files lack custom keys added only to EN/FR
+    (e.g. general.timer.days, general.product_form.error, plural .many forms).
+    This function deep-merges EN keys into the target, keeping all existing
+    target translations intact — only adding what's absent.
+
+    Reads/writes real Shopify locale JSON (handles /* */ comment headers).
+    Output is written as clean UTF-8 JSON (no comment header).
+    """
+    import json as _json
+
+    def _load(p: Path) -> dict | None:
+        try:
+            raw = p.read_bytes().decode("utf-8-sig", errors="replace")
+            raw = re.sub(r"^/\*.*?\*/\s*", "", raw, flags=re.DOTALL)
+            raw = re.sub(r",(\s*[}\]])", r"\1", raw)
+            return _json.loads(raw)
+        except Exception:
+            return None
+
+    def _deep_merge(base: dict, overlay: dict) -> dict:
+        result = dict(base)
+        for k, v in overlay.items():
+            if k not in result:
+                result[k] = v
+            elif isinstance(v, dict) and isinstance(result.get(k), dict):
+                result[k] = _deep_merge(result[k], v)
+        return result
+
+    en_data = _load(en_path)
+    tgt_data = _load(target_path)
+    if en_data is None or tgt_data is None:
+        return
+
+    merged = _deep_merge(tgt_data, en_data)
+    if merged == tgt_data:
+        return  # Nothing to add
+
+    target_path.write_text(
+        _json.dumps(merged, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:

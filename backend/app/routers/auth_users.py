@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 import bcrypt
@@ -33,6 +34,16 @@ def _verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
+async def _hash_password_async(password: str) -> str:
+    """Run bcrypt hash in a thread pool to avoid blocking the event loop."""
+    return await asyncio.to_thread(_hash_password, password)
+
+
+async def _verify_password_async(password: str, hashed: str) -> bool:
+    """Run bcrypt verify in a thread pool to avoid blocking the event loop."""
+    return await asyncio.to_thread(_verify_password, password, hashed)
+
+
 class RegisterRequest(BaseModel):
     email: str
     password: str
@@ -66,34 +77,31 @@ async def register(req: RegisterRequest):
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé.")
 
     is_admin = bool(settings.admin_email and req.email.lower() == settings.admin_email.lower())
-    is_approved = is_admin  # admin auto-approuvé, les autres attendent
+    is_approved = True  # tous les nouveaux comptes sont auto-approuvés
 
     # Use provided display_name or auto-generate from email
     display_name = req.display_name.strip() or _display_name_from_email(req.email)
 
     user_id = str(uuid.uuid4())
-    password_hash = _hash_password(req.password)
+    password_hash = await _hash_password_async(req.password)
     await create_user(user_id, req.email.lower(), password_hash, is_approved, is_admin, display_name)
 
     await log_activity(req.email.lower(), "register")
 
-    if is_approved:
-        token = create_access_token({
-            "sub": user_id,
-            "email": req.email.lower(),
-            "display_name": display_name,
-            "is_admin": True,
-            "is_approved": True,
-        })
-        return {"access_token": token, "token_type": "bearer", "is_admin": True, "display_name": display_name}
-
-    return {"message": "Compte créé avec succès. En attente d'approbation par l'administrateur."}
+    token = create_access_token({
+        "sub": user_id,
+        "email": req.email.lower(),
+        "display_name": display_name,
+        "is_admin": is_admin,
+        "is_approved": True,
+    })
+    return {"access_token": token, "token_type": "bearer", "is_admin": is_admin, "display_name": display_name}
 
 
 @router.post("/login")
 async def login(req: LoginRequest):
     user = await get_user_by_email(req.email.lower())
-    if not user or not _verify_password(req.password, user["password_hash"]):
+    if not user or not await _verify_password_async(req.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect.")
 
     if not user["is_approved"]:
@@ -143,11 +151,11 @@ async def update_profile(req: UpdateProfileRequest, current_user: dict = Depends
     if req.new_password:
         if not req.current_password:
             raise HTTPException(status_code=400, detail="Mot de passe actuel requis.")
-        if not _verify_password(req.current_password, user["password_hash"]):
+        if not await _verify_password_async(req.current_password, user["password_hash"]):
             raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect.")
         if len(req.new_password) < 6:
             raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caractères.")
-        new_password_hash = _hash_password(req.new_password)
+        new_password_hash = await _hash_password_async(req.new_password)
 
     if new_display_name is None and new_password_hash is None:
         raise HTTPException(status_code=400, detail="Aucune modification à effectuer.")
@@ -238,7 +246,7 @@ async def edit_user(user_id: str, req: AdminEditUserRequest, current_user: dict 
     if req.new_password:
         if len(req.new_password) < 6:
             raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères.")
-        new_password_hash = _hash_password(req.new_password)
+        new_password_hash = await _hash_password_async(req.new_password)
 
     if new_email is None and new_display_name is None and new_password_hash is None:
         raise HTTPException(status_code=400, detail="Aucune modification à effectuer.")

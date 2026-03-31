@@ -1582,21 +1582,10 @@ def _fill_missing_locale_keys(en_path: Path, target_path: Path) -> None:
     if merged == tgt_data:
         return  # Nothing to add
 
-    # Write with LF line endings + Shopify-required comment header
-    _SHOPIFY_HEADER = (
-        "/*\n"
-        " * ------------------------------------------------------------\n"
-        " * IMPORTANT: The contents of this file are auto-generated.\n"
-        " *\n"
-        " * This file may be updated by the Shopify admin language editor\n"
-        " * or related systems. Please exercise caution as any changes\n"
-        " * made to this file may be overwritten.\n"
-        " * ------------------------------------------------------------\n"
-        " */\n"
-    )
+    # Write with LF line endings (no comment header — Shopify parses plain JSON fine
+    # and the header caused template resolution failures on some theme versions)
     json_body = _json.dumps(merged, ensure_ascii=False, indent=2).replace("\r\n", "\n").replace("\r", "\n")
-    content = _SHOPIFY_HEADER + json_body + "\n"
-    target_path.write_bytes(content.encode("utf-8"))
+    target_path.write_bytes((json_body + "\n").encode("utf-8"))
 
 
 def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
@@ -1687,18 +1676,6 @@ def _merge_schema_with_en(fr_path: Path, en_path: Path, out_path: Path) -> None:
 
     merged = _deep_merge(merged, _HARDCODED_PATCHES)
 
-    # Write with LF line endings + Shopify-required comment header
-    _SHOPIFY_HEADER = (
-        "/*\n"
-        " * ------------------------------------------------------------\n"
-        " * IMPORTANT: The contents of this file are auto-generated.\n"
-        " *\n"
-        " * This file may be updated by the Shopify admin language editor\n"
-        " * or related systems. Please exercise caution as any changes\n"
-        " * made to this file may be overwritten.\n"
-        " * ------------------------------------------------------------\n"
-        " */\n"
-    )
+    # Write with LF line endings (no comment header — plain JSON is safer)
     json_body = _json.dumps(merged, ensure_ascii=False, indent=2).replace("\r\n", "\n").replace("\r", "\n")
-    content = _SHOPIFY_HEADER + json_body + "\n"
-    out_path.write_bytes(content.encode("utf-8"))
+    out_path.write_bytes((json_body + "\n").encode("utf-8"))

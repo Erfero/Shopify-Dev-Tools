@@ -505,9 +505,11 @@ async def apply_theme(
 
         modified_files = apply_generated_texts(structure, all_results, language=language, target_gender=target_gender, store_name=store_name)
 
-        await translate_remaining_texts(
-            structure.extract_dir, structure.parsed_files, language
-        )
+        # NOTE: translate_remaining_texts is intentionally NOT called here.
+        # Translation already ran during the Generate step (POST /generate).
+        # Calling it again with stale parsed_files would use pre-apply text values
+        # as old_val, potentially matching and incorrectly replacing unrelated fields
+        # in already-translated files — corrupting the theme.
 
         session["generated_texts"] = all_results
         session["modified_files"] = modified_files

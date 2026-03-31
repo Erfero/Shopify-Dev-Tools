@@ -71,6 +71,7 @@ def apply_replacements(file_path: Path, replacements: list[tuple[str, str, str]]
         # our mapping was wrong). We silently skip — the file stays intact.
 
     if applied > 0:
-        file_path.write_text(raw, "utf-8")
+        # write_bytes() guarantees LF-only on all platforms (write_text() adds CRLF on Windows)
+        file_path.write_bytes(raw.encode("utf-8"))
 
     return applied

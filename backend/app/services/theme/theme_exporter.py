@@ -108,12 +108,29 @@ def create_legal_page_template(theme_root: Path, page_handle: str, title: str, c
 
 def _create_zip(source_dir: Path, zip_path: Path):
     """Create a ZIP file from a directory, excluding internal temp directories."""
-    # Verify layout/theme.liquid exists before starting — Shopify requires it
-    theme_liquid = source_dir / "layout" / "theme.liquid"
-    if not theme_liquid.exists():
-        raise FileNotFoundError(
-            f"layout/theme.liquid manquant dans le répertoire theme: {source_dir}"
-        )
+    # Verify required files exist before starting
+    for required in ("layout/theme.liquid", "templates/product.json", "templates/index.json"):
+        if not (source_dir / required).exists():
+            raise FileNotFoundError(
+                f"{required} manquant dans le répertoire theme: {source_dir}"
+            )
+
+    # Guard: Shopify allows only ONE *.default.json and ONE *.default.schema.json.
+    # If _switch_locale_files() left duplicates, abort before producing a broken ZIP.
+    locales_dir = source_dir / "locales"
+    if locales_dir.exists():
+        default_content = [f.name for f in locales_dir.glob("*.default.json") if ".schema" not in f.name]
+        default_schema  = [f.name for f in locales_dir.glob("*.default.schema.json")]
+        if len(default_content) > 1:
+            raise ValueError(
+                f"Plusieurs fichiers *.default.json trouvés dans locales/: {default_content}. "
+                "Le thème sera rejeté par Shopify."
+            )
+        if len(default_schema) > 1:
+            raise ValueError(
+                f"Plusieurs fichiers *.default.schema.json trouvés dans locales/: {default_schema}. "
+                "Le thème sera rejeté par Shopify."
+            )
 
     # Collect all files first so we can detect issues before writing the ZIP
     files_to_add: list[tuple[Path, str]] = []

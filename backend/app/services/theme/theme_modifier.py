@@ -1508,7 +1508,9 @@ def _switch_locale_files(ed: Path, language: str) -> None:
             continue  # already the target → keep as-is
         # Demote storefront content file: fr.default.json → fr.json
         demoted = locales_dir / f"{lang_code}.json"
-        if not demoted.exists():
+        if demoted.exists():
+            existing_def.unlink()   # fr.json already exists → remove the stale default
+        else:
             existing_def.rename(demoted)
         # CRITICAL: also demote schema file: fr.default.schema.json → fr.schema.json
         # Without this, Shopify sees two "default" markers and invalidates the theme.

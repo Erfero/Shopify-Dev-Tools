@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Layers, Loader2, Eye, EyeOff } from "lucide-react";
 import { API_BASE } from "@/lib/config";
-import { setToken, setUser } from "@/lib/auth";
+import { setToken, setUser, updateActivity } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,6 +33,7 @@ export default function LoginPage() {
       }
       setToken(data.access_token, remember);
       setUser({ email, is_admin: data.is_admin, display_name: data.display_name ?? "" }, remember);
+      updateActivity();
       router.replace("/");
     } catch {
       setError("Impossible de contacter le serveur. Veuillez réessayer dans quelques secondes.");

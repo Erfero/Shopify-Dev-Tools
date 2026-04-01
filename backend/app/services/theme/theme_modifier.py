@@ -25,12 +25,12 @@ PAGE MAPPING:
     Liste de comparaison  ← comparison.title / .description / items[0..4]
     Texte enrichi 2       ← advantages[2].title / .text
     Spécifications        ← specs.title / items[0..3]
-    Avis Trustpilot (10)  ← reviews[0..9]  (reviews-two section, ajoutée si manquante)
+    Avis Trustpilot (15)  ← reviews[0..14] (reviews-two section, si présente dans le thème)
     Contenu réductible    ← faq.title / items[0..4]
     Footer bloc image     ← global_texts.footer.brand_text
 
   Page Produit (templates/product.json):
-    Avis clients (10)                  ← reviews[0..9]  (reviews section, ajoutée si manquante)
+    Avis clients (15)                  ← reviews[0..14] (reviews section, si présente dans le thème)
     Produit → bloc Icônes (4 icônes)   ← product_benefits[0..3].short_title
     Produit → bloc Témoignages (3)     ← mini_reviews[0..2].name / .text
     Produit → bloc description-faq    ← product_description / how_it_works / adoption
@@ -300,113 +300,58 @@ def _rep(reps: list, field: str, old: str, new: str) -> None:
 
 # ── Reviews: JSON injection (Avis Trustpilot + Avis) ─────────────────────────
 
-_REVIEWS_TWO_HEADING = {
-    "fr": "Ils en parlent mieux que nous",
-    "en": "They speak better about us than we do",
-    "de": "Sie sprechen besser über uns als wir selbst",
-    "da": "De taler bedre om os end vi selv",
-    "sv": "De talar bättre om oss än vi själva",
-    "no": "De snakker bedre om oss enn vi gjør selv",
-    "fi": "He puhuvat meistä paremmin kuin me itse",
-    "es": "Ellos hablan mejor de nosotros que nosotros mismos",
-    "pt": "Eles falam melhor de nós do que nós mesmos",
-    "it": "Parlano di noi meglio di quanto facciamo noi",
-    "nl": "Ze spreken beter over ons dan wijzelf",
-    "pl": "Mówią o nas lepiej niż my sami",
-    "ru": "Они говорят о нас лучше, чем мы сами",
-}
-
-_REVIEWS_HEADING = {
-    "fr": "Avis clients",
-    "en": "Customer Reviews",
-    "de": "Kundenbewertungen",
-    "da": "Kundeanmeldelser",
-    "sv": "Kundrecensioner",
-    "no": "Kundeanmeldelser",
-    "fi": "Asiakasarvostelut",
-    "es": "Reseñas de clientes",
-    "pt": "Avaliações de clientes",
-    "it": "Recensioni clienti",
-    "nl": "Klantbeoordelingen",
-    "pl": "Opinie klientów",
-    "ru": "Отзывы покупателей",
-}
-
-
 def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
-    """Inject up to 10 review blocks into both review section types.
+    """Inject up to 15 review blocks into existing review sections only.
 
     - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
     - reviews (Avis) in product.json: text blocks
 
-    If either section is missing from its template, it is added automatically.
+    Sections are NEVER created if missing — only existing sections are filled.
     Called BEFORE text surgery so files have the correct block count.
     Updates pf cache so subsequent surgery reads correct old values.
 
     Returns the set of rel-paths that were modified.
     """
     reviews = rv.get("reviews", [])
-    target_count = min(len(reviews), 10)
+    target_count = min(len(reviews), 15)
     if not reviews:
         return set()
 
     modified: set[str] = set()
 
-    # A — Avis Trustpilot: reviews-two blocks (testimonial) in index.json
-    if _inject_into_template(
-        ed, pf,
-        rel="templates/index.json",
-        section_type="reviews-two",
-        block_type="testimonial",
-        reviews=reviews,
-        target_count=target_count,
-        language=language,
-    ):
+    # A — Avis Trustpilot: reviews-two / testimonial blocks in index.json
+    if _inject_into_existing(ed, pf, "templates/index.json", "reviews-two", "testimonial", reviews, target_count):
         modified.add("templates/index.json")
 
-    # B — Avis: reviews blocks (text) in product.json
-    if _inject_into_template(
-        ed, pf,
-        rel="templates/product.json",
-        section_type="reviews",
-        block_type="text",
-        reviews=reviews,
-        target_count=target_count,
-        language=language,
-    ):
+    # B — Avis: reviews / text blocks in product.json
+    if _inject_into_existing(ed, pf, "templates/product.json", "reviews", "text", reviews, target_count):
         modified.add("templates/product.json")
 
     return modified
 
 
-def _inject_into_template(
+def _inject_into_existing(
     ed: Path, pf: dict,
     rel: str, section_type: str, block_type: str,
-    reviews: list, target_count: int, language: str,
+    reviews: list, target_count: int,
 ) -> bool:
-    """Find or create a section of section_type in rel and fill it with reviews."""
+    """Fill an existing section with reviews. Returns False if section not found."""
     entry = pf.get(rel)
     if not entry:
         return False
 
     data, comment, is_compact = entry
 
-    # Find first existing section of that type
     found_sec = None
     for sec in data.get("sections", {}).values():
         if sec.get("type") == section_type:
             found_sec = sec
             break
 
-    if found_sec is not None:
-        _fill_review_blocks(found_sec, block_type, reviews, target_count)
-    else:
-        # Section missing — create and add it before collapsible-content (or at end)
-        new_id = f"reviews_{uuid.uuid4().hex[:8]}"
-        new_sec = _make_review_section(section_type, block_type, reviews, target_count, language)
-        data.setdefault("sections", {})[new_id] = new_sec
-        _insert_before_collapsible(data, new_id)
+    if found_sec is None:
+        return False  # Section absent — skip silently, never create
 
+    _fill_review_blocks(found_sec, block_type, reviews, target_count)
     write_theme_json(ed / rel, data, comment, is_compact)
     pf[rel] = (data, comment, is_compact)
     return True
@@ -462,65 +407,6 @@ def _block_defaults(block_type: str) -> dict:
     if block_type == "testimonial":
         return {"title": "", "text": "", "author_name": "", "author_age": "", "rating": 5}
     return {"heading": "", "description": "", "name": "", "verified": True, "stars_rating": 5}
-
-
-def _make_review_section(
-    section_type: str, block_type: str,
-    reviews: list, target_count: int, language: str,
-) -> dict:
-    """Build a complete new section dict with review blocks filled in."""
-    blocks = {}
-    block_order = []
-    for r in reviews[:target_count]:
-        bid = uuid.uuid4().hex[:16]
-        blk = {"type": block_type, "settings": dict(_block_defaults(block_type))}
-        _write_review_to_block(blk, block_type, r)
-        blocks[bid] = blk
-        block_order.append(bid)
-
-    if section_type == "reviews-two":
-        settings = {
-            "heading": _REVIEWS_TWO_HEADING.get(language, _REVIEWS_TWO_HEADING["en"]),
-            "trustpilot_info": True,
-            "rating": "4.8",
-            "reviews_count": "238",
-            "layout_width": "full",
-            "color_palette": "background-1",
-            "padding_top": 24,
-            "padding_bottom": 24,
-            "padding_top_sm": 24,
-            "padding_bottom_sm": 24,
-        }
-    else:  # reviews
-        settings = {
-            "heading": _REVIEWS_HEADING.get(language, _REVIEWS_HEADING["en"]),
-            "layout_width": "normal",
-            "layout": "swiper",
-            "color_palette": "background",
-            "enable_rating": True,
-            "padding_top": 0,
-            "padding_bottom": 64,
-            "padding_top_sm": 0,
-            "padding_bottom_sm": 32,
-        }
-
-    return {
-        "type": section_type,
-        "blocks": blocks,
-        "block_order": block_order,
-        "settings": settings,
-    }
-
-
-def _insert_before_collapsible(data: dict, new_id: str):
-    """Insert new_id into the order array just before collapsible-content, or append."""
-    sections = data.get("sections", {})
-    order = data.setdefault("order", [])
-    for i, sid in enumerate(order):
-        if sections.get(sid, {}).get("type") == "collapsible-content":
-            order.insert(i, new_id)
-            return
-    order.append(new_id)
 
 
 # ── Homepage ──────────────────────────────────────────────────────────────────

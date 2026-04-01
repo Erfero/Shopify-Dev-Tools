@@ -60,7 +60,7 @@ def _get_prenoms(lang_code: str, gender: str) -> str:
 def build_reviews_prompt(context: dict) -> tuple[str, str]:
     """Prompt avis clients — schéma identique à mock_generator.py / theme_modifier.py.
 
-    Schema : {"reviews": [{"name", "age", "rating", "title", "text", "response"}]} x10
+    Schema : {"reviews": [{"name", "age", "rating", "title", "text", "response"}]} x15
     """
 
     system = """Tu es un expert en marketing e-commerce. Tu génères des avis clients réalistes et variés.
@@ -135,7 +135,7 @@ Produit(s) : {products}
 {gender_note}
 {lang_note}
 {image_note}
-Génère 10 avis clients authentiques et variés pour ce produit.
+Génère 15 avis clients authentiques et variés pour ce produit.
 
 Réponds en JSON avec ce schéma EXACT :
 
@@ -220,12 +220,52 @@ Réponds en JSON avec ce schéma EXACT :
       "title": "Titre 10",
       "text": "Avis 10",
       "response": "Réponse 10"
+    }},
+    {{
+      "name": "Prénom N.",
+      "age": "XX ans",
+      "rating": 5,
+      "title": "Titre 11",
+      "text": "Avis 11",
+      "response": "Réponse 11"
+    }},
+    {{
+      "name": "Prénom N.",
+      "age": "XX ans",
+      "rating": 4,
+      "title": "Titre 12 (rating 4, nuancé mais positif)",
+      "text": "Avis 12",
+      "response": "Réponse 12"
+    }},
+    {{
+      "name": "Prénom N.",
+      "age": "XX ans",
+      "rating": 5,
+      "title": "Titre 13",
+      "text": "Avis 13",
+      "response": "Réponse 13"
+    }},
+    {{
+      "name": "Prénom N.",
+      "age": "XX ans",
+      "rating": 5,
+      "title": "Titre 14",
+      "text": "Avis 14",
+      "response": "Réponse 14"
+    }},
+    {{
+      "name": "Prénom N.",
+      "age": "XX ans",
+      "rating": 5,
+      "title": "Titre 15",
+      "text": "Avis 15",
+      "response": "Réponse 15"
     }}
   ]
 }}
 
 CONTRAINTES :
-- Exactement 10 avis dans reviews[]
+- Exactement 15 avis dans reviews[]
 - Prénoms à utiliser (dans l'ordre) : {prenoms_ex}
 - Âges entre 22 et 62 ans
 - Les textes (text et response) sont en texte simple, AUCUN HTML

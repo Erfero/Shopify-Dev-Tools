@@ -25,11 +25,12 @@ PAGE MAPPING:
     Liste de comparaison  ← comparison.title / .description / items[0..4]
     Texte enrichi 2       ← advantages[2].title / .text
     Spécifications        ← specs.title / items[0..3]
-    Avis Trustpilot (10)  ← reviews[0..9]
+    Avis Trustpilot (10)  ← reviews[0..9]  (reviews-two section, ajoutée si manquante)
     Contenu réductible    ← faq.title / items[0..4]
     Footer bloc image     ← global_texts.footer.brand_text
 
   Page Produit (templates/product.json):
+    Avis clients (10)                  ← reviews[0..9]  (reviews section, ajoutée si manquante)
     Produit → bloc Icônes (4 icônes)   ← product_benefits[0..3].short_title
     Produit → bloc Témoignages (3)     ← mini_reviews[0..2].name / .text
     Produit → bloc description-faq    ← product_description / how_it_works / adoption
@@ -196,10 +197,10 @@ def apply_generated_texts(
         if _apply_colors(ed, pf, all_results["colors"]):
             modified.add("config/settings_data.json")
 
-    # ── 1. Reviews: JSON injection (must run BEFORE text surgery on index.json)
+    # ── 1. Reviews: JSON injection (must run BEFORE text surgery on index/product)
     if "reviews" in all_results:
-        if _inject_testimonials(ed, pf, all_results["reviews"]):
-            modified.add("templates/index.json")
+        for rel in _inject_testimonials(ed, pf, all_results["reviews"], language=language):
+            modified.add(rel)
 
     # ── 2. Homepage text surgery
     if hp:
@@ -297,82 +298,229 @@ def _rep(reps: list, field: str, old: str, new: str) -> None:
         reps.append((field, old, new))
 
 
-# ── Reviews: JSON injection (adds testimonial blocks up to 10) ────────────────
+# ── Reviews: JSON injection (Avis Trustpilot + Avis) ─────────────────────────
 
-def _inject_testimonials(ed: Path, pf: dict, rv: dict) -> bool:
-    """Inject up to 10 testimonial blocks in reviews-two section via JSON write.
+_REVIEWS_TWO_HEADING = {
+    "fr": "Ils en parlent mieux que nous",
+    "en": "They speak better about us than we do",
+    "de": "Sie sprechen besser über uns als wir selbst",
+    "da": "De taler bedre om os end vi selv",
+    "sv": "De talar bättre om oss än vi själva",
+    "no": "De snakker bedre om oss enn vi gjør selv",
+    "fi": "He puhuvat meistä paremmin kuin me itse",
+    "es": "Ellos hablan mejor de nosotros que nosotros mismos",
+    "pt": "Eles falam melhor de nós do que nós mesmos",
+    "it": "Parlano di noi meglio di quanto facciamo noi",
+    "nl": "Ze spreken beter over ons dan wijzelf",
+    "pl": "Mówią o nas lepiej niż my sami",
+    "ru": "Они говорят о нас лучше, чем мы сами",
+}
 
-    Called BEFORE text surgery so that the file has the correct block count.
+_REVIEWS_HEADING = {
+    "fr": "Avis clients",
+    "en": "Customer Reviews",
+    "de": "Kundenbewertungen",
+    "da": "Kundeanmeldelser",
+    "sv": "Kundrecensioner",
+    "no": "Kundeanmeldelser",
+    "fi": "Asiakasarvostelut",
+    "es": "Reseñas de clientes",
+    "pt": "Avaliações de clientes",
+    "it": "Recensioni clienti",
+    "nl": "Klantbeoordelingen",
+    "pl": "Opinie klientów",
+    "ru": "Отзывы покупателей",
+}
+
+
+def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
+    """Inject up to 10 review blocks into both review section types.
+
+    - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
+    - reviews (Avis) in product.json: text blocks
+
+    If either section is missing from its template, it is added automatically.
+    Called BEFORE text surgery so files have the correct block count.
     Updates pf cache so subsequent surgery reads correct old values.
+
+    Returns the set of rel-paths that were modified.
     """
-    rel = "templates/index.json"
+    reviews = rv.get("reviews", [])
+    target_count = min(len(reviews), 10)
+    if not reviews:
+        return set()
+
+    modified: set[str] = set()
+
+    # A — Avis Trustpilot: reviews-two blocks (testimonial) in index.json
+    if _inject_into_template(
+        ed, pf,
+        rel="templates/index.json",
+        section_type="reviews-two",
+        block_type="testimonial",
+        reviews=reviews,
+        target_count=target_count,
+        language=language,
+    ):
+        modified.add("templates/index.json")
+
+    # B — Avis: reviews blocks (text) in product.json
+    if _inject_into_template(
+        ed, pf,
+        rel="templates/product.json",
+        section_type="reviews",
+        block_type="text",
+        reviews=reviews,
+        target_count=target_count,
+        language=language,
+    ):
+        modified.add("templates/product.json")
+
+    return modified
+
+
+def _inject_into_template(
+    ed: Path, pf: dict,
+    rel: str, section_type: str, block_type: str,
+    reviews: list, target_count: int, language: str,
+) -> bool:
+    """Find or create a section of section_type in rel and fill it with reviews."""
     entry = pf.get(rel)
     if not entry:
         return False
 
     data, comment, is_compact = entry
-    reviews = rv.get("reviews", [])
-    target_count = min(len(reviews), 10)
-    if not reviews:
-        return False
 
-    modified = False
+    # Find first existing section of that type
+    found_sec = None
     for sec in data.get("sections", {}).values():
-        if sec.get("type") != "reviews-two":
-            continue
+        if sec.get("type") == section_type:
+            found_sec = sec
+            break
 
-        existing = [
-            (bid, sec["blocks"][bid])
-            for bid in sec.get("block_order", [])
-            if bid in sec.get("blocks", {})
-            and sec["blocks"][bid].get("type") == "testimonial"
-        ]
+    if found_sec is not None:
+        _fill_review_blocks(found_sec, block_type, reviews, target_count)
+    else:
+        # Section missing — create and add it before collapsible-content (or at end)
+        new_id = f"reviews_{uuid.uuid4().hex[:8]}"
+        new_sec = _make_review_section(section_type, block_type, reviews, target_count, language)
+        data.setdefault("sections", {})[new_id] = new_sec
+        _insert_before_collapsible(data, new_id)
 
-        # Template settings keys from first existing block (fallback to defaults)
-        if existing:
-            tmpl = {k: "" for k in existing[0][1].get("settings", {})}
-        else:
-            tmpl = {
-                "title": "", "text": "", "author_name": "",
-                "author_age": "", "rating": 5,
-            }
+    write_theme_json(ed / rel, data, comment, is_compact)
+    pf[rel] = (data, comment, is_compact)
+    return True
 
-        # Add missing blocks
-        needed = target_count - len(existing)
-        for _ in range(max(0, needed)):
-            new_id = uuid.uuid4().hex[:16]
-            sec.setdefault("blocks", {})[new_id] = {
-                "type": "testimonial",
-                "settings": dict(tmpl),
-            }
-            sec.setdefault("block_order", []).append(new_id)
 
-        # Rebuild full list after potential additions
-        existing = [
-            (bid, sec["blocks"][bid])
-            for bid in sec.get("block_order", [])
-            if bid in sec.get("blocks", {})
-            and sec["blocks"][bid].get("type") == "testimonial"
-        ]
+def _fill_review_blocks(sec: dict, block_type: str, reviews: list, target_count: int):
+    """Ensure the section has target_count blocks of block_type, then fill with reviews."""
+    existing = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {})
+        and sec["blocks"][bid].get("type") == block_type
+    ]
 
-        # Set all values directly in the data dict
-        for i, (_, blk) in enumerate(existing[:target_count]):
-            r = reviews[i]
-            s = blk.setdefault("settings", {})
-            s["title"]       = r.get("title", "")
-            s["text"]        = f"<p>{r.get('text', '')}</p>"
-            s["author_name"] = r.get("name", "")
-            s["author_age"]  = str(r.get("age", ""))
-            s["rating"]      = r.get("rating", 5)
+    tmpl = {k: "" for k in existing[0][1].get("settings", {})} if existing else _block_defaults(block_type)
 
-        modified = True
-        break  # Only first reviews-two section
+    needed = target_count - len(existing)
+    for _ in range(max(0, needed)):
+        new_id = uuid.uuid4().hex[:16]
+        sec.setdefault("blocks", {})[new_id] = {"type": block_type, "settings": dict(tmpl)}
+        sec.setdefault("block_order", []).append(new_id)
 
-    if modified:
-        write_theme_json(ed / rel, data, comment, is_compact)
-        pf[rel] = (data, comment, is_compact)
+    # Rebuild after additions
+    existing = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {})
+        and sec["blocks"][bid].get("type") == block_type
+    ]
 
-    return modified
+    for i, (_, blk) in enumerate(existing[:target_count]):
+        _write_review_to_block(blk, block_type, reviews[i])
+
+
+def _write_review_to_block(blk: dict, block_type: str, r: dict):
+    """Write a single review's data into a block's settings."""
+    s = blk.setdefault("settings", {})
+    if block_type == "testimonial":
+        s["title"]        = r.get("title", "")
+        s["text"]         = f"<p>{r.get('text', '')}</p>"
+        s["author_name"]  = r.get("name", "")
+        s["author_age"]   = str(r.get("age", ""))
+        s["rating"]       = r.get("rating", 5)
+    elif block_type == "text":
+        s["heading"]      = r.get("title", "")
+        s["description"]  = r.get("text", "")
+        s["name"]         = r.get("name", "")
+        s["verified"]     = True
+        s["stars_rating"] = r.get("rating", 5)
+
+
+def _block_defaults(block_type: str) -> dict:
+    if block_type == "testimonial":
+        return {"title": "", "text": "", "author_name": "", "author_age": "", "rating": 5}
+    return {"heading": "", "description": "", "name": "", "verified": True, "stars_rating": 5}
+
+
+def _make_review_section(
+    section_type: str, block_type: str,
+    reviews: list, target_count: int, language: str,
+) -> dict:
+    """Build a complete new section dict with review blocks filled in."""
+    blocks = {}
+    block_order = []
+    for r in reviews[:target_count]:
+        bid = uuid.uuid4().hex[:16]
+        blk = {"type": block_type, "settings": dict(_block_defaults(block_type))}
+        _write_review_to_block(blk, block_type, r)
+        blocks[bid] = blk
+        block_order.append(bid)
+
+    if section_type == "reviews-two":
+        settings = {
+            "heading": _REVIEWS_TWO_HEADING.get(language, _REVIEWS_TWO_HEADING["en"]),
+            "trustpilot_info": True,
+            "rating": "4.8",
+            "reviews_count": "238",
+            "layout_width": "full",
+            "color_palette": "background-1",
+            "padding_top": 24,
+            "padding_bottom": 24,
+            "padding_top_sm": 24,
+            "padding_bottom_sm": 24,
+        }
+    else:  # reviews
+        settings = {
+            "heading": _REVIEWS_HEADING.get(language, _REVIEWS_HEADING["en"]),
+            "layout_width": "normal",
+            "layout": "swiper",
+            "color_palette": "background",
+            "enable_rating": True,
+            "padding_top": 0,
+            "padding_bottom": 64,
+            "padding_top_sm": 0,
+            "padding_bottom_sm": 32,
+        }
+
+    return {
+        "type": section_type,
+        "blocks": blocks,
+        "block_order": block_order,
+        "settings": settings,
+    }
+
+
+def _insert_before_collapsible(data: dict, new_id: str):
+    """Insert new_id into the order array just before collapsible-content, or append."""
+    sections = data.get("sections", {})
+    order = data.setdefault("order", [])
+    for i, sid in enumerate(order):
+        if sections.get(sid, {}).get("type") == "collapsible-content":
+            order.insert(i, new_id)
+            return
+    order.append(new_id)
 
 
 # ── Homepage ──────────────────────────────────────────────────────────────────

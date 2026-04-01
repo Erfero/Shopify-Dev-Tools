@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { useSessionTimeout } from "@/lib/useSessionTimeout";
+import { toast } from "sonner";
 
 type AppStep = "upload" | "configure" | "generating" | "preview" | "done";
 
@@ -562,7 +563,7 @@ export default function ThemePage() {
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
                     <button
-                      onClick={() => downloadTheme(uploadData.session_id).catch(() => alert("Erreur lors du téléchargement. Veuillez réessayer."))}
+                      onClick={() => downloadTheme(uploadData.session_id).catch(() => toast.error("Erreur lors du téléchargement. Veuillez réessayer."))}
                       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 24px", borderRadius: 12, background: "var(--primary)", color: "white", textDecoration: "none", fontWeight: 700, fontSize: 15, boxShadow: "0 4px 14px rgba(99,102,241,0.3)", border: "none", cursor: "pointer", fontFamily: "inherit" }}
                     >
                       <Download size={16} />

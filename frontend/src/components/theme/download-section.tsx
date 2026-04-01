@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { downloadTheme } from "@/lib/api-theme";
 import { Download, CheckCircle2, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 
 interface DownloadSectionProps {
   sessionId: string;
@@ -11,7 +12,7 @@ interface DownloadSectionProps {
 
 export function DownloadSection({ sessionId, onReset }: DownloadSectionProps) {
   const handleDownload = () => {
-    downloadTheme(sessionId).catch(() => alert("Erreur lors du téléchargement. Veuillez réessayer."));
+    downloadTheme(sessionId).catch(() => toast.error("Erreur lors du téléchargement. Veuillez réessayer."));
   };
 
   return (

@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 _MAX_ZIP_BYTES = 150 * 1024 * 1024
 # Max products per generation request
 _MAX_PRODUCTS = 50
+# Max product images per request
+_MAX_IMAGES = 50
+# Max size per product image: 100 MB
+_MAX_IMAGE_BYTES = 100 * 1024 * 1024
 from app.database import theme_history_add, theme_history_list, theme_history_get, theme_history_delete, theme_history_clear, save_theme_zip, get_theme_zip, delete_theme_zip, save_theme_output_zip, get_theme_output_zip, delete_theme_output_zip, clear_all_theme_output_zips, list_theme_output_zip_ids, analytics_record, analytics_increment_regen, analytics_get_summary, log_activity, save_session_config, get_session_config
 from app.models.theme_schemas import UploadResponse, GenerationStep
 from app.services.theme.theme_parser import extract_theme, cleanup_session, ThemeStructure, EDITABLE_JSON_FILES
@@ -34,6 +38,10 @@ from app.services.theme.theme_exporter import export_theme
 from app.utils.json_handler import read_theme_json, detect_json_format
 
 router = APIRouter(prefix="/api/theme", tags=["theme"], dependencies=[Depends(verify_token)])
+
+_ALLOWED_LANGUAGES = {
+    "fr", "en", "de", "da", "sv", "no", "fi", "es", "pt", "it", "nl", "pl", "ru",
+}
 
 # ── In-memory session store ───────────────────────────────────────────────────
 
@@ -325,6 +333,12 @@ async def generate_theme(
             detail=f"Maximum {_MAX_PRODUCTS} produits par requête.",
         )
 
+    if language not in _ALLOWED_LANGUAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Langue '{language}' non supportée. Langues acceptées : {', '.join(sorted(_ALLOWED_LANGUAGES))}.",
+        )
+
     session["language"] = language
     session["target_gender"] = target_gender
     session["store_name"] = store_name
@@ -338,18 +352,30 @@ async def generate_theme(
     session["return_policy_days"] = return_policy_days
     session["marketing_angles"] = marketing_angles
 
+    if len(product_images) > _MAX_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum {_MAX_IMAGES} images produit par requête.",
+        )
+
     image_paths: list[Path] = []
     images_dir = settings.temp_path / session_id / "_product_images"
     if product_images:
         images_dir.mkdir(parents=True, exist_ok=True)
         for img in product_images:
             if img.content_type and img.content_type in ALLOWED_IMAGE_TYPES and img.filename:
+                img_data = await img.read()
+                if len(img_data) > _MAX_IMAGE_BYTES:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"L'image '{img.filename}' dépasse la taille maximale autorisée de {_MAX_IMAGE_BYTES // 1024 // 1024} Mo.",
+                    )
                 # Use a random name to prevent path traversal via malicious filenames
                 ext = Path(img.filename).suffix.lower() or ".jpg"
                 safe_name = f"{uuid.uuid4().hex}{ext}"
                 img_path = images_dir / safe_name
                 with open(img_path, "wb") as f:
-                    f.write(await img.read())
+                    f.write(img_data)
                 image_paths.append(img_path)
 
     async def event_stream():

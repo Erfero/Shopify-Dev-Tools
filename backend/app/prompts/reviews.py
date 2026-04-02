@@ -1,47 +1,171 @@
-# Female first names per language (keyed by lowercased language name or ISO-2 prefix)
+# Female first names per language — 25 names each for up to 50 reviews
 _PRENOMS_FEMININE: dict[str, str] = {
-    "fr": "Marie P., Sophie L., Chloé M., Léa R., Manon D., Amélie B., Charlotte V., Emma T., Isabelle K., Pauline N.",
-    "en": "Emma S., Olivia B., Sophia M., Isabella K., Ava T., Mia R., Charlotte L., Amelia W., Emily J., Grace C.",
-    "de": "Lena M., Emma S., Hannah K., Mia B., Anna R., Leonie T., Laura N., Alina W., Sophie F., Johanna H.",
-    "da": "Emma N., Sofie L., Laura M., Ida K., Maja B., Anna R., Freja T., Sara C., Emilie H., Julie P.",
-    "es": "Sofía M., Isabella R., Valentina L., Camila B., Lucía T., Gabriela P., Sara N., Elena K., María C., Carmen F.",
-    "it": "Sofia M., Emma L., Giulia R., Aurora B., Alice T., Ginevra N., Chiara K., Beatrice F., Martina P., Valentina C.",
-    "nl": "Emma V., Olivia S., Mia B., Sophie M., Charlotte K., Tessa L., Luna R., Fleur N., Sara F., Laura H.",
-    "pt": "Sofia M., Beatriz L., Maria R., Ana B., Inês T., Catarina N., Francisca K., Joana F., Rita P., Patrícia C.",
-    "sv": "Emma N., Maja S., Elsa B., Alice L., Wilma K., Ebba R., Linnea T., Klara M., Molly F., Freja H.",
-    "no": "Emma N., Nora S., Maja B., Sofia L., Emilie K., Sara R., Ingrid T., Frida M., Kaja F., Thea H.",
-    "fi": "Emma N., Aino S., Sofia B., Helmi L., Maija K., Aada R., Siiri T., Lydia M., Anni F., Elina H.",
-    "pl": "Julia N., Zuzanna S., Maja B., Zofia L., Natalia K., Aleksandra R., Wiktoria T., Amelia M., Oliwia F., Karolina H.",
-    "cs": "Tereza N., Natalie S., Eliška B., Adéla L., Lucie K., Klára R., Karolína T., Veronika M., Jana F., Petra H.",
-    "ro": "Maria N., Elena S., Ioana B., Andreea L., Alexandra K., Cristina R., Ana T., Diana M., Laura F., Mihaela H.",
-    "hu": "Luca N., Anna S., Emma B., Zsófia L., Petra K., Veronika R., Katalin T., Nóra M., Ágnes F., Éva H.",
-    "tr": "Ayşe N., Fatma S., Zeynep B., Elif L., Merve K., Büşra R., İrem T., Selin M., Deniz F., Aslı H.",
-    "el": "Maria N., Eleni S., Katerina B., Sofia L., Anna K., Angeliki R., Vasiliki T., Dimitra M., Vicky F., Ioanna H.",
+    "fr": (
+        "Marie P., Sophie L., Chloé M., Léa R., Manon D., Amélie B., Charlotte V., Emma T., "
+        "Isabelle K., Pauline N., Camille F., Lucie H., Clara S., Inès G., Anaïs J., "
+        "Mathilde C., Audrey W., Céline E., Laure O., Nathalie B., Élise M., Justine R., "
+        "Sandrine T., Virginie P., Élodie L."
+    ),
+    "en": (
+        "Emma S., Olivia B., Sophia M., Isabella K., Ava T., Mia R., Charlotte L., Amelia W., "
+        "Emily J., Grace C., Hannah D., Lily N., Zoe F., Chloe H., Ella P., Scarlett V., "
+        "Nora G., Aria E., Penelope O., Riley Q., Layla X., Hazel Y., Violet Z., Aurora U., "
+        "Stella I."
+    ),
+    "de": (
+        "Lena M., Emma S., Hannah K., Mia B., Anna R., Leonie T., Laura N., Alina W., "
+        "Sophie F., Johanna H., Lisa G., Marie C., Sarah D., Julia E., Katharina O., "
+        "Christina P., Sandra V., Nicole Q., Stefanie X., Petra Y., Monika Z., Heike U., "
+        "Brigitte I., Sabine A., Claudia J."
+    ),
+    "da": (
+        "Emma N., Sofie L., Laura M., Ida K., Maja B., Anna R., Freja T., Sara C., "
+        "Emilie H., Julie P., Camilla D., Nanna G., Astrid E., Mathilde O., Cecilie V., "
+        "Frederikke Q., Stine X., Pernille Y., Trine Z., Lotte U., Rikke I., Hanne A., "
+        "Karen J., Mette W., Birgitte F."
+    ),
+    "sv": (
+        "Emma N., Maja S., Elsa B., Alice L., Wilma K., Ebba R., Linnea T., Klara M., "
+        "Molly F., Freja H., Saga G., Elin C., Astrid D., Vera E., Lovisa O., "
+        "Stella P., Tilda V., Nora Q., Alva X., Ida Y., Sofia Z., Hanna U., "
+        "Lina I., Amanda A., Jenny J."
+    ),
+    "no": (
+        "Emma N., Nora S., Maja B., Sofia L., Emilie K., Sara R., Ingrid T., Frida M., "
+        "Kaja F., Thea H., Astrid G., Malin C., Silje D., Hanne E., Kristine O., "
+        "Tone P., Karianne V., Sigrid Q., Elin X., Marte Y., Camilla Z., Else U., "
+        "Bente I., Lise A., Solveig J."
+    ),
+    "fi": (
+        "Emma N., Aino S., Sofia B., Helmi L., Maija K., Aada R., Siiri T., Lydia M., "
+        "Anni F., Elina H., Tuuli G., Kaisa C., Hanna D., Leena E., Riikka O., "
+        "Päivi P., Minna V., Tanja Q., Satu X., Pirjo Y., Ulla Z., Riitta U., "
+        "Merja I., Eija A., Seija J."
+    ),
+    "es": (
+        "Sofía M., Isabella R., Valentina L., Camila B., Lucía T., Gabriela P., Sara N., "
+        "Elena K., María C., Carmen F., Paula H., Laura G., Andrea D., Natalia E., "
+        "Claudia O., Marta V., Patricia Q., Sandra X., Raquel Y., Cristina Z., "
+        "Silvia U., Mónica I., Nuria A., Beatriz J., Alicia W."
+    ),
+    "pt": (
+        "Sofia M., Beatriz L., Maria R., Ana B., Inês T., Catarina N., Francisca K., "
+        "Joana F., Rita P., Patrícia C., Mariana H., Raquel G., Liliana D., Cláudia E., "
+        "Andreia O., Susana V., Filipa Q., Sandra X., Carla Y., Helena Z., "
+        "Cristina U., Manuela I., Paula A., Teresa J., Anabela W."
+    ),
+    "it": (
+        "Sofia M., Emma L., Giulia R., Aurora B., Alice T., Ginevra N., Chiara K., "
+        "Beatrice F., Martina P., Valentina C., Federica H., Elisa G., Alessia D., "
+        "Serena E., Francesca O., Paola V., Silvia Q., Laura X., Sara Y., Roberta Z., "
+        "Cristina U., Monica I., Patrizia A., Daniela J., Stefania W."
+    ),
+    "nl": (
+        "Emma V., Olivia S., Mia B., Sophie M., Charlotte K., Tessa L., Luna R., "
+        "Fleur N., Sara F., Laura H., Anna G., Lisa C., Julia D., Nathalie E., "
+        "Chantal O., Simone P., Ingrid Q., Anouk X., Monique Y., Petra Z., "
+        "Sylvia U., Rianne I., Hanneke A., Inge J., Marieke W."
+    ),
+    "pl": (
+        "Julia N., Zuzanna S., Maja B., Zofia L., Natalia K., Aleksandra R., Wiktoria T., "
+        "Amelia M., Oliwia F., Karolina H., Martyna G., Patrycja C., Ewelina D., "
+        "Monika E., Agnieszka O., Katarzyna P., Małgorzata V., Joanna Q., Beata X., "
+        "Dorota Y., Anna Z., Elżbieta U., Barbara I., Izabela A., Renata J."
+    ),
+    "ru": (
+        "Анна М., Мария С., Екатерина Б., Наталья Л., Ольга К., Татьяна Р., Ирина Т., "
+        "Светлана Н., Людмила Ф., Елена Х., Валентина Г., Надежда В., Галина Д., "
+        "Юлия Е., Оксана О., Вера П., Тамара Ч., Нина Щ., Зоя Ш., Лариса У., "
+        "Жанна И., Алла А., Раиса Ж., Полина З., Дарья Б."
+    ),
 }
 
+# Male first names per language — 25 names each
 _PRENOMS_MASCULIN: dict[str, str] = {
-    "fr": "Thomas P., Nicolas V., Antoine M., Julien R., Maxime D., Pierre B., Romain K., Alexandre T., David N., Florian C.",
-    "en": "James S., Oliver B., Noah M., William K., Benjamin T., Lucas R., Henry L., Alexander W., Mason J., Ethan C.",
-    "de": "Luca M., Noah S., Leon K., Jonas B., Felix R., Paul T., Elias N., Finn W., Max F., Lukas H.",
-    "da": "Noah N., Lucas L., Emil M., Oliver K., William B., Magnus R., Frederik T., Victor C., Mikkel H., Rasmus P.",
-    "es": "Santiago M., Mateo R., Sebastián L., Nicolás B., Alejandro T., Daniel P., Gabriel N., Lucas K., Diego C., Andrés F.",
-    "it": "Lorenzo M., Leonardo L., Matteo R., Francesco B., Alessandro T., Andrea N., Davide K., Marco F., Riccardo P., Simone C.",
-    "nl": "Liam V., Noah S., Oliver B., Lucas M., Finn K., Daan L., Sander R., Bram N., Joris F., Tim H.",
-    "pt": "João M., Pedro L., Tiago R., Miguel B., Rodrigo T., Diogo N., Gonçalo K., André F., Nuno P., Rui C.",
-    "sv": "Liam N., Noah S., Oliver B., Lucas L., Elias K., Hugo R., Axel T., Alexander M., Filip F., Erik H.",
-    "no": "Oliver N., Noah S., William B., Elias L., Liam K., Lucas R., Filip T., Jakob M., Emil F., Isak H.",
-    "fi": "Eetu N., Mikael S., Matias B., Aleksi L., Sami K., Jari R., Antti T., Timo M., Petri F., Markus H.",
-    "pl": "Jakub N., Mateusz S., Michał B., Piotr L., Łukasz K., Marcin R., Tomasz T., Bartosz M., Dawid F., Filip H.",
-    "cs": "Jakub N., Tomáš S., Jan B., Martin L., Lukáš K., Ondřej R., Petr T., Marek M., Jiří F., Pavel H.",
-    "ro": "Alexandru N., Andrei S., Mihai B., Cristian L., Gabriel K., Bogdan R., Ionuț T., Daniel M., Vlad F., Radu H.",
-    "hu": "Péter N., László S., János B., Gábor L., Attila K., Zoltán R., Tamás T., Balázs M., Ádám F., Bence H.",
-    "tr": "Mehmet N., Mustafa S., Ahmet B., Ali L., Hasan K., Emre R., Burak T., Serkan M., Mert F., Cem H.",
-    "el": "Giorgos N., Nikos S., Kostas B., Dimitris L., Stavros K., Vasilis R., Petros T., Antonis M., Ioannis F., Christos H.",
+    "fr": (
+        "Thomas P., Nicolas V., Antoine M., Julien R., Maxime D., Pierre B., Romain K., "
+        "Alexandre T., David N., Florian C., Sébastien H., Mathieu G., Quentin F., "
+        "Arnaud E., Kevin O., Guillaume S., Cédric L., Benoît W., Franck J., Stéphane Z., "
+        "Laurent U., Olivier I., Christophe A., Philippe X., Jean-Baptiste Y."
+    ),
+    "en": (
+        "James S., Oliver B., Noah M., William K., Benjamin T., Lucas R., Henry L., "
+        "Alexander W., Mason J., Ethan C., Liam D., Aiden N., Jackson F., Sebastian H., "
+        "Carter G., Owen E., Caleb O., Ryan P., Dylan V., Nathan Q., Zachary X., "
+        "Isaiah Y., Hunter Z., Aaron U., Connor I."
+    ),
+    "de": (
+        "Luca M., Noah S., Leon K., Jonas B., Felix R., Paul T., Elias N., Finn W., "
+        "Max F., Lukas H., Niklas G., Tobias C., Moritz D., Philipp E., Jan O., "
+        "Fabian P., Markus V., Stefan Q., Klaus X., Bernd Y., Werner Z., Dieter U., "
+        "Jürgen I., Wolfgang A., Helmut J."
+    ),
+    "da": (
+        "Noah N., Lucas L., Emil M., Oliver K., William B., Magnus R., Frederik T., "
+        "Victor C., Mikkel H., Rasmus P., Christian D., Mads G., Lars E., Søren O., "
+        "Jesper V., Henrik Q., Nikolaj X., Peter Y., Anders Z., Thomas U., "
+        "Klaus I., Jens A., Bo J., Niels W., Erik F."
+    ),
+    "sv": (
+        "Liam N., Noah S., Oliver B., Lucas L., Elias K., Hugo R., Axel T., Alexander M., "
+        "Filip F., Erik H., Gustav G., Anton C., Isak D., Adrian E., Sebastian O., "
+        "Viktor P., Oskar V., Felix Q., Max X., Simon Y., Johan Z., Anders U., "
+        "Björn I., Mikael A., Lars J."
+    ),
+    "no": (
+        "Oliver N., Noah S., William B., Elias L., Liam K., Lucas R., Filip T., Jakob M., "
+        "Emil F., Isak H., Mathias G., Andreas C., Henrik D., Magnus E., Sondre O., "
+        "Kristian P., Mats V., Tor Q., Arne X., Kjell Y., Bjørn Z., Geir U., "
+        "Trond I., Gunnar A., Svein J."
+    ),
+    "fi": (
+        "Eetu N., Mikael S., Matias B., Aleksi L., Sami K., Jari R., Antti T., Timo M., "
+        "Petri F., Markus H., Juha G., Kari C., Matti D., Pekka E., Seppo O., "
+        "Hannu P., Ville V., Lauri Q., Tuomas X., Ilkka Y., Risto Z., Ossi U., "
+        "Harri I., Pentti A., Erkki J."
+    ),
+    "es": (
+        "Santiago M., Mateo R., Sebastián L., Nicolás B., Alejandro T., Daniel P., "
+        "Gabriel N., Lucas K., Diego C., Andrés F., Carlos H., Miguel G., Jorge D., "
+        "Roberto E., Fernando O., José V., Antonio Q., Manuel X., Francisco Y., "
+        "David Z., Pedro U., Luis I., Rafael A., Javier J., Sergio W."
+    ),
+    "pt": (
+        "João M., Pedro L., Tiago R., Miguel B., Rodrigo T., Diogo N., Gonçalo K., "
+        "André F., Nuno P., Rui C., Bruno H., Ricardo G., Carlos D., Paulo E., "
+        "Jorge O., Sérgio V., Marco Q., Hugo X., Filipe Y., Eduardo Z., "
+        "Luís U., António I., Manuel A., Vítor J., Renato W."
+    ),
+    "it": (
+        "Lorenzo M., Leonardo L., Matteo R., Francesco B., Alessandro T., Andrea N., "
+        "Davide K., Marco F., Riccardo P., Simone C., Luca H., Gabriele G., "
+        "Tommaso D., Nicola E., Stefano O., Roberto V., Massimo Q., Fabrizio X., "
+        "Giorgio Y., Alberto Z., Claudio U., Gianluca I., Paolo A., Enrico J., "
+        "Antonio W."
+    ),
+    "nl": (
+        "Liam V., Noah S., Oliver B., Lucas M., Finn K., Daan L., Sander R., Bram N., "
+        "Joris F., Tim H., Bas G., Niels C., Ruben D., Tom E., Jasper O., "
+        "Wouter P., Arjan V., Mark Q., Jan X., Henk Y., Kees Z., Wim U., "
+        "Gerard I., Pieter A., Hans J."
+    ),
+    "pl": (
+        "Jakub N., Mateusz S., Michał B., Piotr L., Łukasz K., Marcin R., Tomasz T., "
+        "Bartosz M., Dawid F., Filip H., Krzysztof G., Artur C., Grzegorz D., "
+        "Rafał E., Kamil O., Paweł P., Sebastian V., Marek Q., Andrzej X., "
+        "Zbigniew Y., Sławomir Z., Dariusz U., Mirosław I., Leszek A., Ryszard J."
+    ),
+    "ru": (
+        "Александр М., Дмитрий С., Иван Б., Сергей Л., Андрей К., Михаил Р., Алексей Т., "
+        "Николай Н., Владимир Ф., Артём Х., Павел Г., Евгений В., Роман Д., "
+        "Антон Е., Максим О., Кирилл П., Егор Ч., Тимур Щ., Денис Ш., Игорь У., "
+        "Олег И., Виктор А., Константин Ж., Геннадий З., Борис Б."
+    ),
 }
 
 
 def _get_prenoms(lang_code: str, gender: str) -> str:
-    """Return example reviewer names for the given language code and gender."""
+    """Return 25 example reviewer names for the given language code and gender."""
     code = lang_code[:2].lower()
     if gender.lower() == "homme":
         return _PRENOMS_MASCULIN.get(code, _PRENOMS_MASCULIN["fr"])
@@ -49,10 +173,10 @@ def _get_prenoms(lang_code: str, gender: str) -> str:
         f_names = _PRENOMS_FEMININE.get(code, _PRENOMS_FEMININE["fr"]).split(", ")
         m_names = _PRENOMS_MASCULIN.get(code, _PRENOMS_MASCULIN["fr"]).split(", ")
         mixed = []
-        for i in range(min(5, len(f_names), len(m_names))):
+        for i in range(min(25, len(f_names), len(m_names))):
             mixed.append(f_names[i])
             mixed.append(m_names[i])
-        return ", ".join(mixed[:10])
+        return ", ".join(mixed[:50])
     else:
         return _PRENOMS_FEMININE.get(code, _PRENOMS_FEMININE["fr"])
 
@@ -60,7 +184,7 @@ def _get_prenoms(lang_code: str, gender: str) -> str:
 def build_reviews_prompt(context: dict) -> tuple[str, str]:
     """Prompt avis clients — schéma identique à mock_generator.py / theme_modifier.py.
 
-    Schema : {"reviews": [{"name", "age", "rating", "title", "text", "response"}]} x15
+    Schema : {"reviews": [{"name", "age", "rating", "title", "text", "response"}]} x50
     """
 
     system = """Tu es un expert en marketing e-commerce. Tu génères des avis clients réalistes et variés.
@@ -109,6 +233,9 @@ RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être 
     elif lang.lower().startswith("pl"):
         lang_note = "Generate ALL texts in POLISH. Use perfect Polish grammar and spelling with all required special characters (ą, ę, ó, ś, ź, ż, ć, ń, ł). Use Polish first names."
         lang_code = "pl"
+    elif lang.lower().startswith("ru"):
+        lang_note = "Generate ALL texts in RUSSIAN. Use perfect Russian grammar and spelling. Use Russian first names."
+        lang_code = "ru"
     else:
         lang_note = f"CRITICAL: Generate ALL texts in the language '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Use first names that are authentic and common for that language/culture. Do NOT write any French text."
         lang_code = lang[:2].lower()
@@ -135,9 +262,9 @@ Produit(s) : {products}
 {gender_note}
 {lang_note}
 {image_note}
-Génère 15 avis clients authentiques et variés pour ce produit.
+Génère 50 avis clients authentiques et variés pour ce produit.
 
-Réponds en JSON avec ce schéma EXACT :
+Réponds en JSON avec ce schéma EXACT (50 objets dans reviews[]) :
 
 {{
   "reviews": [
@@ -153,15 +280,15 @@ Réponds en JSON avec ce schéma EXACT :
       "name": "Prénom N.",
       "age": "XX ans",
       "rating": 5,
-      "title": "Titre 2",
-      "text": "Avis 2 différent (angle différent : efficacité, livraison, facilité...)",
+      "title": "Titre 2 (angle différent : livraison, facilité d'utilisation...)",
+      "text": "Avis 2",
       "response": "Réponse 2"
     }},
     {{
       "name": "Prénom N.",
       "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 3",
+      "rating": 4,
+      "title": "Titre 3 (rating 4, légèrement nuancé mais positif)",
       "text": "Avis 3",
       "response": "Réponse 3"
     }},
@@ -180,96 +307,19 @@ Réponds en JSON avec ce schéma EXACT :
       "title": "Titre 5",
       "text": "Avis 5",
       "response": "Réponse 5"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 4,
-      "title": "Titre 6 (rating 4, légèrement moins enthousiaste)",
-      "text": "Avis 6 nuancé mais positif",
-      "response": "Réponse 6"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 7",
-      "text": "Avis 7",
-      "response": "Réponse 7"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 8",
-      "text": "Avis 8",
-      "response": "Réponse 8"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 9",
-      "text": "Avis 9",
-      "response": "Réponse 9"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 10",
-      "text": "Avis 10",
-      "response": "Réponse 10"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 11",
-      "text": "Avis 11",
-      "response": "Réponse 11"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 4,
-      "title": "Titre 12 (rating 4, nuancé mais positif)",
-      "text": "Avis 12",
-      "response": "Réponse 12"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 13",
-      "text": "Avis 13",
-      "response": "Réponse 13"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 14",
-      "text": "Avis 14",
-      "response": "Réponse 14"
-    }},
-    {{
-      "name": "Prénom N.",
-      "age": "XX ans",
-      "rating": 5,
-      "title": "Titre 15",
-      "text": "Avis 15",
-      "response": "Réponse 15"
     }}
+    ... continuer jusqu'à l'avis 50 en respectant le même format
   ]
 }}
 
-CONTRAINTES :
-- Exactement 15 avis dans reviews[]
-- Prénoms à utiliser (dans l'ordre) : {prenoms_ex}
-- Âges entre 22 et 62 ans
+CONTRAINTES ABSOLUES :
+- Exactement 50 avis dans reviews[] — pas moins, pas plus
+- Prénoms à utiliser (dans l'ordre, un par avis) : {prenoms_ex}
+- Âges entre 22 et 62 ans, variés
 - Les textes (text et response) sont en texte simple, AUCUN HTML
-- Chaque avis doit être unique (angle différent : résultats, livraison, facilité, rapport qualité/prix...)
-- Les réponses de la boutique sont courtes et chaleureuses (1-2 phrases)"""
+- Chaque avis doit aborder un angle DIFFÉRENT : résultats, livraison, facilité d'utilisation, rapport qualité/prix, packaging, cadeau, recommandation, longévité des résultats, comparaison avec d'autres produits...
+- Environ 4-5 avis sur 50 avec rating 4 (légèrement nuancés mais positifs), les autres à 5
+- Les réponses de la boutique sont courtes et chaleureuses (1-2 phrases)
+- IMPORTANT : générer les 50 avis complets, ne pas s'arrêter avant"""
 
     return system, user

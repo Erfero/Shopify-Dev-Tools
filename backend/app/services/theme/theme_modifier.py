@@ -25,12 +25,12 @@ PAGE MAPPING:
     Liste de comparaison  ← comparison.title / .description / items[0..4]
     Texte enrichi 2       ← advantages[2].title / .text
     Spécifications        ← specs.title / items[0..3]
-    Avis Trustpilot (15)  ← reviews[0..14] (reviews-two, créée avec 15 blocs si absente)
+    Avis Trustpilot (50)  ← reviews[0..49] (reviews-two, créée avec 50 blocs si absente)
     Contenu réductible    ← faq.title / items[0..4]
     Footer bloc image     ← global_texts.footer.brand_text
 
   Page Produit (templates/product.json):
-    Avis clients (15)                  ← reviews[0..14] (reviews, créée avec 15 blocs si absente)
+    Avis clients (50)                  ← reviews[0..49] (reviews, créée avec 50 blocs si absente)
     Produit → bloc Icônes (4 icônes)   ← product_benefits[0..3].short_title
     Produit → bloc Témoignages (3)     ← mini_reviews[0..2].name / .text
     Produit → bloc description-faq    ← product_description / how_it_works / adoption
@@ -334,7 +334,7 @@ _REVIEWS_HEADING = {
 
 
 def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
-    """Inject 15 review blocks into both review section types.
+    """Inject up to 50 review blocks into both review section types.
 
     - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
     - reviews (Avis) in product.json: text blocks
@@ -349,7 +349,7 @@ def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> 
     Returns the set of rel-paths that were modified.
     """
     reviews = rv.get("reviews", [])
-    target_count = min(len(reviews), 15)
+    target_count = min(len(reviews), 50)
     if not reviews:
         return set()
 

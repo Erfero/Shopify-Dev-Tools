@@ -230,6 +230,10 @@ export default function ThemePage() {
     setPreviewData(null);
     setApplyError(null);
     setUploadError(null);
+    setHistoryStack([]);
+    setHistoryIndex(-1);
+    historyIndexRef.current = -1;
+    lastConfigRef.current = null;
     localStorage.removeItem("theme_session");
   }, []);
 

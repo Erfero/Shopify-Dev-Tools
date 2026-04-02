@@ -25,12 +25,12 @@ PAGE MAPPING:
     Liste de comparaison  ← comparison.title / .description / items[0..4]
     Texte enrichi 2       ← advantages[2].title / .text
     Spécifications        ← specs.title / items[0..3]
-    Avis Trustpilot (50)  ← reviews[0..49] (reviews-two, créée avec 50 blocs si absente)
+    Avis Trustpilot (80)  ← reviews[0..79] (reviews-two, créée avec 80 blocs si absente)
     Contenu réductible    ← faq.title / items[0..4]
     Footer bloc image     ← global_texts.footer.brand_text
 
   Page Produit (templates/product.json):
-    Avis clients (50)                  ← reviews[0..49] (reviews, créée avec 50 blocs si absente)
+    Avis clients (80)                  ← reviews[0..79] (reviews, créée avec 80 blocs si absente)
     Produit → bloc Icônes (4 icônes)   ← product_benefits[0..3].short_title
     Produit → bloc Témoignages (3)     ← mini_reviews[0..2].name / .text
     Produit → bloc description-faq    ← product_description / how_it_works / adoption
@@ -334,7 +334,7 @@ _REVIEWS_HEADING = {
 
 
 def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
-    """Inject up to 50 review blocks into both review section types.
+    """Inject up to 80 review blocks into both review section types.
 
     - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
     - reviews (Avis) in product.json: text blocks
@@ -349,7 +349,7 @@ def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> 
     Returns the set of rel-paths that were modified.
     """
     reviews = rv.get("reviews", [])
-    target_count = min(len(reviews), 50)
+    target_count = min(len(reviews), 80)
     if not reviews:
         return set()
 
@@ -424,23 +424,49 @@ def _make_review_section(
     if section_type == "reviews-two":
         settings = {
             "heading": _REVIEWS_TWO_HEADING.get(language, _REVIEWS_TWO_HEADING["en"]),
+            "heading_style": "1",
             "trustpilot_info": True,
             "rating": "4.8",
             "reviews_count": "238",
             "layout_width": "full",
-            "color_palette": "background-1",
-            "padding_top": 24,
-            "padding_bottom": 24,
-            "padding_top_sm": 24,
-            "padding_bottom_sm": 24,
+            "color_palette": "background",
+            "customize_slider": True,
+            "navigation": True,
+            "pagination": True,
+            "autoplay": True,
+            "speed": 4,
+            "swiper_pagination_style": "dots",
+            "swiper_pagination_color": "accent",
+            "swiper_navigation_style": "square",
+            "swiper_navigation_color": "accent",
+            "enable_animations": True,
+            "animation": "fade-up",
+            "padding_top": 0,
+            "padding_bottom": 64,
+            "padding_top_sm": 0,
+            "padding_bottom_sm": 32,
         }
     else:  # reviews
         settings = {
             "heading": _REVIEWS_HEADING.get(language, _REVIEWS_HEADING["en"]),
-            "layout_width": "normal",
-            "layout": "swiper",
-            "color_palette": "background",
+            "heading_style": "2",
             "enable_rating": True,
+            "stars_style": "stars",
+            "layout": "swiper",
+            "layout_width": "normal",
+            "slides_on_desktop": 4,
+            "slides_on_tablet": 3,
+            "slides_on_mobile": 1,
+            "preshot_swiper": True,
+            "loop": True,
+            "navigation": True,
+            "pagination": True,
+            "autoplay": True,
+            "speed": 4,
+            "visible_grid_blocks": 6,
+            "color_palette": "background",
+            "enable_animations": True,
+            "animation": "fade-up",
             "padding_top": 0,
             "padding_bottom": 64,
             "padding_top_sm": 0,
@@ -509,7 +535,8 @@ def _write_review_to_block(blk: dict, block_type: str, r: dict):
         s["description"]  = r.get("text", "")
         s["name"]         = r.get("name", "")
         s["verified"]     = True
-        s["stars_rating"] = r.get("rating", 5)
+        # stars_rating is a float range (min=2, max=5, step=0.1)
+        s["stars_rating"] = float(r.get("rating", 5))
 
 
 def _block_defaults(block_type: str) -> dict:

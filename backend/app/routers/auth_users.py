@@ -27,7 +27,8 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def _hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    # rounds=10 instead of default 12: 4x faster (250ms vs 1s+), still very secure
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=10)).decode()
 
 
 def _verify_password(password: str, hashed: str) -> bool:
@@ -114,8 +115,11 @@ async def login(req: LoginRequest):
         "is_admin": user["is_admin"],
         "is_approved": True,
     })
-    await log_activity(user["email"], "login")
-    await set_last_login(user["email"])
+    # Run both DB writes in parallel — they are independent
+    await asyncio.gather(
+        log_activity(user["email"], "login"),
+        set_last_login(user["email"]),
+    )
     return {
         "access_token": token,
         "token_type": "bearer",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Layers, Loader2, Eye, EyeOff } from "lucide-react";
@@ -11,6 +11,12 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Wake up the backend server as soon as the login page loads
+  // This avoids the cold-start delay hitting the user when they click "Login"
+  useEffect(() => {
+    fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");

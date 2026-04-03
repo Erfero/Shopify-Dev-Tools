@@ -394,7 +394,10 @@ def _inject_into_template(
             break
 
     if found_sec is not None:
-        _fill_review_blocks(found_sec, block_type, reviews, target_count)
+        if section_type == "reviews":
+            _fill_reviews_mixed_blocks(found_sec, reviews)
+        else:
+            _fill_review_blocks(found_sec, block_type, reviews, target_count)
     else:
         # Section missing — create it with all 15 review blocks pre-filled
         new_id = f"reviews_{uuid.uuid4().hex[:8]}"
@@ -411,15 +414,36 @@ def _make_review_section(
     section_type: str, block_type: str,
     reviews: list, target_count: int, language: str,
 ) -> dict:
-    """Build a complete section dict with target_count review blocks pre-filled."""
+    """Build a complete section dict with review blocks pre-filled.
+
+    For 'reviews' sections: 20 image blocks + 80 text blocks.
+    For other sections: target_count blocks of block_type.
+    """
     blocks = {}
     block_order = []
-    for r in reviews[:target_count]:
-        bid = uuid.uuid4().hex[:16]
-        blk = {"type": block_type, "settings": dict(_block_defaults(block_type))}
-        _write_review_to_block(blk, block_type, r)
-        blocks[bid] = blk
-        block_order.append(bid)
+
+    if section_type == "reviews":
+        # 20 image blocks (first 20 reviews)
+        for r in reviews[:_REVIEWS_IMAGE_COUNT]:
+            bid = uuid.uuid4().hex[:16]
+            blk = {"type": "image", "settings": dict(_block_defaults("image"))}
+            _write_review_to_block(blk, "image", r)
+            blocks[bid] = blk
+            block_order.append(bid)
+        # 80 text blocks (all 80 reviews)
+        for r in reviews[:_REVIEWS_TEXT_COUNT]:
+            bid = uuid.uuid4().hex[:16]
+            blk = {"type": "text", "settings": dict(_block_defaults("text"))}
+            _write_review_to_block(blk, "text", r)
+            blocks[bid] = blk
+            block_order.append(bid)
+    else:
+        for r in reviews[:target_count]:
+            bid = uuid.uuid4().hex[:16]
+            blk = {"type": block_type, "settings": dict(_block_defaults(block_type))}
+            _write_review_to_block(blk, block_type, r)
+            blocks[bid] = blk
+            block_order.append(bid)
 
     if section_type == "reviews-two":
         settings = {
@@ -530,19 +554,76 @@ def _write_review_to_block(blk: dict, block_type: str, r: dict):
         s["author_name"]  = r.get("name", "")
         s["author_age"]   = str(r.get("age", ""))
         s["rating"]       = r.get("rating", 5)
-    elif block_type == "text":
+    elif block_type in ("text", "image"):
         s["heading"]      = r.get("title", "")
         s["description"]  = r.get("text", "")
         s["name"]         = r.get("name", "")
         s["verified"]     = True
         # stars_rating is a float range (min=2, max=5, step=0.1)
         s["stars_rating"] = float(r.get("rating", 5))
+        # image block has an image_picker field that cannot be set programmatically
 
 
 def _block_defaults(block_type: str) -> dict:
     if block_type == "testimonial":
         return {"title": "", "text": "", "author_name": "", "author_age": "", "rating": 5}
+    if block_type == "image":
+        return {"image": "", "heading": "", "description": "", "name": "", "verified": True, "stars_rating": 5}
     return {"heading": "", "description": "", "name": "", "verified": True, "stars_rating": 5}
+
+
+_REVIEWS_IMAGE_COUNT = 20
+_REVIEWS_TEXT_COUNT = 80
+
+
+def _fill_reviews_mixed_blocks(sec: dict, reviews: list):
+    """Populate 'reviews' section with 20 image blocks + 80 text blocks."""
+    image_reviews = reviews[:_REVIEWS_IMAGE_COUNT]
+    text_reviews = reviews[:_REVIEWS_TEXT_COUNT]
+
+    # Get existing blocks by type
+    existing_image = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "image"
+    ]
+    existing_text = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "text"
+    ]
+
+    # Add missing image blocks
+    for _ in range(max(0, _REVIEWS_IMAGE_COUNT - len(existing_image))):
+        new_id = uuid.uuid4().hex[:16]
+        sec.setdefault("blocks", {})[new_id] = {"type": "image", "settings": dict(_block_defaults("image"))}
+        sec.setdefault("block_order", []).append(new_id)
+
+    # Add missing text blocks
+    for _ in range(max(0, _REVIEWS_TEXT_COUNT - len(existing_text))):
+        new_id = uuid.uuid4().hex[:16]
+        sec.setdefault("blocks", {})[new_id] = {"type": "text", "settings": dict(_block_defaults("text"))}
+        sec.setdefault("block_order", []).append(new_id)
+
+    # Rebuild after additions
+    existing_image = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "image"
+    ]
+    existing_text = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "text"
+    ]
+
+    for i, (_, blk) in enumerate(existing_image[:_REVIEWS_IMAGE_COUNT]):
+        if i < len(image_reviews):
+            _write_review_to_block(blk, "image", image_reviews[i])
+
+    for i, (_, blk) in enumerate(existing_text[:_REVIEWS_TEXT_COUNT]):
+        if i < len(text_reviews):
+            _write_review_to_block(blk, "text", text_reviews[i])
 
 
 # ── Homepage ──────────────────────────────────────────────────────────────────

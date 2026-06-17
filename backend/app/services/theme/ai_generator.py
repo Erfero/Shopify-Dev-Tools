@@ -3,8 +3,11 @@ import json
 import logging
 import base64
 import httpx
+import io
 from pathlib import Path
 from typing import AsyncGenerator
+
+from PIL import Image
 
 from app.config import settings
 from app.prompts.homepage import build_homepage_prompt
@@ -31,22 +34,22 @@ GENERATION_STEPS = [
 ]
 
 
+MAX_IMAGES = 10
+MAX_WIDTH = 1024
+JPEG_QUALITY = 75
+
+
 def _encode_image(image_path: Path) -> tuple[str, str]:
-    """Read an image file and return (base64_data, mime_type)."""
-    suffix = image_path.suffix.lower()
-    mime_map = {
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".png": "image/png",
-        ".webp": "image/webp",
-        ".gif": "image/gif",
-    }
-    mime_type = mime_map.get(suffix, "image/jpeg")
-
-    with open(image_path, "rb") as f:
-        data = base64.b64encode(f.read()).decode("utf-8")
-
-    return data, mime_type
+    """Resize + compress image to JPEG and return (base64_data, mime_type)."""
+    with Image.open(image_path) as img:
+        img = img.convert("RGB")
+        if img.width > MAX_WIDTH:
+            ratio = MAX_WIDTH / img.width
+            img = img.resize((MAX_WIDTH, int(img.height * ratio)), Image.LANCZOS)
+        output = io.BytesIO()
+        img.save(output, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        data = base64.b64encode(output.getvalue()).decode("utf-8")
+    return data, "image/jpeg"
 
 
 def _is_free_model(model: str) -> bool:
@@ -76,9 +79,11 @@ def _build_messages(
         combined_text = user_prompt
 
     if image_paths:
-        # Multimodal message: text + images
+        limited_paths = image_paths[:MAX_IMAGES]
+        if len(image_paths) > MAX_IMAGES:
+            logger.warning(f"Images réduites de {len(image_paths)} à {MAX_IMAGES} pour OpenRouter.")
         content = [{"type": "text", "text": combined_text}]
-        for img_path in image_paths:
+        for img_path in limited_paths:
             if img_path.exists():
                 b64_data, mime = _encode_image(img_path)
                 content.append({

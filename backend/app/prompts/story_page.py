@@ -4,24 +4,29 @@ def build_story_page_prompt(context: dict) -> tuple[str, str]:
     Schema : {"page_heading", "page_subheading", "timeline_events": [{year, heading, text}]} x5
     """
 
-    system = """Tu es un expert en storytelling de marque et en copywriting e-commerce.
+    products = ", ".join(context["product_names"])
+    lang = context.get("language", "fr")
+
+    if lang.lower().startswith("en"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect English — correct grammar, spelling, punctuation. Zero errors. HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
+    elif lang.lower().startswith("de"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect German — correct grammar, all umlauts (ä, ö, ü, ß), capitalization of nouns. Zero errors. HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
+    elif lang.lower().startswith("fr"):
+        quality_rule = "RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres."
+        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
+    else:
+        lang2 = lang.lower()[:2]
+        quality_rule = f"ABSOLUTE LANGUAGE QUALITY RULE: ALL texts must be in the target language (ISO code: '{lang2}'). Perfect grammar and spelling with all required special characters. Zero words in French, English or any other language. HIGHEST PRIORITY — overrides everything else."
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
+
+    system = f"""Tu es un expert en storytelling de marque et en copywriting e-commerce.
 Tu crées des histoires de marque engageantes et authentiques.
 Les textes des événements timeline sont en texte simple (pas de HTML).
 Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
 
-RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres."""
-
-    products = ", ".join(context["product_names"])
-
-    lang = context.get("language", "fr")
-    if lang.lower().startswith("en"):
-        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
-    elif lang.lower().startswith("de"):
-        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
-    elif lang.lower().startswith("fr"):
-        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
-    else:
-        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
+{quality_rule}"""
 
     image_note = """
 IMPORTANT : Des images du produit sont jointes. Utilise ce que tu vois pour :

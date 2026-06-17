@@ -36,6 +36,9 @@ _GENDER_LABELS = {
     "da": {"homme": ("mænd", "mand"), "mixte": ("personer", "person"), "femme": ("kvinder", "kvinde")},
     "sv": {"homme": ("män", "man"), "mixte": ("personer", "person"), "femme": ("kvinnor", "kvinna")},
     "no": {"homme": ("menn", "mann"), "mixte": ("personer", "person"), "femme": ("kvinner", "kvinne")},
+    "fi": {"homme": ("miestä", "mies"), "mixte": ("henkilöä", "henkilö"), "femme": ("naista", "nainen")},
+    "pl": {"homme": ("mężczyzn", "mężczyzna"), "mixte": ("osób", "osoba"), "femme": ("kobiet", "kobieta")},
+    "ru": {"homme": ("мужчин", "мужчина"), "mixte": ("человек", "человек"), "femme": ("женщин", "женщина")},
 }
 
 _SPECS_TITLE_FORMAT = {
@@ -49,6 +52,9 @@ _SPECS_TITLE_FORMAT = {
     "da": "Den [korte-produktnavn] du har brug for (PÅKRÆVET format: 'Den X du har brug for')",
     "sv": "Den [korta-produktnamn] du behöver (OBLIGATORISKT format: 'Den X du behöver')",
     "no": "Den [korte-produktnavn] du trenger (PÅKREVD format: 'Den X du trenger')",
+    "fi": "Se [lyhyt-tuotenimi], jonka tarvitset (PAKOLLINEN muoto: 'Se X, jonka tarvitset')",
+    "pl": "Ten [krótka-nazwa-produktu], którego potrzebujesz (FORMAT OBOWIĄZKOWY: 'Ten X, którego potrzebujesz')",
+    "ru": "Тот [краткое-название-продукта], который вам нужен (ОБЯЗАТЕЛЬНЫЙ формат: 'Тот X, который вам нужен')",
 }
 
 
@@ -91,7 +97,9 @@ RÈGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (product_description.text, h
 
 RÈGLE INGRÉDIENTS : Si le produit est un produit naturel (savon, huile essentielle, sérum, cire, lotion, crème, gel, shampoing, beurre de karité, huile de soin, etc.) : dans le champ adoption, heading = '{ingredients_heading}' ET text = description HTML des ingrédients principaux avec leurs bénéfices. Sinon : heading = social proof chiffré + public, text = social proof.
 
-RÈGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes."""
+RÈGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes.
+
+RÈGLE AVANTAGES CONCRETS OBLIGATOIRE : TOUS les textes de la page produit doivent être CENTRÉS SUR CE QUE LE PRODUIT APPORTE AU CLIENT. Chaque champ doit exprimer un bénéfice concret, un résultat mesurable ou une transformation vécue. INTERDITS : descriptions techniques pures sans bénéfice, généralités vagues, promesses sans ancrage ("excellent", "de qualité"). OBLIGATOIRES pour product_benefits et product_specs : résultats chiffrés (ex: "-80% de douleur", "résultats en 14 jours", "+90% de satisfaction"), problèmes résolus (formulation avant/après), avantages exclusifs du produit. Chaque short_title et title de spec doit être un bénéfice direct pour le client, pas une caractéristique technique."""
 
     store = context["store_name"]
     product = context["product_names"][0] if context["product_names"] else "Produit"
@@ -113,11 +121,11 @@ Génère les textes de la page produit. Réponds en JSON avec ce schéma EXACT :
 
 {{
   "product_benefits": [
-    {{"short_title": "Short benefit 1 (~3-4 words, plain text)", "description": "Short explanation (1 sentence, plain text)"}},
-    {{"short_title": "Short benefit 2", "description": "Short explanation"}},
-    {{"short_title": "Short benefit 3", "description": "Short explanation"}},
-    {{"short_title": "Short benefit 4", "description": "Short explanation"}},
-    {{"short_title": "Short benefit 5", "description": "Short explanation"}}
+    {{"short_title": "Résultat ou bénéfice direct (3-4 mots max, texte simple, ex: Résultats en 14 jours)", "description": "1 phrase courte exprimant le bénéfice CONCRET pour le client (pas une caractéristique, un résultat)"}},
+    {{"short_title": "Bénéfice 2 (problème résolu ou transformation)", "description": "1 phrase avec chiffre ou preuve si possible"}},
+    {{"short_title": "Bénéfice 3 (avantage exclusif du produit)", "description": "1 phrase courte"}},
+    {{"short_title": "Bénéfice 4 (facilité ou praticité)", "description": "1 phrase courte"}},
+    {{"short_title": "Bénéfice 5 (bénéfice émotionnel ou social)", "description": "1 phrase courte"}}
   ],
   "product_description": {{
     "heading": "Description heading (plain text)",

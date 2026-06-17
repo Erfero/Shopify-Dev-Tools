@@ -5,17 +5,32 @@ def build_legal_pages_prompt(context: dict) -> tuple[str, str]:
               "politique_expedition": {title, content}}
     """
 
-    system = """Tu es un expert juridique spécialisé dans le e-commerce français.
-Tu génères des pages légales complètes et bien structurées en HTML.
-Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
-
-RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres.
-
-RÈGLE GRAS OBLIGATOIRE : Dans les contenus HTML des pages légales, tu DOIS placer en <strong>...</strong> les informations clés — délais, prix, durées, droits, coordonnées, obligations légales importantes. Chaque section doit avoir plusieurs <strong>."""
-
     store = context["store_name"]
     email = context["store_email"]
     products = ", ".join(context["product_names"])
+
+    lang = context.get("language", "fr")
+    if lang.lower().startswith("en"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect English — correct grammar, spelling, punctuation. Zero errors. HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
+    elif lang.lower().startswith("de"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect German — correct grammar, all umlauts (ä, ö, ü, ß), capitalization of nouns. Zero errors. HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
+    elif lang.lower().startswith("fr"):
+        quality_rule = "RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres."
+        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
+    else:
+        lang2 = lang.lower()[:2]
+        quality_rule = f"ABSOLUTE LANGUAGE QUALITY RULE: ALL texts must be in the target language (ISO code: '{lang2}'). Perfect grammar and spelling with all required special characters. Zero words in French, English or any other language. HIGHEST PRIORITY."
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
+
+    system = f"""Tu es un expert juridique spécialisé dans le e-commerce.
+Tu génères des pages légales complètes et bien structurées en HTML.
+Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
+
+{quality_rule}
+
+RÈGLE GRAS OBLIGATOIRE : Dans les contenus HTML des pages légales, tu DOIS placer en <strong>...</strong> les informations clés — délais, prix, durées, droits, coordonnées, obligations légales importantes. Chaque section doit avoir plusieurs <strong>."""
 
     # Informations légales depuis le contexte étendu
     price = context.get("product_price") or "selon tarif en vigueur"
@@ -24,16 +39,6 @@ RÈGLE GRAS OBLIGATOIRE : Dans les contenus HTML des pages légales, tu DOIS pla
     siret = context.get("siret") or "En cours d'enregistrement"
     delay = context.get("delivery_delay") or "3-5 jours ouvrés"
     returns = context.get("return_policy_days") or "30"
-
-    lang = context.get("language", "fr")
-    if lang.lower().startswith("en"):
-        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation."
-    elif lang.lower().startswith("de"):
-        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization and all umlauts (ä, ö, ü, ß)."
-    elif lang.lower().startswith("fr"):
-        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
-    else:
-        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French."
 
     user = f"""Boutique : {store}
 Email : {email}

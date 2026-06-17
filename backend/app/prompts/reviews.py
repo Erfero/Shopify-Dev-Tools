@@ -333,7 +333,7 @@ Réponds en JSON avec ce schéma EXACT (80 objets dans reviews[]) :
   "reviews": [
     {{
       "name": "Prénom N. (format Prénom Initiale.)",
-      "age": "XX ans",
+      "age": "XX",
       "rating": 5,
       "title": "Titre court de l'avis (texte simple)",
       "text": "Texte de l'avis (2-4 phrases authentiques, texte simple sans HTML)",
@@ -341,7 +341,7 @@ Réponds en JSON avec ce schéma EXACT (80 objets dans reviews[]) :
     }},
     {{
       "name": "Prénom N.",
-      "age": "XX ans",
+      "age": "XX",
       "rating": 5,
       "title": "Titre 2 (angle différent : livraison, facilité d'utilisation...)",
       "text": "Avis 2",
@@ -349,7 +349,7 @@ Réponds en JSON avec ce schéma EXACT (80 objets dans reviews[]) :
     }},
     {{
       "name": "Prénom N.",
-      "age": "XX ans",
+      "age": "XX",
       "rating": 4,
       "title": "Titre 3 (rating 4, légèrement nuancé mais positif)",
       "text": "Avis 3",
@@ -357,7 +357,7 @@ Réponds en JSON avec ce schéma EXACT (80 objets dans reviews[]) :
     }},
     {{
       "name": "Prénom N.",
-      "age": "XX ans",
+      "age": "XX",
       "rating": 5,
       "title": "Titre 4",
       "text": "Avis 4",
@@ -365,7 +365,7 @@ Réponds en JSON avec ce schéma EXACT (80 objets dans reviews[]) :
     }},
     {{
       "name": "Prénom N.",
-      "age": "XX ans",
+      "age": "XX",
       "rating": 5,
       "title": "Titre 5",
       "text": "Avis 5",

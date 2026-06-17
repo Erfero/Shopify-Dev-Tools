@@ -1,14 +1,33 @@
 def build_homepage_prompt(context: dict) -> tuple[str, str]:
     """Prompt homepage — schéma identique à mock_generator.py / theme_modifier.py."""
 
-    system = """Tu es un expert en copywriting e-commerce Shopify.
+    lang = context.get("language", "fr")
+    products = ", ".join(context["product_names"])
+    gender = context.get("target_gender", "femme")
+    store = context["store_name"]
+
+    if lang.lower().startswith("en"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect English — correct grammar, spelling, punctuation. Zero errors. This rule is the HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation. No missing letters or accents."
+    elif lang.lower().startswith("de"):
+        quality_rule = "ABSOLUTE LANGUAGE QUALITY RULE: All generated texts must be written in perfect German — correct grammar, all umlauts (ä, ö, ü, ß), capitalization of nouns. Zero errors. This rule is the HIGHEST PRIORITY."
+        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization (Substantive with capital letters) and all umlauts (ä, ö, ü, ß). No missing accents or special characters."
+    elif lang.lower().startswith("fr"):
+        quality_rule = "RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres."
+        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
+    else:
+        lang2 = lang.lower()[:2]
+        quality_rule = f"ABSOLUTE LANGUAGE QUALITY RULE: ALL texts must be in the target language (ISO code: '{lang2}'). Perfect grammar and spelling with all required special characters. Zero words in French, English or any other language. This rule is the HIGHEST PRIORITY — overrides everything else."
+        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters for that language. Do NOT write any French. Every single word must be in that language."
+
+    system = f"""Tu es un expert en copywriting e-commerce Shopify.
 Tu génères du contenu persuasif et professionnel adapté au produit.
 Les champs "text" richtext utilisent du HTML (<p>, <strong>).
 Les champs "text" inline utilisent uniquement <strong> et <em>, SANS balises de bloc (<p>, <ul>...).
 Les titres/headings sont du texte simple, sans HTML.
 Tu réponds UNIQUEMENT en JSON valide, sans texte autour.
 
-RÈGLE QUALITÉ LINGUISTIQUE ABSOLUE : Tous les textes générés doivent être rédigés dans un français parfait et irréprochable : tous les accents obligatoires (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ), conjugaison correcte, accords grammaticaux parfaits, orthographe sans faute. Zéro mot écrit sans son accent. Cette règle est prioritaire sur toutes les autres.
+{quality_rule}
 
 RÈGLE GRAS OBLIGATOIRE : Dans TOUS les champs HTML (richtext et inline), tu DOIS placer en <strong>...</strong> les expressions et mots d'impact — c'est-à-dire les mots forts, verbes d'action et tournures percutantes qui frappent l'esprit du lecteur et donnent de la puissance au texte. Chaque champ HTML doit contenir au moins un <strong>.
 
@@ -20,22 +39,9 @@ RÈGLE LONGUEUR STRICTE : Tous les champs "text" et "description" (sauf les titr
 
 RÈGLE PERSUASION MAXIMALE : Les textes "advantages" doivent déclencher une ÉMOTION FORTE. Utilise des formules qui créent de l'urgence, de la désirabilité ou de la peur de manquer (FOMO). Évoque des transformations de vie réelles, des résultats mesurables, des douleurs résolues. Chaque avantage doit faire ressentir AU LECTEUR qu'il a BESOIN de ce produit.
 
+RÈGLE AVANTAGES CONCRETS OBLIGATOIRE : TOUS les textes (slogan, welcome, benefits, advantages, specs) doivent être CENTRÉS SUR CE QUE LE PRODUIT APPORTE AU CLIENT — ses bénéfices concrets, ses résultats mesurables, les transformations qu'il produit. INTERDITS : les descriptions génériques du produit, les promesses vagues sans chiffre ni preuve, les formules creuses ("de qualité", "excellent produit", "vous allez adorer"). OBLIGATOIRES : chiffres mesurables (ex : -80% de douleur, résultats en 14 jours, +90% de satisfaction), transformations vécues (avant/après, problème résolu), bénéfices émotionnels (confiance, liberté, sérénité) ancrés dans un résultat tangible.
+
 RÈGLE COMPARISON FEATURES : Chaque champ "feature" du tableau comparatif doit être une expression ULTRA-COURTE et ULTRA-PERCUTANTE de 2 à 5 mots MAXIMUM — JAMAIS plus de 5 mots, JAMAIS plus de 6 mots. Exprime un résultat chiffré, une composition distinctive, une certification ou un bénéfice unique du produit. INTERDIT les expressions génériques et vagues (ex: "Qualité Premium", "Livraison rapide", "Très bon produit", "Efficacité prouvée", "Grande qualité"). OBLIGATOIRE: expressions percutantes et SPÉCIFIQUES à CE produit exact (ex: "Résultats en 14 jours", "Sans sulfate ni parabène", "Certifié cruelty-free", "Tenue 24h garantie", "Formule brevetée", "Testé dermatologiquement", "-80% de douleur"). Chaque feature doit frapper l'esprit du lecteur et donner une raison forte et concrète d'acheter CE produit plutôt qu'un autre. Sois TRÈS spécifique au produit envoyé."""
-
-    products = ", ".join(context["product_names"])
-    gender = context.get("target_gender", "femme")
-    lang = context.get("language", "fr")
-    store = context["store_name"]
-
-    # Note sur la langue
-    if lang.lower().startswith("en"):
-        lang_note = "Generate ALL texts in ENGLISH. Use perfect English grammar, spelling and punctuation. No missing letters or accents."
-    elif lang.lower().startswith("de"):
-        lang_note = "Generate ALL texts in GERMAN. Use perfect German grammar, spelling, capitalization (Substantive with capital letters) and all umlauts (ä, ö, ü, ß). No missing accents or special characters."
-    elif lang.lower().startswith("fr"):
-        lang_note = "Génère TOUS les textes en FRANÇAIS parfait. Tous les accents sont obligatoires : é, è, ê, ë, à, â, ç, ù, û, î, ô, œ. Conjugaison et grammaire irréprochables."
-    else:
-        lang_note = f"CRITICAL: Generate ALL texts in the language with ISO code '{lang}'. Use perfect grammar, spelling and all required accents/special characters for that language. Do NOT write any French. Every single word must be in that language."
 
     image_note = """
 IMPORTANT : Des images du produit sont jointes. Observe-les attentivement :

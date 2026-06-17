@@ -333,15 +333,45 @@ _REVIEWS_HEADING = {
 }
 
 
+def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str) -> bool:
+    """Inject 10 image + 20 text review blocks into a 'reviews' section in index.json.
+
+    The section is placed just above the reviews-two (Trustpilot) section.
+    """
+    entry = pf.get("templates/index.json")
+    if not entry:
+        return False
+
+    data, comment, is_compact = entry
+
+    found_sec = None
+    for sec in data.get("sections", {}).values():
+        if sec.get("type") == "reviews":
+            found_sec = sec
+            break
+
+    if found_sec is not None:
+        _fill_index_reviews_mixed_blocks(found_sec, reviews)
+    else:
+        new_id = f"reviews_{uuid.uuid4().hex[:8]}"
+        new_sec = _make_review_section(
+            "reviews", "text", reviews, _INDEX_REVIEWS_TEXT_COUNT, language,
+            img_count=_INDEX_REVIEWS_IMAGE_COUNT, txt_count=_INDEX_REVIEWS_TEXT_COUNT,
+        )
+        data.setdefault("sections", {})[new_id] = new_sec
+        _insert_before_reviews_two(data, new_id)
+
+    write_theme_json(ed / "templates/index.json", data, comment, is_compact)
+    pf["templates/index.json"] = (data, comment, is_compact)
+    return True
+
+
 def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
-    """Inject up to 80 review blocks into both review section types.
+    """Inject review blocks into all review sections across templates.
 
     - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
-    - reviews (Avis) in product.json: text blocks
-
-    If a section already exists → its blocks are populated.
-    If a section is missing → it is created with 15 blocks pre-filled so the user
-    can add it via the Shopify theme editor and find all reviews already in place.
+    - reviews (Avis) in index.json: 10 image + 20 text blocks, above reviews-two
+    - reviews (Avis) in product.json: 20 image + 80 text blocks
 
     Called BEFORE text surgery so files have the correct block count.
     Updates pf cache so subsequent surgery reads correct old values.
@@ -363,7 +393,11 @@ def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> 
     ):
         modified.add("templates/index.json")
 
-    # B — Avis: reviews / text blocks in product.json
+    # B — Avis: reviews / 10 image + 20 text blocks in index.json (above reviews-two)
+    if _inject_index_reviews(ed, pf, reviews, language):
+        modified.add("templates/index.json")
+
+    # C — Avis: reviews / 20 image + 80 text blocks in product.json
     if _inject_into_template(
         ed, pf, "templates/product.json",
         "reviews", "text",
@@ -413,25 +447,28 @@ def _inject_into_template(
 def _make_review_section(
     section_type: str, block_type: str,
     reviews: list, target_count: int, language: str,
+    img_count: int | None = None, txt_count: int | None = None,
 ) -> dict:
     """Build a complete section dict with review blocks pre-filled.
 
-    For 'reviews' sections: 20 image blocks + 80 text blocks.
+    For 'reviews' sections: img_count image blocks + txt_count text blocks
+    (defaults: 20 image + 80 text for product page; pass 10/20 for homepage).
     For other sections: target_count blocks of block_type.
     """
+    _img = img_count if img_count is not None else _REVIEWS_IMAGE_COUNT
+    _txt = txt_count if txt_count is not None else _REVIEWS_TEXT_COUNT
+
     blocks = {}
     block_order = []
 
     if section_type == "reviews":
-        # 20 image blocks (first 20 reviews)
-        for r in reviews[:_REVIEWS_IMAGE_COUNT]:
+        for r in reviews[:_img]:
             bid = uuid.uuid4().hex[:16]
             blk = {"type": "image", "settings": dict(_block_defaults("image"))}
             _write_review_to_block(blk, "image", r)
             blocks[bid] = blk
             block_order.append(bid)
-        # 80 text blocks (all 80 reviews)
-        for r in reviews[:_REVIEWS_TEXT_COUNT]:
+        for r in reviews[:_txt]:
             bid = uuid.uuid4().hex[:16]
             blk = {"type": "text", "settings": dict(_block_defaults("text"))}
             _write_review_to_block(blk, "text", r)
@@ -453,7 +490,7 @@ def _make_review_section(
             "rating": "4.8",
             "reviews_count": "238",
             "layout_width": "full",
-            "color_palette": "background",
+            "color_palette": "background-1",
             "customize_slider": True,
             "navigation": True,
             "pagination": True,
@@ -488,7 +525,7 @@ def _make_review_section(
             "autoplay": True,
             "speed": 4,
             "visible_grid_blocks": 6,
-            "color_palette": "background",
+            "color_palette": "background-1",
             "enable_animations": True,
             "animation": "fade-up",
             "padding_top": 0,
@@ -511,6 +548,17 @@ def _insert_before_collapsible(data: dict, new_id: str):
     order = data.setdefault("order", [])
     for i, sid in enumerate(order):
         if sections.get(sid, {}).get("type") == "collapsible-content":
+            order.insert(i, new_id)
+            return
+    order.append(new_id)
+
+
+def _insert_before_reviews_two(data: dict, new_id: str):
+    """Insert new_id just before the reviews-two section in the order array, or append."""
+    sections = data.get("sections", {})
+    order = data.setdefault("order", [])
+    for i, sid in enumerate(order):
+        if sections.get(sid, {}).get("type") == "reviews-two":
             order.insert(i, new_id)
             return
     order.append(new_id)
@@ -545,6 +593,18 @@ def _fill_review_blocks(sec: dict, block_type: str, reviews: list, target_count:
         _write_review_to_block(blk, block_type, reviews[i])
 
 
+_AGE_SUFFIXES = ("ans", "years", "Jahre", "år", "años", "anni", "jaar", "lat", "лет", "года", "год")
+
+def _strip_age_suffix(age_val) -> str:
+    """Return only the numeric part of an age value, stripping any language-specific suffix."""
+    s = str(age_val).strip()
+    for suffix in _AGE_SUFFIXES:
+        if s.lower().endswith(" " + suffix.lower()):
+            s = s[: -(len(suffix) + 1)].strip()
+            break
+    return s
+
+
 def _write_review_to_block(blk: dict, block_type: str, r: dict):
     """Write a single review's data into a block's settings."""
     s = blk.setdefault("settings", {})
@@ -552,7 +612,7 @@ def _write_review_to_block(blk: dict, block_type: str, r: dict):
         s["title"]        = r.get("title", "")
         s["text"]         = f"<p>{r.get('text', '')}</p>"
         s["author_name"]  = r.get("name", "")
-        s["author_age"]   = str(r.get("age", ""))
+        s["author_age"]   = _strip_age_suffix(r.get("age", ""))
         s["rating"]       = r.get("rating", 5)
     elif block_type in ("text", "image"):
         s["heading"]      = r.get("title", "")
@@ -574,6 +634,8 @@ def _block_defaults(block_type: str) -> dict:
 
 _REVIEWS_IMAGE_COUNT = 20
 _REVIEWS_TEXT_COUNT = 80
+_INDEX_REVIEWS_IMAGE_COUNT = 10
+_INDEX_REVIEWS_TEXT_COUNT = 20
 
 
 def _fill_reviews_mixed_blocks(sec: dict, reviews: list):
@@ -622,6 +684,52 @@ def _fill_reviews_mixed_blocks(sec: dict, reviews: list):
             _write_review_to_block(blk, "image", image_reviews[i])
 
     for i, (_, blk) in enumerate(existing_text[:_REVIEWS_TEXT_COUNT]):
+        if i < len(text_reviews):
+            _write_review_to_block(blk, "text", text_reviews[i])
+
+
+def _fill_index_reviews_mixed_blocks(sec: dict, reviews: list):
+    """Populate homepage 'reviews' section with 10 image blocks + 20 text blocks."""
+    image_reviews = reviews[:_INDEX_REVIEWS_IMAGE_COUNT]
+    text_reviews = reviews[:_INDEX_REVIEWS_TEXT_COUNT]
+
+    existing_image = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "image"
+    ]
+    existing_text = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "text"
+    ]
+
+    for _ in range(max(0, _INDEX_REVIEWS_IMAGE_COUNT - len(existing_image))):
+        new_id = uuid.uuid4().hex[:16]
+        sec.setdefault("blocks", {})[new_id] = {"type": "image", "settings": dict(_block_defaults("image"))}
+        sec.setdefault("block_order", []).append(new_id)
+
+    for _ in range(max(0, _INDEX_REVIEWS_TEXT_COUNT - len(existing_text))):
+        new_id = uuid.uuid4().hex[:16]
+        sec.setdefault("blocks", {})[new_id] = {"type": "text", "settings": dict(_block_defaults("text"))}
+        sec.setdefault("block_order", []).append(new_id)
+
+    existing_image = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "image"
+    ]
+    existing_text = [
+        (bid, sec["blocks"][bid])
+        for bid in sec.get("block_order", [])
+        if bid in sec.get("blocks", {}) and sec["blocks"][bid].get("type") == "text"
+    ]
+
+    for i, (_, blk) in enumerate(existing_image[:_INDEX_REVIEWS_IMAGE_COUNT]):
+        if i < len(image_reviews):
+            _write_review_to_block(blk, "image", image_reviews[i])
+
+    for i, (_, blk) in enumerate(existing_text[:_INDEX_REVIEWS_TEXT_COUNT]):
         if i < len(text_reviews):
             _write_review_to_block(blk, "text", text_reviews[i])
 
@@ -678,12 +786,14 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
         "pl": f"Witamy w {store_name}!",
         "ru": f"Добро пожаловать в {store_name}!",
     }
-    _welcome_title = _welcome_titles.get(_lang2, _welcome_titles["en"])
+    _welcome_title_fallback = _welcome_titles.get(_lang2, _welcome_titles["en"])
+    _ai_welcome_title = hp.get("welcome", {}).get("title", "")
+    _welcome_title = _inline(_ai_welcome_title) if _ai_welcome_title else _inline(_welcome_title_fallback)
     rich = _sections_by_type(data, "rich-text")
     if rich:
         _, sec = rich[0]
         for _, blk in _blocks_by_type(sec, "heading"):
-            _rep(reps, "heading", _s(blk, "heading"), _inline(_welcome_title))
+            _rep(reps, "heading", _s(blk, "heading"), _welcome_title)
             break
         for _, blk in _blocks_by_type(sec, "text"):
             _rep(reps, "description", _s(blk, "description"),
@@ -864,6 +974,7 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
         "no": ("Beskrivelse", "Hvordan fungerer det?", f"+9860 {_plural} har allerede tatt det i bruk!"),
         "fi": ("Kuvaus", "Miten se toimii?", f"+9860 {_plural} on jo ottanut sen käyttöön!"),
         "pl": ("Opis", "Jak to działa?", f"+9860 {_plural} już to przyjęło!"),
+        "ru": ("Описание", "Как это работает?", f"+9860 {_plural} уже попробовали!"),
     }
     h1, h2, h3 = _fixed.get(_lang2, _fixed["en"])
 
@@ -1581,34 +1692,34 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "ru": "Предложение истекло",
     }
     _product_card_btn = {
-        "fr": "Ajouter au panier",
-        "en": "Add to cart",
+        "fr": "Ajoutez au panier",
+        "en": "Add to Cart",
         "de": "In den Warenkorb",
         "da": "Læg i kurv",
         "sv": "Lägg i kundvagn",
         "no": "Legg i handlekurv",
         "fi": "Lisää koriin",
-        "es": "Agregar al carrito",
-        "pt": "Adicionar ao carrinho",
-        "it": "Aggiungi al carrello",
+        "es": "Agregue al carrito",
+        "pt": "Adicione ao carrinho",
+        "it": "Aggiunga al carrello",
         "nl": "In winkelwagen",
         "pl": "Dodaj do koszyka",
-        "ru": "Добавить в корзину",
+        "ru": "Добавьте в корзину",
     }
     _cart_button = {
-        "fr": "COMMANDER MAINTENANT",
-        "en": "ORDER NOW",
-        "de": "JETZT BESTELLEN",
-        "da": "BESTIL NU",
-        "sv": "BESTÄLL NU",
-        "no": "BESTILL NÅ",
-        "fi": "TILAA NYT",
-        "es": "PEDIR AHORA",
-        "pt": "PEDIR AGORA",
-        "it": "ORDINA ORA",
-        "nl": "NU BESTELLEN",
-        "pl": "ZAMÓW TERAZ",
-        "ru": "ЗАКАЗАТЬ СЕЙЧАС",
+        "fr": "AJOUTEZ AU PANIER",
+        "en": "ADD TO CART",
+        "de": "IN DEN WARENKORB",
+        "da": "LÆG I KURV",
+        "sv": "LÄGG I KUNDVAGNEN",
+        "no": "LEGG I HANDLEKURVEN",
+        "fi": "LISÄÄ OSTOSKORIIN",
+        "es": "AGREGUE AL CARRITO",
+        "pt": "ADICIONE AO CARRINHO",
+        "it": "AGGIUNGA AL CARRELLO",
+        "nl": "IN WINKELWAGEN",
+        "pl": "DODAJ DO KOSZYKA",
+        "ru": "ДОБАВЬТЕ В КОРЗИНУ",
     }
 
     timer_text = _timer_texts.get(_lang2, _timer_texts["en"])

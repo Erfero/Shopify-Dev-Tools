@@ -1,302 +1,405 @@
-import httpx
+import asyncio
 import json
+import logging
 import base64
-from typing import List, Dict, Optional
+import httpx
+import io
+from pathlib import Path
+from typing import AsyncGenerator
+
+from PIL import Image
 
 from app.config import settings
+from app.prompts.homepage import build_homepage_prompt
+from app.prompts.product_page import build_product_page_prompt
+from app.prompts.reviews import build_reviews_prompt
+from app.prompts.faq import build_faq_prompt
+from app.prompts.story_page import build_story_page_prompt
+from app.prompts.global_texts import build_global_texts_prompt, get_static_ui_translations
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+logger = logging.getLogger(__name__)
 
-GENDER_CONFIG = {
-    "femmes": {"description": "women (target audience is female)"},
-    "hommes": {"description": "men (target audience is male)"},
-    "mixte": {"description": "both men and women"},
-}
+# Steps that benefit from seeing the product images
+VISION_STEPS = {"homepage", "product_page", "story_page", "global_texts"}
 
-# Female first names per language (keyed by lowercased language name as sent from frontend)
-_FEMALE_NAMES: dict[str, str] = {
-    "français": "Marie, Sophie, Camille, Emma, Léa, Inès, Chloé, Manon, Laura, Jade, Clara, Lucie, Anaïs, Pauline, Alice",
-    "english": "Emma, Olivia, Sophia, Isabella, Ava, Mia, Charlotte, Amelia, Emily, Abigail, Ella, Madison, Lily, Grace, Chloe",
-    "deutsch": "Lena, Emma, Hannah, Mia, Anna, Leonie, Laura, Alina, Sophie, Johanna, Lea, Nina, Katharina, Sandra, Julia",
-    "dansk": "Emma, Sofie, Laura, Ida, Maja, Anna, Freja, Sara, Emilie, Julie, Camilla, Mathilde, Astrid, Nora, Cecilie",
-    "español": "Sofía, Isabella, Valentina, Camila, Lucía, Gabriela, Valeria, Natalia, Sara, Elena, María, Carmen, Paula, Andrea",
-    "italiano": "Sofia, Emma, Giulia, Aurora, Alice, Ginevra, Vittoria, Chiara, Beatrice, Martina, Valentina, Federica, Elisa",
-    "nederlands": "Emma, Olivia, Ava, Mia, Sophie, Charlotte, Tessa, Luna, Fleur, Lisa, Sara, Kim, Laura, Anne, Noor",
-    "português": "Sofia, Beatriz, Maria, Ana, Inês, Catarina, Margarida, Francisca, Joana, Constança, Rita, Patrícia, Marta",
-    "svenska": "Emma, Maja, Elsa, Alice, Wilma, Ebba, Ella, Linnea, Klara, Molly, Astrid, Vera, Freja, Agnes, Signe",
-    "norsk": "Emma, Nora, Maja, Sofia, Olivia, Emilie, Sara, Ingrid, Frida, Kaja, Thea, Ida, Silje, Tuva, Marte",
-    "suomi": "Emma, Aino, Sofia, Helmi, Olivia, Maija, Aada, Siiri, Lydia, Anni, Elina, Leena, Hanna, Katja, Sari",
-    "polski": "Julia, Zuzanna, Maja, Zofia, Lena, Natalia, Aleksandra, Wiktoria, Amelia, Oliwia, Karolina, Monika, Ewa",
-    "čeština": "Tereza, Natalie, Anežka, Eliška, Adéla, Lucie, Klára, Karolína, Veronika, Jana, Petra, Martina, Markéta",
-    "română": "Maria, Elena, Ioana, Andreea, Alexandra, Cristina, Ana, Diana, Laura, Mihaela, Monica, Alina, Simona",
-    "magyar": "Luca, Anna, Emma, Zsófia, Petra, Veronika, Katalin, Erzsébet, Kinga, Nóra, Ágnes, Éva, Judit",
-    "slovenčina": "Katarína, Jana, Mária, Veronika, Lucia, Petra, Martina, Monika, Eva, Zuzana, Andrea, Barbora",
-    "hrvatski": "Ana, Petra, Katarina, Maja, Martina, Marija, Ivana, Lucija, Sara, Iva, Tea, Nikolina, Lana",
-    "български": "Мария, Ивана, Елена, Христина, Виктория, Симона, Анна, Людмила, Надежда, Стела, Ралица, Десислава",
-    "ελληνικά": "Maria, Eleni, Katerina, Sofia, Anna, Angeliki, Vasiliki, Dimitra, Stavroula, Vicky, Anastasia, Ioanna",
-    "türkçe": "Ayşe, Fatma, Zeynep, Elif, Emine, Hatice, Merve, Büşra, İrem, Selin, Deniz, Aslı, Gül, Leyla",
-}
-
-# Male first names per language
-_MALE_NAMES: dict[str, str] = {
-    "français": "Thomas, Lucas, Maxime, Hugo, Pierre, Antoine, Nicolas, Julien, Alexandre, Baptiste, Clément, Simon, Mathieu",
-    "english": "James, Oliver, Noah, William, Benjamin, Lucas, Henry, Alexander, Mason, Ethan, Liam, Aiden, Ryan, Nathan, Tyler",
-    "deutsch": "Luca, Noah, Leon, Jonas, Felix, Paul, Elias, Finn, Max, Lukas, Tim, Jan, Nico, Moritz, Philipp, Tobias",
-    "dansk": "Noah, Lucas, Emil, Oliver, William, Magnus, Frederik, Victor, Christian, Mikkel, Rasmus, Mads, Anders, Søren",
-    "español": "Santiago, Mateo, Sebastián, Nicolás, Alejandro, Daniel, Gabriel, Lucas, Diego, Andrés, Carlos, Juan, David",
-    "italiano": "Lorenzo, Leonardo, Matteo, Francesco, Alessandro, Andrea, Davide, Marco, Riccardo, Simone, Luca, Stefano, Paolo",
-    "nederlands": "Liam, Noah, Oliver, Lucas, Finn, Daan, Sander, Bram, Joris, Tim, Lars, Stefan, Pieter, Koen, Ruben",
-    "português": "João, Pedro, Tiago, Miguel, Rodrigo, Diogo, Gonçalo, André, Nuno, Rui, Bruno, Hugo, Marco, Ricardo",
-    "svenska": "Liam, Noah, Oliver, Lucas, Elias, William, Hugo, Axel, Alexander, Filip, Erik, Karl, Emil, Johan, Oscar",
-    "norsk": "Oliver, Noah, William, Elias, Liam, Lucas, Filip, Jakob, Emil, Isak, Anders, Morten, Henrik, Lars, Kristian",
-    "suomi": "Eetu, Mikael, Matias, Aleksi, Sami, Jari, Antti, Timo, Petri, Markus, Veli, Lauri, Juha, Matti, Pekka",
-    "polski": "Jakub, Mateusz, Michał, Piotr, Łukasz, Marcin, Tomasz, Bartosz, Dawid, Adrian, Filip, Kamil, Szymon",
-    "čeština": "Jakub, Tomáš, Jan, Martin, Lukáš, Ondřej, Petr, Marek, Jiří, Pavel, Michal, David, Radek, Václav",
-    "română": "Alexandru, Andrei, Mihai, Cristian, Gabriel, Bogdan, Ionuț, Daniel, Vlad, Radu, Adrian, Florin, Sorin",
-    "magyar": "Péter, László, János, Gábor, Attila, Zoltán, Tamás, Balázs, Ádám, Bence, Dávid, Márton, Norbert",
-    "slovenčina": "Jakub, Martin, Tomáš, Lukáš, Marek, Michal, Peter, Ján, Rastislav, Radoslav, Vladimír, Dušan",
-    "hrvatski": "Ivan, Marko, Ante, Tomislav, Stjepan, Nikola, Josip, Mario, Luka, Davor, Dario, Robert, Mateo",
-    "български": "Иван, Георги, Димитър, Александър, Николай, Петър, Христо, Стефан, Валентин, Тодор, Васил",
-    "ελληνικά": "Giorgos, Nikos, Kostas, Dimitris, Stavros, Panagiotis, Vasilis, Petros, Antonis, Ioannis, Christos",
-    "türkçe": "Mehmet, Mustafa, Ahmet, Ali, Hasan, Hüseyin, İbrahim, Ömer, Yusuf, Emre, Burak, Serkan, Mert, Cem",
-}
-
-
-def _get_names_instruction(target_gender: str, language: str) -> str:
-    """Return a language-appropriate names instruction for the given gender."""
-    key = language.lower()
-    f_names = _FEMALE_NAMES.get(key)
-    m_names = _MALE_NAMES.get(key)
-
-    if target_gender == "femmes":
-        if f_names:
-            return f"Use ONLY {language} female first names (e.g., {f_names}, etc.)"
-        return f"Use ONLY female first names that are authentic and common for {language} native speakers"
-    elif target_gender == "hommes":
-        if m_names:
-            return f"Use ONLY {language} male first names (e.g., {m_names}, etc.)"
-        return f"Use ONLY male first names that are authentic and common for {language} native speakers"
-    else:
-        if f_names and m_names:
-            return (
-                f"Use a MIX of {language} female (e.g., {f_names[:60]}...) "
-                f"and male (e.g., {m_names[:60]}...) first names, alternating between genders"
-            )
-        return f"Use a MIX of male and female first names authentic and common for {language} native speakers, alternating between genders"
-
-MOCK_REVIEWS = [
-    {
-        "author": "Marie P. - 28 ans",
-        "review": "Je suis absolument ravie de ce produit ! La qualité est vraiment exceptionnelle et je ne m'attendais pas à des résultats aussi impressionnants en si peu de temps. La livraison a été ultra rapide, j'ai reçu ma commande en 2 jours seulement, c'est vraiment top.",
-        "reply": "Bonjour Marie, merci infiniment pour ce magnifique retour ! Nous sommes ravis que le produit vous donne entière satisfaction.",
-    },
-    {
-        "author": "Sophie L. - 34 ans",
-        "review": "Un produit de qualité exceptionnelle que je recommande vivement à toutes mes amies. Les résultats sont visibles dès la première utilisation et ça change vraiment la vie au quotidien. La marque est vraiment sérieuse et le service client est au top.",
-        "reply": "Chère Sophie, votre retour nous touche profondément ! N'hésitez pas à revenir vers nous si vous avez besoin.",
-    },
+# Colors are NOT generated by AI — they come from the uploaded theme's settings_data.json
+# and are injected into preview data by the generate endpoint after generation completes.
+GENERATION_STEPS = [
+    ("homepage",     "Textes page d'accueil",     build_homepage_prompt),
+    ("product_page", "Textes page produit",       build_product_page_prompt),
+    ("reviews",      "Avis clients",              build_reviews_prompt),
+    ("faq",          "Questions fréquentes",      build_faq_prompt),
+    ("story_page",   "Page Notre Histoire",       build_story_page_prompt),
+    ("global_texts", "Textes globaux",            build_global_texts_prompt),
 ]
 
+# ──────────────────────────────────────────────────────────────────────────────
+# CONSTANTES DE COMPRESSION
+# ──────────────────────────────────────────────────────────────────────────────
+MAX_IMAGES = 10        # Nombre max d'images envoyées à OpenRouter par appel
+MAX_WIDTH = 1024       # Largeur max des images en pixels
+JPEG_QUALITY = 75      # Qualité JPEG (0-100) — 75 est un bon compromis qualité/poids
 
-async def analyze_product_images(images_data: List[bytes], images_mime: List[str]) -> str:
+
+def _encode_image(image_path: Path) -> tuple[str, str]:
     """
-    Send product photos to a vision model and get back a detailed
-    description that will enrich the review generation prompt.
+    Lit une image, la redimensionne si nécessaire et la compresse en JPEG.
+    Retourne (base64_data, mime_type).
     """
-    if not images_data:
-        return ""
+    with Image.open(image_path) as img:
+        # Convertit en RGB pour éviter les erreurs avec PNG transparents ou RGBA
+        img = img.convert("RGB")
 
-    if settings.USE_MOCK:
-        return "Le produit est de haute qualité avec une belle finition. Il se distingue par son design soigné et ses matériaux premium."
+        # Redimensionne si la largeur dépasse MAX_WIDTH
+        if img.width > MAX_WIDTH:
+            ratio = MAX_WIDTH / img.width
+            new_height = int(img.height * ratio)
+            img = img.resize((MAX_WIDTH, new_height), Image.LANCZOS)
 
-    content = [
-        {
-            "type": "text",
-            "text": (
-                "You are analyzing product photos for an e-commerce store. "
-                "Look carefully at each image and provide a detailed, precise description of:\n"
-                "1. What the product looks like (shape, color, design, size impression)\n"
-                "2. Materials and build quality visible in the photos\n"
-                "3. Key features and details you can observe\n"
-                "4. The overall aesthetic and style of the product\n"
-                "5. Any text, branding, or labels visible\n\n"
-                "Write 3-5 sentences in English. Be specific and factual — this description will be used "
-                "to generate authentic customer reviews, so accuracy is critical."
-            ),
-        }
-    ]
+        # Compresse et encode en base64
+        output = io.BytesIO()
+        img.save(output, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        data = base64.b64encode(output.getvalue()).decode("utf-8")
 
-    for i, (img_bytes, mime) in enumerate(zip(images_data, images_mime)):
-        b64 = base64.b64encode(img_bytes).decode("utf-8")
-        content.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:{mime};base64,{b64}"
-            },
-        })
-
-    headers = {
-        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": settings.frontend_url,
-        "X-Title": "Loox Review Generator",
-    }
-
-    payload = {
-        "model": settings.AI_VISION_MODEL,
-        "messages": [{"role": "user", "content": content}],
-        "temperature": 0.3,
-        "max_tokens": 512,
-    }
-
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
+    return data, "image/jpeg"
 
 
-def build_prompt(
-    product_name: str,
-    brand_name: str,
-    product_description: str,
-    target_gender: str,
-    language: str,
-    batch_size: int,
-    batch_number: int,
-    existing_authors: List[str],
-    visual_analysis: Optional[str] = None,
-) -> str:
-    gender = GENDER_CONFIG.get(target_gender, GENDER_CONFIG["femmes"])
-    names_instruction = _get_names_instruction(target_gender, language)
-    avoid_names = ""
-    if existing_authors:
-        sample = existing_authors[-15:]
-        avoid_names = f"\n\nIMPORTANT - Do NOT reuse these names already used: {', '.join(sample)}"
-
-    visual_section = ""
-    if visual_analysis:
-        visual_section = f"\n- Visual analysis from product photos: {visual_analysis}"
-
-    is_mixte = target_gender == "mixte"
-    gender_field_rule = ""
-    json_example_field = ""
-    if is_mixte:
-        gender_field_rule = (
-            '\n6. GENDER FIELD: Since the audience is mixed, each review object MUST include a "gender" field: '
-            '"F" for female reviewers, "M" for male reviewers. '
-            'Strictly alternate starting with F: F, M, F, M, F, M, ...'
-        )
-        json_example_field = ', "gender": "F"'
-
-    return f"""Generate exactly {batch_size} authentic customer reviews for this product. This is batch number {batch_number}.
-
-PRODUCT DETAILS:
-- Product name: {product_name}
-- Brand/Store: {brand_name}
-- Product description: {product_description}{visual_section}
-- Target audience: {gender['description']}
-
-STRICT RULES:
-1. LANGUAGE & QUALITY: Every single word (reviews AND replies) MUST be written in {language}. No exceptions. Use perfect grammar, correct spelling with ALL required accents and special characters (for French: é, è, ê, à, â, ç, ù, û, î, ô, œ — NEVER omit them; for German: ä, ö, ü, ß and capitalized nouns). Native-level fluency, zero errors.
-2. AUTHOR NAMES: {names_instruction}. Format: "Firstname L. - XX ans" (e.g., "Marie P. - 28 ans"). Age between 18 and 52. NEVER repeat the same name.
-3. REVIEWS: Each review MUST be minimum 3 sentences. Make them varied, natural and SPECIFIC to this product. Mention product details from the description. Focus on different themes:
-   - Product quality and appearance (reference specific visual details)
-   - Fast/quick delivery (mention days received)
-   - Visible results and effectiveness
-   - Recommending to friends/family
-   - Personal story or situation where they used the product
-   - Price/value for money
-   - How the product looks/feels in real life
-4. REPLIES: Owner reply per review, MAXIMUM 2 sentences. Warm, grateful, professional. Address reviewer by first name. Written in {language}.
-5. DIVERSITY: Each review must be completely unique in style and content. Vary sentence structure, length, and vocabulary.{gender_field_rule}{avoid_names}
-
-Return ONLY a valid JSON array with exactly {batch_size} objects. No markdown, no code blocks, no explanation:
-[
-  {{"author": "Prénom L. - XX ans"{json_example_field}, "review": "Review text here...", "reply": "Owner reply here..."}},
-  ...
-]"""
+def _is_free_model(model: str) -> bool:
+    """Check if a model is a free variant (may not support system messages or response_format)."""
+    return ":free" in model
 
 
-async def generate_review_batch(
-    product_name: str,
-    brand_name: str,
-    product_description: str,
-    target_gender: str,
-    language: str,
-    batch_size: int,
-    batch_number: int,
-    existing_authors: List[str],
-    visual_analysis: Optional[str] = None,
-) -> List[Dict]:
-    if settings.USE_MOCK:
-        result = []
-        for i in range(batch_size):
-            idx = (batch_number * batch_size + i) % len(MOCK_REVIEWS)
-            mock = MOCK_REVIEWS[idx].copy()
-            result.append(mock)
-        return result
+def _build_messages(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+    merge_system: bool = False,
+) -> list[dict]:
+    """Build the messages array, with optional images in the user message.
 
-    prompt = build_prompt(
-        product_name,
-        brand_name,
-        product_description,
-        target_gender,
-        language,
-        batch_size,
-        batch_number,
-        existing_authors,
-        visual_analysis,
+    Args:
+        merge_system: If True, merge system prompt into user message
+                      (for models that don't support system role).
+    """
+    messages = []
+
+    # Build the combined text
+    if merge_system:
+        combined_text = f"[Instructions]\n{system_prompt}\n\n[Requete]\n{user_prompt}"
+    else:
+        messages.append({"role": "system", "content": system_prompt})
+        combined_text = user_prompt
+
+    if image_paths:
+        # Limite le nombre d'images pour éviter les erreurs 413 et les crashs RAM
+        limited_paths = image_paths[:MAX_IMAGES]
+        if len(image_paths) > MAX_IMAGES:
+            logger.warning(
+                f"Nombre d'images réduit de {len(image_paths)} à {MAX_IMAGES} "
+                f"pour respecter les limites OpenRouter."
+            )
+
+        content = [{"type": "text", "text": combined_text}]
+        for img_path in limited_paths:
+            if img_path.exists():
+                b64_data, mime = _encode_image(img_path)
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime};base64,{b64_data}"
+                    }
+                })
+        messages.append({"role": "user", "content": content})
+    else:
+        messages.append({"role": "user", "content": combined_text})
+
+    return messages
+
+
+async def call_openrouter(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+) -> dict:
+    """Call OpenRouter API and return parsed JSON response.
+
+    Automatically adapts to model capabilities:
+    - Free models: merges system into user prompt, no response_format
+    - Paid models: uses system message and response_format
+    """
+    use_vision = bool(image_paths)
+    model = settings.vision_model if use_vision else settings.text_model
+    is_free = _is_free_model(model)
+
+    messages = _build_messages(
+        system_prompt, user_prompt, image_paths,
+        merge_system=is_free,
     )
 
-    headers = {
-        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": settings.frontend_url,
-        "X-Title": "Loox Review Generator",
-    }
-
     payload = {
-        "model": settings.model,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert at generating authentic, diverse e-commerce customer reviews. "
-                    "You always return valid JSON arrays only, with no extra text or markdown.\n\n"
-                    "ABSOLUTE LANGUAGE QUALITY RULE: Every single word you generate must be written "
-                    "in perfect, native-level language as specified in the user prompt. "
-                    "For French: use all required accents (é, è, ê, ë, à, â, ç, ù, û, î, ô, œ) — "
-                    "NEVER omit accents. Perfect grammar, correct conjugation, proper agreements. "
-                    "For German: use all umlauts (ä, ö, ü, ß) and capitalize all nouns. "
-                    "For any language: zero spelling errors, zero missing special characters. "
-                    "This rule is absolute and cannot be overridden."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
-        "temperature": 0.92,
-        "max_tokens": 4096,
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
-        response.raise_for_status()
+    # response_format not supported by all free models
+    if not is_free:
+        payload["response_format"] = {"type": "json_object"}
 
-        data = response.json()
-        content = data["choices"][0]["message"]["content"].strip()
+    logger.info(f"Calling OpenRouter: model={model}, images={len(image_paths) if image_paths else 0}")
 
-        if "```" in content:
-            parts = content.split("```")
-            for part in parts:
-                stripped = part.strip()
-                if stripped.startswith("[") or stripped.startswith("json\n["):
-                    content = stripped.lstrip("json").strip()
-                    break
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {settings.openrouter_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
 
-        reviews = json.loads(content)
+        if response.status_code != 200:
+            error_body = response.text[:500]
+            logger.error(f"OpenRouter error {response.status_code}: {error_body}")
+            raise Exception(f"OpenRouter API erreur {response.status_code}: {error_body}")
 
-        if not isinstance(reviews, list):
-            raise ValueError(f"Expected JSON array, got: {type(reviews)}")
+        result = response.json()
 
-        return reviews
+    content = result["choices"][0]["message"]["content"]
+
+    # Parse JSON from the response
+    if isinstance(content, str):
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}\nContent: {content[:300]}")
+            raise Exception(f"L'IA n'a pas retourne du JSON valide: {str(e)[:100]}")
+
+    return content
+
+
+async def generate_all_texts(
+    store_name: str,
+    store_email: str,
+    product_names: list[str],
+    product_description: str | None = None,
+    language: str = "fr",
+    image_paths: list[Path] | None = None,
+    target_gender: str = "femme",
+    product_price: str | None = None,
+    store_address: str | None = None,
+    siret: str | None = None,
+    delivery_delay: str = "3-5 jours ouvrés",
+    return_policy_days: str = "30",
+    marketing_angles: str | None = None,
+) -> AsyncGenerator[tuple[str, str, dict | None], None]:
+    """Generate all theme texts step by step.
+
+    Yields tuples of (step_name, status, data) for SSE streaming.
+    """
+    context = {
+        "store_name": store_name,
+        "store_email": store_email,
+        "product_names": product_names,
+        "product_description": product_description or "",
+        "language": language,
+        "has_images": bool(image_paths),
+        # Champs additionnels utilisés par les prompts legal_pages, product_page, global_texts
+        "target_gender": target_gender,
+        "product_price": product_price,
+        "store_address": store_address,
+        "siret": siret,
+        "delivery_delay": delivery_delay,
+        "return_policy_days": return_policy_days,
+        "marketing_angles": marketing_angles or "",
+    }
+
+    all_results = {}
+
+    for step_id, step_label, prompt_builder in GENERATION_STEPS:
+        yield (step_id, "generating", None)
+
+        try:
+            system_prompt, user_prompt = prompt_builder(context)
+
+            # Inject product description strongly into BOTH system and user prompts
+            if context.get("product_description"):
+                desc = context["product_description"].strip()
+                system_prompt += (
+                    "\n\n---\nDESCRIPTION PRODUIT (source de verite — prioritaire) :\n"
+                    + desc
+                    + "\n\nTous les textes generes DOIVENT etre ancres dans cette description. "
+                    "Les benefices, promesses, caracteristiques et arguments doivent en deriver directement. "
+                    "Ne pas inventer d'elements absents de cette description."
+                )
+                user_prompt = (
+                    f"DESCRIPTION PRODUIT (a respecter absolument dans tous tes textes) :\n{desc}\n\n"
+                    + user_prompt
+                )
+
+            # Inject marketing angles strongly into BOTH system and user prompts
+            if context.get("marketing_angles"):
+                angles = context["marketing_angles"].strip()
+                system_prompt += (
+                    "\n\n---\nANGLES MARKETING OBLIGATOIRES :\n"
+                    + angles
+                    + "\n\nCes angles sont le coeur du message. Chaque texte genere DOIT reflechir ces angles directement — dans le choix des mots, des promesses, des benefices et des accroches."
+                )
+                user_prompt = (
+                    f"ANGLES MARKETING A APPLIQUER (prioritaire sur tout le reste) :\n{angles}\n\n"
+                    "Tous les textes que tu generes ci-dessous DOIVENT integrer ces angles comme message central.\n\n"
+                    + user_prompt
+                )
+
+            # Send images only for steps that benefit from visual context
+            step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
+
+            result = await _call_with_retry(system_prompt, user_prompt, step_images)
+
+            # Inject static UI translations into global_texts (cart, delivery, settings)
+            if step_id == "global_texts":
+                static = get_static_ui_translations(
+                    context.get("language", "fr"),
+                    context.get("delivery_delay", ""),
+                )
+                for section, fields in static.items():
+                    if section not in result or not result[section]:
+                        result[section] = {}
+                    for key, val in fields.items():
+                        if not result[section].get(key):
+                            result[section][key] = val
+
+            all_results[step_id] = result
+            yield (step_id, "done", result)
+        except Exception as e:
+            logger.error(f"Step {step_id} failed: {e}")
+            yield (step_id, "error", {"error": str(e)})
+
+    yield ("complete", "done", all_results)
+
+
+async def generate_single_section(
+    section: str,
+    store_name: str,
+    store_email: str,
+    product_names: list[str],
+    product_description: str | None = None,
+    language: str = "fr",
+    image_paths: list[Path] | None = None,
+    target_gender: str = "femme",
+    product_price: str | None = None,
+    store_address: str | None = None,
+    siret: str | None = None,
+    delivery_delay: str = "3-5 jours ouvrés",
+    return_policy_days: str = "30",
+    marketing_angles: str | None = None,
+) -> AsyncGenerator[tuple[str, str, dict | None], None]:
+    """Generate a single section's texts.
+
+    Yields tuples of (step_name, status, data) for SSE streaming.
+    """
+    # Find the matching step
+    step_entry = next((s for s in GENERATION_STEPS if s[0] == section), None)
+    if step_entry is None:
+        yield (section, "error", {"error": f"Section inconnue : {section}"})
+        return
+
+    step_id, _step_label, prompt_builder = step_entry
+
+    context = {
+        "store_name": store_name,
+        "store_email": store_email,
+        "product_names": product_names,
+        "product_description": product_description or "",
+        "language": language,
+        "has_images": bool(image_paths),
+        "target_gender": target_gender,
+        "product_price": product_price,
+        "store_address": store_address,
+        "siret": siret,
+        "delivery_delay": delivery_delay,
+        "return_policy_days": return_policy_days,
+        "marketing_angles": marketing_angles or "",
+    }
+
+    yield (step_id, "generating", None)
+
+    try:
+        system_prompt, user_prompt = prompt_builder(context)
+
+        if context.get("product_description"):
+            desc = context["product_description"].strip()
+            system_prompt += (
+                "\n\n---\nDESCRIPTION PRODUIT (source de verite — prioritaire) :\n"
+                + desc
+                + "\n\nTous les textes generes DOIVENT etre ancres dans cette description. "
+                "Les benefices, promesses, caracteristiques et arguments doivent en deriver directement. "
+                "Ne pas inventer d'elements absents de cette description."
+            )
+            user_prompt = (
+                f"DESCRIPTION PRODUIT (a respecter absolument dans tous tes textes) :\n{desc}\n\n"
+                + user_prompt
+            )
+
+        if context.get("marketing_angles"):
+            angles = context["marketing_angles"].strip()
+            system_prompt += (
+                "\n\n---\nANGLES MARKETING OBLIGATOIRES :\n"
+                + angles
+                + "\n\nCes angles sont le coeur du message. Chaque texte genere DOIT reflechir ces angles directement — dans le choix des mots, des promesses, des benefices et des accroches."
+            )
+            user_prompt = (
+                f"ANGLES MARKETING A APPLIQUER (prioritaire sur tout le reste) :\n{angles}\n\n"
+                "Tous les textes que tu generes ci-dessous DOIVENT integrer ces angles comme message central.\n\n"
+                + user_prompt
+            )
+
+        step_images = image_paths if (image_paths and step_id in VISION_STEPS) else None
+        result = await _call_with_retry(system_prompt, user_prompt, step_images)
+
+        if step_id == "global_texts":
+            static = get_static_ui_translations(
+                context.get("language", "fr"),
+                context.get("delivery_delay", ""),
+            )
+            for sec, fields in static.items():
+                if sec not in result or not result[sec]:
+                    result[sec] = {}
+                for key, val in fields.items():
+                    if not result[sec].get(key):
+                        result[sec][key] = val
+
+        yield (step_id, "done", result)
+    except Exception as e:
+        logger.error(f"Section {step_id} regeneration failed: {e}")
+        yield (step_id, "error", {"error": str(e)})
+
+
+async def _call_with_retry(
+    system_prompt: str,
+    user_prompt: str,
+    image_paths: list[Path] | None = None,
+    max_retries: int = 2,
+) -> dict:
+    """Call OpenRouter with retry logic and exponential back-off on 429."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            return await call_openrouter(system_prompt, user_prompt, image_paths)
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                # Back-off longer on rate-limit errors (429)
+                delay = 15 if "429" in str(e) else 3
+                logger.warning(f"Retry {attempt + 1}/{max_retries} in {delay}s: {e}")
+                await asyncio.sleep(delay)
+    raise last_error

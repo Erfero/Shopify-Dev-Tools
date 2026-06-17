@@ -219,6 +219,46 @@ _STATIC_UI: dict[str, dict] = {
             "timer_timeout_text": "Oferta wygasła",
         },
     },
+    "fi": {
+        "cart": {
+            "button_text": "Tee tilaus",
+            "upsell_title": "Saatat myös pitää tästä",
+            "upsell_button_text": "Lisää",
+            "protection_text": "Pakettivakuutus sisältyy",
+            "savings_text": "Säästät",
+            "subtotal_text": "Välisumma",
+            "total_text": "Yhteensä",
+            "cart_footer_text": "Toimitus ja verot lasketaan kassalla",
+        },
+        "delivery": {
+            "today_info": "Tilaus tehty tänään",
+            "ready_info": "Paketti valmisteltu 24 tunnissa",
+        },
+        "settings": {
+            "product_card_button_text": "Katso tuote",
+            "timer_timeout_text": "Tarjous vanhentunut",
+        },
+    },
+    "ru": {
+        "cart": {
+            "button_text": "Оформить заказ",
+            "upsell_title": "Вам также может понравиться",
+            "upsell_button_text": "Добавить",
+            "protection_text": "Защита посылки включена",
+            "savings_text": "Вы экономите",
+            "subtotal_text": "Промежуточный итог",
+            "total_text": "Итого",
+            "cart_footer_text": "Доставка и налоги рассчитываются при оформлении",
+        },
+        "delivery": {
+            "today_info": "Заказ сделан сегодня",
+            "ready_info": "Посылка подготовлена за 24 часа",
+        },
+        "settings": {
+            "product_card_button_text": "Посмотреть товар",
+            "timer_timeout_text": "Предложение истекло",
+        },
+    },
 }
 
 
@@ -245,6 +285,8 @@ def get_static_ui_translations(lang: str, delivery_delay: str = "") -> dict:
             "sv": f"Levereras om {delivery_delay}",
             "no": f"Levert om {delivery_delay}",
             "pl": f"Dostarczone w {delivery_delay}",
+            "fi": f"Toimitettu {delivery_delay} kuluessa",
+            "ru": f"Доставлено за {delivery_delay}",
         }
         result["delivery"]["delivered_info"] = delivered_label.get(lang2, f"Delivered in {delivery_delay}")
     else:
@@ -260,6 +302,8 @@ def get_static_ui_translations(lang: str, delivery_delay: str = "") -> dict:
             "sv": "Levereras om 3-5 arbetsdagar",
             "no": "Levert om 3-5 virkedager",
             "pl": "Dostarczone w 3-5 dni roboczych",
+            "fi": "Toimitettu 3-5 arkipäivässä",
+            "ru": "Доставлено за 3-5 рабочих дней",
         }.get(lang2, "Delivered in 3-5 business days")
     return result
 
@@ -310,6 +354,7 @@ RÈGLE GRAS OBLIGATOIRE : Dans brand_text et trust_badges.description (champs HT
         "it": "Generate ALL texts in ITALIAN. Use perfect Italian grammar and spelling. Do NOT write any French text.",
         "nl": "Generate ALL texts in DUTCH. Use perfect Dutch grammar and spelling. Do NOT write any French text.",
         "pl": "Generate ALL texts in POLISH. Use perfect Polish grammar, spelling and all special characters (ą, ę, ó, ś, ź, ż, ć, ń, ł). Do NOT write any French text.",
+        "ru": "Generate ALL texts in RUSSIAN. Use perfect Russian grammar, spelling and Cyrillic characters. Do NOT write any French, English or other Latin text.",
     }
     lang2 = lang[:2].lower()
     lang_note = _lang_notes.get(lang2) or f"CRITICAL: Generate ALL texts in the language '{lang}' (ISO code: {lang2}). Use perfect grammar, spelling and all required accents/special characters. Do NOT write any French, English or German text — ONLY the target language."

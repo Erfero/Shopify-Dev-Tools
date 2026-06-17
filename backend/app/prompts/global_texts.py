@@ -1,9 +1,9 @@
 _STATIC_UI: dict[str, dict] = {
     "fr": {
         "cart": {
-            "button_text": "Commander",
+            "button_text": "Commandez",
             "upsell_title": "Vous pourriez aussi aimer",
-            "upsell_button_text": "Ajouter",
+            "upsell_button_text": "Ajoutez",
             "protection_text": "Protection colis incluse",
             "savings_text": "Vous économisez",
             "subtotal_text": "Sous-total",
@@ -61,9 +61,9 @@ _STATIC_UI: dict[str, dict] = {
     },
     "es": {
         "cart": {
-            "button_text": "Realizar pedido",
-            "upsell_title": "También te puede gustar",
-            "upsell_button_text": "Añadir",
+            "button_text": "Realice su pedido",
+            "upsell_title": "También le puede gustar",
+            "upsell_button_text": "Agregue",
             "protection_text": "Protección del paquete incluida",
             "savings_text": "Ahorras",
             "subtotal_text": "Subtotal",
@@ -81,9 +81,9 @@ _STATIC_UI: dict[str, dict] = {
     },
     "it": {
         "cart": {
-            "button_text": "Effettua ordine",
-            "upsell_title": "Potrebbe piacerti anche",
-            "upsell_button_text": "Aggiungi",
+            "button_text": "Effettui l'ordine",
+            "upsell_title": "Potrebbe piacerle anche",
+            "upsell_button_text": "Aggiunga",
             "protection_text": "Protezione pacco inclusa",
             "savings_text": "Risparmi",
             "subtotal_text": "Subtotale",
@@ -101,9 +101,9 @@ _STATIC_UI: dict[str, dict] = {
     },
     "pt": {
         "cart": {
-            "button_text": "Fazer pedido",
+            "button_text": "Faça seu pedido",
             "upsell_title": "Você também pode gostar",
-            "upsell_button_text": "Adicionar",
+            "upsell_button_text": "Adicione",
             "protection_text": "Proteção do pacote incluída",
             "savings_text": "Você economiza",
             "subtotal_text": "Subtotal",
@@ -241,9 +241,9 @@ _STATIC_UI: dict[str, dict] = {
     },
     "ru": {
         "cart": {
-            "button_text": "Оформить заказ",
+            "button_text": "Оформите заказ",
             "upsell_title": "Вам также может понравиться",
-            "upsell_button_text": "Добавить",
+            "upsell_button_text": "Добавьте",
             "protection_text": "Защита посылки включена",
             "savings_text": "Вы экономите",
             "subtotal_text": "Промежуточный итог",

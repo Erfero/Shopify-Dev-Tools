@@ -61,7 +61,7 @@ Génère tous les textes de la page d'accueil. Réponds en JSON avec ce schéma 
 
 {{
   "slogan": "{store} : Accroche courte et percutante — format OBLIGATOIRE : NomBoutique : Promesse vendeuse (ex: Roselash : Révélez un Regard Magnétique, Sans Colle, Sans Limite)",
-  "cta_button_text": "Texte bouton CTA principal (ex: Découvrir, Acheter maintenant)",
+  "cta_button_text": "Texte bouton CTA — OBLIGATOIRE : verbe à la 2ème personne du pluriel (vous), ex: Découvrez, Achetez maintenant, Profitez de l'offre",
   "welcome": {{
     "title": "Titre de bienvenue (texte simple)",
     "text": "<p>2 phrases courtes. <strong>Mot d'impact</strong> pour présenter la boutique et le produit.</p>"

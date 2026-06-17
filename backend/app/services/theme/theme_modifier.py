@@ -745,10 +745,10 @@ def _apply_homepage(ed: Path, pf: dict, hp: dict, language: str = "fr", store_na
     reps: list[tuple[str, str, str]] = []
 
     _cta_map = {
-        "fr": "Découvrir", "en": "Discover", "de": "Entdecken",
+        "fr": "Découvrez", "en": "Discover", "de": "Entdecken",
         "da": "Opdag", "sv": "Upptäck", "no": "Oppdag", "fi": "Tutustu",
-        "es": "Descubrir", "pt": "Descobrir", "it": "Scopri",
-        "nl": "Ontdekken", "pl": "Odkryj", "ru": "Открыть",
+        "es": "Descubra", "pt": "Descubra", "it": "Scopra",
+        "nl": "Ontdek", "pl": "Odkryj", "ru": "Откройте",
     }
     # Use AI-generated CTA if available, otherwise fall back to map (English if unknown)
     _lang2 = language[:2].lower()
@@ -1632,19 +1632,19 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "ru": "Итого",
     }
     _upsell_btn = {
-        "fr": "Ajouter",
+        "fr": "Ajoutez",
         "en": "Add",
         "de": "Hinzufügen",
         "da": "Tilføj",
         "sv": "Lägg till",
         "no": "Legg til",
         "fi": "Lisää",
-        "es": "Agregar",
-        "pt": "Adicionar",
-        "it": "Aggiungi",
-        "nl": "Toevoegen",
+        "es": "Agregue",
+        "pt": "Adicione",
+        "it": "Aggiunga",
+        "nl": "Voeg toe",
         "pl": "Dodaj",
-        "ru": "Добавить",
+        "ru": "Добавьте",
     }
     _protection = {
         "fr": "Protégez votre commande contre les dommages, la perte ou le vol.",

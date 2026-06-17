@@ -140,9 +140,9 @@ Génère les textes de la page produit. Réponds en JSON avec ce schéma EXACT :
     "text": "RULE: If natural product → '<p>List <strong>key ingredients</strong> with their specific benefits.</p><p>Short sentence on <strong>quality and origin</strong> of ingredients.</p>'. Otherwise → '<p>2 short social proof sentences with <strong>impactful expression</strong>.</p>'"
   }},
   "mini_reviews": [
-    {{"name": "First name N. (consistent with {gender} audience)", "age": "XX", "text": "Short review: 2 simple sentences, no HTML."}},
-    {{"name": "First name N.", "age": "XX", "text": "Different short review: 2 sentences."}},
-    {{"name": "First name N.", "age": "XX", "text": "Different short review: 2 sentences."}}
+    {{"name": "First name N. (consistent with {gender} audience)", "text": "Short review: 2 simple sentences, no HTML."}},
+    {{"name": "First name N.", "text": "Different short review: 2 sentences."}},
+    {{"name": "First name N.", "text": "Different short review: 2 sentences."}}
   ],
   "product_specs": {{
     "title": "{specs_title_format}",

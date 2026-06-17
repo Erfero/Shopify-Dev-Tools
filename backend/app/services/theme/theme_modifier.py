@@ -612,7 +612,7 @@ def _write_review_to_block(blk: dict, block_type: str, r: dict):
         s["title"]        = r.get("title", "")
         s["text"]         = f"<p>{r.get('text', '')}</p>"
         s["author_name"]  = r.get("name", "")
-        s["author_age"]   = _strip_age_suffix(r.get("age", ""))
+        s["author_age"]   = ""
         s["rating"]       = r.get("rating", 5)
     elif block_type in ("text", "image"):
         s["heading"]      = r.get("title", "")

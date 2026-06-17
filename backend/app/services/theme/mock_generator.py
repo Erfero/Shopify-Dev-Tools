@@ -441,7 +441,6 @@ def _mock_product_page(store_name: str, product: str, target_gender: str) -> dic
         "mini_reviews": [
             {
                 "name": "Marie P.",
-                "age": "22 ans",
                 "text": (
                     "J'étais très complexée par mon double-menton, même à mon jeune âge. "
                     f"J'ai testé le {product} par curiosité et je suis bluffée ! Après "
@@ -451,7 +450,6 @@ def _mock_product_page(store_name: str, product: str, target_gender: str) -> dic
             },
             {
                 "name": "Sophie L.",
-                "age": "45 ans",
                 "text": (
                     "Avec l'âge, j'avais l'impression que mon cou perdait de sa fermeté. "
                     "Ce masque est une vraie révolution ! L'effet liftant est immédiat et "
@@ -461,7 +459,6 @@ def _mock_product_page(store_name: str, product: str, target_gender: str) -> dic
             },
             {
                 "name": "Chloé M.",
-                "age": "30 ans",
                 "text": (
                     "J'ai toujours été sceptique face aux produits « miracles », mais "
                     f"{store_name} a changé ma perception. Mon double-menton est moins "
@@ -545,19 +542,15 @@ def _mock_reviews(store_name: str, product: str, target_gender: str) -> dict:
     g = target_gender.lower()
     if g == "homme":
         names = [
-            ("Thomas P.", "32 ans"), ("Nicolas V.", "41 ans"),
-            ("Antoine M.", "28 ans"), ("Julien R.", "55 ans"),
-            ("Maxime D.", "37 ans"), ("Pierre B.", "48 ans"),
-            ("Romain K.", "25 ans"), ("Alexandre T.", "62 ans"),
-            ("David N.", "33 ans"), ("Florian C.", "44 ans"),
+            "Thomas P.", "Nicolas V.", "Antoine M.", "Julien R.",
+            "Maxime D.", "Pierre B.", "Romain K.", "Alexandre T.",
+            "David N.", "Florian C.",
         ]
     else:
         names = [
-            ("Marie P.", "22 ans"), ("Sophie L.", "45 ans"),
-            ("Chloé M.", "30 ans"), ("Léa R.", "58 ans"),
-            ("Manon D.", "35 ans"), ("Amélie B.", "28 ans"),
-            ("Charlotte V.", "42 ans"), ("Emma T.", "52 ans"),
-            ("Isabelle K.", "38 ans"), ("Pauline N.", "25 ans"),
+            "Marie P.", "Sophie L.", "Chloé M.", "Léa R.",
+            "Manon D.", "Amélie B.", "Charlotte V.", "Emma T.",
+            "Isabelle K.", "Pauline N.",
         ]
 
     review_data = [
@@ -680,11 +673,9 @@ def _mock_reviews(store_name: str, product: str, target_gender: str) -> dict:
     ]
 
     reviews = []
-    for i, (name_age, rev_data) in enumerate(zip(names, review_data)):
-        name, age = name_age
+    for i, (name, rev_data) in enumerate(zip(names, review_data)):
         reviews.append({
             "name": name,
-            "age": age,
             "rating": 5 if i % 5 != 4 else 4,
             "title": rev_data["title"],
             "text": rev_data["text"],
@@ -1180,7 +1171,6 @@ def _mock_product_page_en(store_name: str, product: str, target_gender: str) -> 
         "mini_reviews": [
             {
                 "name": "Emily R.",
-                "age": "28 years",
                 "text": (
                     "I was very self-conscious about my double chin even at my age. "
                     f"I tried the {product} out of curiosity and I am blown away! After "
@@ -1190,7 +1180,6 @@ def _mock_product_page_en(store_name: str, product: str, target_gender: str) -> 
             },
             {
                 "name": "Sarah M.",
-                "age": "44 years",
                 "text": (
                     "As I've gotten older, I felt my neck losing its firmness. "
                     "This mask is a total game-changer! The lifting effect is immediate and "
@@ -1200,7 +1189,6 @@ def _mock_product_page_en(store_name: str, product: str, target_gender: str) -> 
             },
             {
                 "name": "Claire B.",
-                "age": "35 years",
                 "text": (
                     "I have always been sceptical of miracle products, but "
                     f"{store_name} changed my mind. My double chin is less noticeable "
@@ -1433,11 +1421,9 @@ def _mock_reviews_en(store_name: str, product: str, target_gender: str) -> dict:
     ]
 
     reviews = []
-    for i, (name_age, rev_data) in enumerate(zip(names, review_data)):
-        name, age = name_age
+    for i, (name, rev_data) in enumerate(zip(names, review_data)):
         reviews.append({
             "name": name,
-            "age": age,
             "rating": 5 if i % 5 != 4 else 4,
             "title": rev_data["title"],
             "text": rev_data["text"],
@@ -1775,7 +1761,6 @@ def _mock_product_page_de(store_name: str, product: str, target_gender: str) -> 
         "mini_reviews": [
             {
                 "name": "Lena M.",
-                "age": "27 Jahre",
                 "text": (
                     "Ich war sehr unsicher wegen meines Doppelkinns, sogar in meinem Alter. "
                     f"Ich habe das {product} aus Neugier ausprobiert und bin begeistert! "
@@ -1785,7 +1770,6 @@ def _mock_product_page_de(store_name: str, product: str, target_gender: str) -> 
             },
             {
                 "name": "Petra S.",
-                "age": "46 Jahre",
                 "text": (
                     "Mit zunehmendem Alter hatte ich das Gefühl, dass mein Hals seine "
                     "Straffheit verliert. Diese Maske ist eine echte Revolution! Der "
@@ -1794,7 +1778,6 @@ def _mock_product_page_de(store_name: str, product: str, target_gender: str) -> 
             },
             {
                 "name": "Julia K.",
-                "age": "33 Jahre",
                 "text": (
                     "Ich war immer skeptisch gegenüber Wunderprodukten, aber "
                     f"{store_name} hat meine Meinung geändert. Mein Doppelkinn ist "
@@ -2029,11 +2012,9 @@ def _mock_reviews_de(store_name: str, product: str, target_gender: str) -> dict:
     ]
 
     reviews = []
-    for i, (name_age, rev_data) in enumerate(zip(names, review_data)):
-        name, age = name_age
+    for i, (name, rev_data) in enumerate(zip(names, review_data)):
         reviews.append({
             "name": name,
-            "age": age,
             "rating": 5 if i % 5 != 4 else 4,
             "title": rev_data["title"],
             "text": rev_data["text"],

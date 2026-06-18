@@ -114,7 +114,7 @@ async def analyze_product_image(
                         ],
                     },
                 ],
-                "max_tokens": 1500,
+                "max_tokens": 2500,
                 "temperature": 0.3,
             },
         )
@@ -124,7 +124,24 @@ async def analyze_product_image(
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw.strip())
 
-    result = json.loads(raw)
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError:
+        # Try removing control characters that break JSON
+        cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", raw)
+        try:
+            result = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # Fallback: extract quoted strings as queries
+            queries_fallback = re.findall(r'"([A-Za-z][^"]{15,})"', raw)
+            result = {
+                "visual_description": "",
+                "product_category": product_name,
+                "target_audience": "",
+                "usage_context": "",
+                "search_queries": queries_fallback[:8],
+                "dalle_prompt": f"Professional lifestyle photo of {product_name}, high quality, realistic",
+            }
 
     existing = result.get("search_queries", [])
     all_queries = existing + [q for q in extra_queries if q not in existing]

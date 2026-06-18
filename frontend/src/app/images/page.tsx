@@ -5,20 +5,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ImageIcon, Upload, Search, CheckSquare, CloudUpload,
   ChevronLeft, X, Check, Loader2, ArrowLeft, ExternalLink,
-  Sparkles, Store, Plus
+  Sparkles, Store, Plus, Shapes, Copy, Download
 } from "lucide-react";
 import Link from "next/link";
 import {
   analyzeProductImage,
   searchImages,
   generateImages,
+  findProductIcons,
   uploadImagesToShopify,
   type AnalysisResult,
   type ImageResult,
+  type IconResult,
 } from "@/lib/api-images";
 import { toast } from "sonner";
 
-type Step = "product" | "analyzing" | "gallery" | "shopify" | "done";
+type Step = "product" | "analyzing" | "gallery" | "shopify" | "done" | "icons";
 
 interface SavedStore {
   id: string;
@@ -61,7 +63,10 @@ export default function ImagesPage() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
   // Mode
-  const [mode, setMode] = useState<"search" | "generate">("search");
+  const [mode, setMode] = useState<"search" | "generate" | "icons">("search");
+
+  // Icons
+  const [icons, setIcons] = useState<IconResult[]>([]);
 
   // Gallery
   const [images, setImages] = useState<ImageResult[]>([]);
@@ -121,15 +126,19 @@ export default function ImagesPage() {
         setImages(imgs);
         setLoadingSearch(false);
         if (imgs.length === 0) toast.warning("Aucune image trouvée. Vérifie tes clés API Pexels/Unsplash.");
-      } else {
+        setStep("gallery");
+      } else if (mode === "generate") {
         const prompt = result.dalle_prompt ||
           `Professional lifestyle product photo of ${productName}, high quality, realistic, white background`;
         const imgs = await generateImages(prompt, 2, 8);
         setImages(imgs);
         if (imgs.length === 0) toast.warning("Génération échouée. Vérifie ta clé OpenRouter.");
+        setStep("gallery");
+      } else {
+        const icns = await findProductIcons(productName, productDescription, marketingAngles, 5);
+        setIcons(icns);
+        setStep("icons");
       }
-
-      setStep("gallery");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
       toast.error(msg);
@@ -203,6 +212,7 @@ export default function ImagesPage() {
     setStep("product");
     setSelected(new Set());
     setImages([]);
+    setIcons([]);
     setAnalysis(null);
     setUploadResults(null);
     setProductImage(null);
@@ -326,13 +336,11 @@ export default function ImagesPage() {
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 {/* Mode toggle */}
-                <div className="flex gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
+                <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
                   <button
                     onClick={() => setMode("search")}
-                    className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
-                      mode === "search"
-                        ? "bg-background shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                      mode === "search" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Search className="h-3.5 w-3.5" />
@@ -340,14 +348,21 @@ export default function ImagesPage() {
                   </button>
                   <button
                     onClick={() => setMode("generate")}
-                    className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
-                      mode === "generate"
-                        ? "bg-background shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                      mode === "generate" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Générer avec DALL-E
+                  </button>
+                  <button
+                    onClick={() => setMode("icons")}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                      mode === "icons" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Shapes className="h-3.5 w-3.5" />
+                    Icônes produit
                   </button>
                 </div>
 
@@ -356,8 +371,10 @@ export default function ImagesPage() {
                   disabled={!productName.trim()}
                   className="flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
                 >
-                  {mode === "search" ? <Search className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                  {mode === "search" ? "Rechercher des photos" : "Générer avec DALL-E"}
+                  {mode === "search" && <Search className="h-4 w-4" />}
+                  {mode === "generate" && <Sparkles className="h-4 w-4" />}
+                  {mode === "icons" && <Shapes className="h-4 w-4" />}
+                  {mode === "search" ? "Rechercher des photos" : mode === "generate" ? "Générer avec DALL-E" : "Trouver des icônes"}
                 </button>
               </div>
             </motion.div>
@@ -380,7 +397,9 @@ export default function ImagesPage() {
               <div className="flex gap-2">
                 {(mode === "search"
                   ? ["Analyse visuelle IA", "Recherche Pexels", "Recherche Unsplash"]
-                  : ["Analyse du produit", "Génération DALL-E 3"]
+                  : mode === "generate"
+                  ? ["Analyse du produit", "Génération DALL-E 3"]
+                  : ["Analyse des bénéfices", "Sélection des icônes", "Chargement SVG"]
                 ).map((label, i) => (
                   <span key={i} className="rounded-full border border-border/60 bg-foreground/[0.03] px-3 py-1 text-xs text-muted-foreground animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>
                     {label}
@@ -534,6 +553,81 @@ export default function ImagesPage() {
                   )}
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* ── STEP ICONS ───────────────────────────────────────────────── */}
+          {step === "icons" && (
+            <motion.div key="icons" {...sv} className="space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Icônes produit</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {icons.length} icônes générées pour les avantages de ton produit
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStep("product")}
+                  className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors shrink-0"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Modifier
+                </button>
+              </div>
+
+              {icons.length === 0 ? (
+                <div className="flex flex-col items-center py-20 gap-3 text-muted-foreground">
+                  <Shapes className="h-10 w-10 opacity-30" />
+                  <p className="text-sm">Aucune icône générée.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {icons.map((icon) => (
+                    <div
+                      key={icon.icon}
+                      className="flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-foreground/[0.01] p-5 text-center"
+                    >
+                      {icon.svg ? (
+                        <div
+                          className="w-12 h-12 text-foreground"
+                          dangerouslySetInnerHTML={{ __html: icon.svg }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-foreground/[0.05] flex items-center justify-center">
+                          <Shapes className="h-6 w-6 text-foreground/30" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-sm">{icon.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{icon.benefit}</p>
+                      </div>
+                      <div className="flex gap-2 mt-auto w-full">
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(icon.svg); toast.success("SVG copié !"); }}
+                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs hover:bg-muted transition-colors"
+                        >
+                          <Copy className="h-3 w-3" /> Copier
+                        </button>
+                        <a
+                          href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon.svg)}`}
+                          download={`${icon.icon}.svg`}
+                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs hover:bg-muted transition-colors"
+                        >
+                          <Download className="h-3 w-3" /> SVG
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={resetAll}
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                >
+                  Nouvelle recherche
+                </button>
+              </div>
             </motion.div>
           )}
 

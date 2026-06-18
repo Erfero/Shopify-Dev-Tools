@@ -37,10 +37,38 @@ export interface ShopifyUploadResult {
   error?: string;
 }
 
+export interface IconResult {
+  label: string;
+  icon: string;
+  benefit: string;
+  svg: string;
+}
+
 export interface ImagesConfig {
   pexels: boolean;
   unsplash: boolean;
   vision_model: string;
+}
+
+export async function findProductIcons(
+  productName: string,
+  productDescription: string,
+  marketingAngles: string,
+  n: number = 5,
+): Promise<IconResult[]> {
+  const r = await apiFetch(`${API_BASE}/api/images/icons`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      product_name: productName,
+      product_description: productDescription,
+      marketing_angles: marketingAngles,
+      n,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.detail || "Recherche d'icônes échouée");
+  return data.icons as IconResult[];
 }
 
 export async function getImagesConfig(): Promise<ImagesConfig> {

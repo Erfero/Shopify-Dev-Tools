@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.services.images.analyzer import analyze_product_image
 from app.services.images.generator import generate_dalle_images
+from app.services.images.icon_finder import find_product_icons
 from app.services.images.shopify_uploader import upload_image_to_shopify
 from app.services.images.stock_searcher import search_oriented
 
@@ -45,6 +46,13 @@ class GenerateRequest(BaseModel):
     dalle_prompt: str
     landscape_count: int = 2
     portrait_count: int = 8
+
+
+class IconsRequest(BaseModel):
+    product_name: str
+    product_description: str = ""
+    marketing_angles: str = ""
+    n: int = 5
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -138,6 +146,26 @@ async def generate_images_endpoint(req: GenerateRequest):
     except Exception as e:
         logger.error("Image generation failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Génération échouée : {e}")
+
+
+@router.post("/icons")
+async def find_icons(req: IconsRequest):
+    """Find 3-6 Lucide SVG icons matching product benefits."""
+    if not settings.openrouter_api_key:
+        raise HTTPException(status_code=503, detail="Clé OpenRouter manquante.")
+    if not req.product_name.strip():
+        raise HTTPException(status_code=400, detail="Nom du produit requis.")
+    try:
+        icons = await find_product_icons(
+            req.product_name,
+            req.product_description,
+            req.marketing_angles,
+            max(3, min(req.n, 6)),
+        )
+        return {"success": True, "icons": icons}
+    except Exception as e:
+        logger.error("Icon finder failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Recherche d'icônes échouée : {e}")
 
 
 @router.post("/upload-shopify")

@@ -347,13 +347,12 @@ export default function ImagesPage() {
                     Trouver des photos
                   </button>
                   <button
-                    onClick={() => setMode("generate")}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                      mode === "generate" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    disabled
+                    title="Nécessite une clé OpenAI directe — bientôt disponible"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium opacity-35 cursor-not-allowed"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    Générer avec DALL-E
+                    DALL-E (bientôt)
                   </button>
                   <button
                     onClick={() => setMode("icons")}

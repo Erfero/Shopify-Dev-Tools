@@ -45,6 +45,7 @@ Shopify field types:
   "richtext"        → full block HTML (<p>, <ul>, <li>, <h2>, etc.)
   "text"/"textarea" → plain text
 """
+import json
 import re
 import shutil
 import uuid
@@ -177,6 +178,68 @@ def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
     return True
 
 
+def _remove_invalid_template_blocks(ed: Path) -> int:
+    """Remove blocks from template JSONs that reference block types undefined in their section schema.
+
+    Story Theme 3.5.0 ships with product.json containing a 'social_proof' block in
+    the main-product section, but the 3.5.0 main-product.liquid no longer defines that
+    block type. Shopify rejects the product template when an unknown block type is present,
+    causing a 404 on the product page. This function fixes that inconsistency for any
+    base theme version.
+    """
+    sections_dir = ed / "sections"
+    templates_dir = ed / "templates"
+    if not sections_dir.exists() or not templates_dir.exists():
+        return 0
+
+    # Build map: section_filename_stem → set of valid block types from schema
+    valid_block_types: dict[str, set[str]] = {}
+    for section_file in sections_dir.glob("*.liquid"):
+        try:
+            content = section_file.read_text(encoding="utf-8", errors="replace")
+            m = re.search(r"\{%-?\s*schema\s*-?%\}(.*?)\{%-?\s*endschema\s*-?%\}", content, re.DOTALL)
+            if not m:
+                continue
+            schema = json.loads(m.group(1).strip())
+            block_types = {b["type"] for b in schema.get("blocks", []) if "type" in b}
+            valid_block_types[section_file.stem] = block_types
+        except Exception:
+            continue
+
+    total_removed = 0
+    for template_file in templates_dir.glob("*.json"):
+        try:
+            raw = template_file.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            changed = False
+
+            for _sec_key, sec_data in data.get("sections", {}).items():
+                section_type = sec_data.get("type", "")
+                if section_type not in valid_block_types:
+                    continue
+                valid = valid_block_types[section_type]
+                blocks = sec_data.get("blocks", {})
+                bad_keys = [k for k, v in blocks.items() if v.get("type") not in valid]
+                if bad_keys:
+                    for k in bad_keys:
+                        del blocks[k]
+                    # Also prune blocks_order if present
+                    if "blocks_order" in sec_data:
+                        sec_data["blocks_order"] = [o for o in sec_data["blocks_order"] if o not in bad_keys]
+                    total_removed += len(bad_keys)
+                    changed = True
+
+            if changed:
+                template_file.write_text(
+                    json.dumps(data, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8",
+                )
+        except Exception:
+            continue
+
+    return total_removed
+
+
 def apply_generated_texts(
     structure: ThemeStructure,
     all_results: dict,
@@ -191,6 +254,9 @@ def apply_generated_texts(
 
     hp = all_results.get("homepage", {})
     pp = all_results.get("product_page", {})
+
+    # ── -1. Remove invalid blocks (e.g. 'social_proof' dropped in Story Theme 3.5.0)
+    _remove_invalid_template_blocks(ed)
 
     # ── 0. Colors: JSON write on settings_data.json (MUST run before text surgery on same file)
     if "colors" in all_results:

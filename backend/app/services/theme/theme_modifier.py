@@ -240,6 +240,61 @@ def _remove_invalid_template_blocks(ed: Path) -> int:
     return total_removed
 
 
+# ── Universal theme reconstruction ────────────────────────────────────────────
+
+_STORY_SIGNATURE_SECTIONS = {"comparaison-list", "specs", "icons", "ugc"}
+_REFERENCE_DIR = Path(__file__).parent.parent / "theme_reference"
+
+
+def _is_story_structure(ed: Path) -> bool:
+    """Return True if this theme already has Story-compatible product.json structure.
+
+    A theme is considered Story-compatible when its product.json contains all four
+    signature section types used by the Story Theme family.
+    """
+    product_json = ed / "templates" / "product.json"
+    if not product_json.exists():
+        return False
+    try:
+        data = json.loads(product_json.read_text(encoding="utf-8"))
+        section_types = {s.get("type", "") for s in data.get("sections", {}).values()}
+        return _STORY_SIGNATURE_SECTIONS.issubset(section_types)
+    except Exception:
+        return False
+
+
+def _rebuild_to_story_structure(ed: Path) -> bool:
+    """Rebuild index.json and product.json to match Story Theme structure.
+
+    Uses the uploaded theme's own Liquid section files — only copies truly missing
+    Liquid files (e.g. reviews-two.liquid) from the reference bundle.
+    Returns True if any files were written.
+    """
+    changed = False
+    templates_dir = ed / "templates"
+    sections_dir = ed / "sections"
+
+    # ── 1. Copy reference template JSONs ─────────────────────────────────────
+    for tmpl_name in ("index.json", "product.json"):
+        ref_file = _REFERENCE_DIR / "templates" / tmpl_name
+        if not ref_file.exists():
+            continue
+        target = templates_dir / tmpl_name
+        shutil.copy2(ref_file, target)
+        changed = True
+
+    # ── 2. Copy only missing Liquid section files from reference ─────────────
+    ref_sections = _REFERENCE_DIR / "sections"
+    if ref_sections.exists():
+        for ref_liquid in ref_sections.glob("*.liquid"):
+            target = sections_dir / ref_liquid.name
+            if not target.exists():
+                shutil.copy2(ref_liquid, target)
+                changed = True
+
+    return changed
+
+
 def apply_generated_texts(
     structure: ThemeStructure,
     all_results: dict,

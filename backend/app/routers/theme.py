@@ -32,7 +32,7 @@ from app.services.theme.theme_parser import extract_theme, cleanup_session, Them
 from app.services.theme.text_mapper import extract_text_slots
 from app.services.theme.ai_generator import generate_all_texts, generate_single_section
 from app.services.theme.mock_generator import generate_mock_texts
-from app.services.theme.theme_modifier import apply_generated_texts
+from app.services.theme.theme_modifier import apply_generated_texts, _is_story_structure, _rebuild_to_story_structure
 from app.services.theme.theme_translator import translate_remaining_texts
 from app.services.theme.theme_exporter import export_theme
 from app.utils.json_handler import read_theme_json, detect_json_format
@@ -141,6 +141,24 @@ async def _restore_session(session_id: str) -> dict | None:
             return None
         finally:
             tmp_zip.unlink(missing_ok=True)
+
+        # Rebuild non-Story themes (Basic, Sylys…) to Story structure on restore too,
+        # since the DB ZIP holds the original unmodified theme.
+        if not _is_story_structure(structure.extract_dir):
+            _rebuild_to_story_structure(structure.extract_dir)
+            for rel_path in EDITABLE_JSON_FILES:
+                file_path = structure.extract_dir / rel_path
+                if file_path.exists():
+                    try:
+                        data, comment = read_theme_json(file_path)
+                        is_compact = detect_json_format(file_path)
+                        structure.parsed_files[rel_path] = (data, comment, is_compact)
+                    except Exception:
+                        pass
+            structure.templates_found = [
+                rp for rp in EDITABLE_JSON_FILES
+                if rp.startswith("templates/") and (structure.extract_dir / rp).exists()
+            ]
 
         # Disk meta was empty — try to restore config fields from DB
         if not meta.get("language"):
@@ -270,6 +288,25 @@ async def upload_theme(theme_file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Erreur lors de l'extraction du theme: {str(e)}")
     finally:
         temp_zip.unlink(missing_ok=True)
+
+    # If this is not already a Story-compatible theme (Basic, Sylys, etc.), rebuild the
+    # template JSONs from the Story reference so all sections/features are available.
+    if not _is_story_structure(structure.extract_dir):
+        _rebuild_to_story_structure(structure.extract_dir)
+        # Refresh parsed_files so extract_text_slots sees the rebuilt templates
+        for rel_path in EDITABLE_JSON_FILES:
+            file_path = structure.extract_dir / rel_path
+            if file_path.exists():
+                try:
+                    data, comment = read_theme_json(file_path)
+                    is_compact = detect_json_format(file_path)
+                    structure.parsed_files[rel_path] = (data, comment, is_compact)
+                except Exception:
+                    pass
+        structure.templates_found = [
+            rp for rp in EDITABLE_JSON_FILES
+            if rp.startswith("templates/") and (structure.extract_dir / rp).exists()
+        ]
 
     text_slots = extract_text_slots(structure.parsed_files)
 

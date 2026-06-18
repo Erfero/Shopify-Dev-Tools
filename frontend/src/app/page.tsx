@@ -142,13 +142,12 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
 
           {/* Image Finder */}
           <motion.div variants={staggerItem}>
-            <Link href="/images" className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/1 p-6 transition-all hover:border-foreground/20 hover:bg-foreground/3 hover:shadow-sm cursor-pointer">
+            <Link href="/images" className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/[0.01] p-6 transition-all hover:border-foreground/20 hover:bg-foreground/[0.03] hover:shadow-sm cursor-pointer">
               <motion.div
-                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/5"
+                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05]"
                 whileHover={{ scale: 1.08, rotate: -4 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
@@ -162,7 +161,7 @@ export default function Home() {
                 {["Pexels + Unsplash", "Analyse IA", "Upload Shopify"].map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-foreground/4 px-2.5 py-0.5 text-xs text-foreground/60 border border-border/40"
+                    className="rounded-full bg-foreground/[0.04] px-2.5 py-0.5 text-xs text-foreground/60 border border-border/40"
                   >
                     {tag}
                   </span>

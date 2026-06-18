@@ -156,7 +156,7 @@ export default function ImagesPage() {
           `Professional lifestyle product photo of ${productName}, high quality, realistic, white background`;
         const imgs = await generateImages(prompt, 2, 8);
         setImages(imgs);
-        if (imgs.length === 0) toast.warning("Génération échouée. Vérifie ta clé TOGETHER_API_KEY sur Render.");
+        if (imgs.length === 0) toast.warning("Génération échouée. Réessaie dans quelques secondes.");
         setStep("gallery");
       } else {
         const icns = await findProductIcons(productName, productDescription, marketingAngles, 5);
@@ -412,7 +412,7 @@ export default function ImagesPage() {
                   <button
                     onClick={() => config?.together ? setMode("generate") : undefined}
                     disabled={!config?.together}
-                    title={config?.together ? "Générer des images avec FLUX AI" : "Ajoute TOGETHER_API_KEY dans Render pour activer"}
+                    title="Générer des images avec FLUX AI (gratuit via Pollinations.ai)"
                     className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       mode === "generate"
                         ? "bg-foreground text-background"
@@ -467,7 +467,7 @@ export default function ImagesPage() {
                 {(mode === "search"
                   ? ["Analyse visuelle IA", "Recherche Pexels", "Recherche Unsplash"]
                   : mode === "generate"
-                  ? ["Analyse du produit", "Génération DALL-E 3"]
+                  ? ["Analyse du produit", "Génération FLUX AI"]
                   : ["Analyse des bénéfices", "Sélection des icônes", "Chargement SVG"]
                 ).map((label, i) => (
                   <span key={i} className="rounded-full border border-border/60 bg-foreground/[0.03] px-3 py-1 text-xs text-muted-foreground animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>

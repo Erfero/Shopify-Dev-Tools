@@ -63,7 +63,7 @@ async def get_config():
     return {
         "pexels": bool(settings.pexels_api_key),
         "unsplash": bool(settings.unsplash_access_key),
-        "together": bool(settings.together_api_key),
+        "together": True,  # Pollinations.ai — free, no API key required
         "vision_model": settings.vision_model,
     }
 
@@ -122,9 +122,7 @@ async def search_images(req: SearchRequest):
 
 @router.post("/generate")
 async def generate_images_endpoint(req: GenerateRequest):
-    """Generate images with DALL-E 3 via OpenRouter."""
-    if not settings.openrouter_api_key:
-        raise HTTPException(status_code=503, detail="Clé OpenRouter manquante.")
+    """Generate images via Pollinations.ai (FLUX, free, no API key required)."""
     if not req.dalle_prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt vide.")
 

@@ -1,1 +1,2077 @@
-{"sections":{"42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3":{"type":"banner","blocks":{"template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-0":{"type":"heading","settings":{"subheading":"","heading":"L'ébéniste : L'art du mobilier moderne, illuminé par le design.","heading_style":"1","heading_font_size":110,"heading_font_size_mobile":100,"enable_slides":false,"slides":"","margin_bottom":24}},"template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-2":{"type":"button","settings":{"button_text":"Découvrir","button_link":"shopify:\/\/collections\/all","button_style":"1","button_text_secondary":"","button_link_secondary":"","button_style_secondary":"2","extra_button":false,"margin_bottom":16}}},"block_order":["template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-0","template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-2"],"settings":{"section_id":"","image_overlay_opacity":20,"image_overlay_color":"foreground","height":"adapt","layout":"full","layout_orientation":"right","gutterless_mobile":true,"media_type":"image","media_type_mobile":"image","lazy":false,"content_container_width":1000,"text_color":"background","desktop_content_position":"bottom","mobile_content_position":"bottom","content_background_behavior":"transparent","enable_animations":false,"animation":"fade-up","hide_desktop":false,"hide_mobile":false,"layout_width":"full","padding_top":0,"padding_bottom":0,"padding_top_sm":0,"padding_bottom_sm":0,"color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"marquee_logo_mVRefV":{"type":"marquee-logo","blocks":{"marquee_GWLib8":{"type":"marquee","settings":{}},"marquee_gDDFUU":{"type":"marquee","settings":{}},"marquee_rMHcWT":{"type":"marquee","settings":{}},"marquee_4Fk8k3":{"type":"marquee","settings":{}},"marquee_z7PmRq":{"type":"marquee","settings":{}}},"block_order":["marquee_GWLib8","marquee_gDDFUU","marquee_rMHcWT","marquee_4Fk8k3","marquee_z7PmRq"],"name":"t:sections.scrolling-gallery.name","settings":{"subheading":"","heading":"","heading_style":"2","description":"","alignment":"center","image_ratio":"adapt","delay":16,"width":100,"gap":24,"border-radius":true,"enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":0,"padding_bottom":0,"padding_top_sm":0,"padding_bottom_sm":0,"color_palette":"","separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"rich_text_ix8NJN":{"type":"rich-text","blocks":{"heading_NWLCEA":{"type":"heading","settings":{"subheading":"","heading":"Bienvenue chez L'ébéniste !","heading_style":"2"}},"text_8PytgY":{"type":"text","settings":{"description":"<p>Nous sommes ravis de vous accueillir dans l'univers de <strong>L'ébéniste<\/strong>, où chaque pièce de mobilier est pensée pour sublimer votre intérieur. <\/p>","color_bold_words":"text"}},"button_8MdCa9":{"type":"button","settings":{"button_text":"Discover","button_link":"","button_style":"2","extra_button":false}}},"block_order":["heading_NWLCEA","text_8PytgY","button_8MdCa9"],"name":"t:sections.rich-text.presets.name","settings":{"section_id":"","alignment":"center","enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"scheme","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"icons_6pxNUg":{"type":"icons","blocks":{"icon_GiLNdX":{"type":"icon","settings":{"icon":"check_mark","heading":"Ambiance Lumineuse Personnalisable","description":"Créez l'atmosphère parfaite avec un <strong>éclairage LED modulable<\/strong> selon vos envies.","heading_font_size":24,"heading_font_size_mobile":21,"button_text":"Discover","button_link":"","button_style":"2"}},"icon_gzUFfj":{"type":"icon","settings":{"icon":"check_mark","heading":"Design Épuré et Moderne","description":"Un <strong>esthétisme contemporain<\/strong> qui s'intègre harmonieusement à tout intérieur.","heading_font_size":24,"heading_font_size_mobile":21,"button_text":"Discover","button_link":"","button_style":"2"}},"icon_6JfBXN":{"type":"icon","settings":{"icon":"check_mark","heading":"Optimisation de l'Espace","description":"Des <strong>rangements astucieux<\/strong> et une conception compacte pour un salon organisé.","heading_font_size":24,"heading_font_size_mobile":21,"button_text":"Discover","button_link":"","button_style":"2"}}},"block_order":["icon_GiLNdX","icon_gzUFfj","icon_6JfBXN"],"name":"t:sections.icons.name","settings":{"section_id":"","layout":"swiper","layout_style":"normal","icon__type":"complete","icon_width_desktop":70,"icon_width_mobile":60,"center_icons":true,"slides_on_desktop":3,"slides_on_tablet":2,"slides_on_mobile":1,"preshot_swiper":true,"loop":false,"navigation":false,"pagination":false,"autoplay":true,"speed":4,"subheading":"","heading":"","heading_style":"2","description":"","alignment":"center","enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"5b487781-6227-4db6-af44-deaf82bf3b71":{"type":"image-with-text","blocks":{"template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-0":{"type":"heading","settings":{"heading":"L'Éclat de Votre Salon","heading_level":"2","heading_style":"2","icon":"none"}},"template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-1":{"type":"text","settings":{"description":"<p>Transformez votre espace de vie avec notre <strong>Meuble TV LED<\/strong>. Son <strong>éclairage intégré<\/strong> offre une <strong>ambiance unique<\/strong> et personnalisable, faisant de chaque soirée un moment spécial.<\/p>","color_bold_words":"text"}},"template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-2":{"type":"button","settings":{"button_text":"Découvrir 👉","button_link":"shopify:\/\/collections\/all","button_style":"1","button_text_secondary":"","button_link_secondary":"","button_style_secondary":"2","extra_button":false}}},"block_order":["template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-0","template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-1","template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-2"],"settings":{"section_id":"","media_type":"image","height":"adapt","desktop_image_width":"medium","layout":"image_first","layout_style":"normal","remove_gap":false,"make_square":true,"text_container_max_width":700,"desktop_content_position":"middle","desktop_content_alignment":"center","mobile_content_alignment":"center","enable_animations":true,"animation":"fade-up","hide_desktop":false,"hide_mobile":false,"layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f9f9f9","cut_bg_color_vertical":-20,"cut_bg_color_vertical_mobile":28,"cut_bg_color_horizontal":-22,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"image_with_text_A8Lw9M":{"type":"image-with-text","blocks":{"heading_w7nAbG":{"type":"heading","settings":{"heading":"Design Minimaliste, Impact Maximal","heading_level":"2","heading_style":"2","icon":"none"}},"text_Wh6ibQ":{"type":"text","settings":{"description":"<p>Adoptez l'élégance de la simplicité. Ce meuble TV, avec ses <strong>lignes épurées<\/strong> et sa <strong>finition en bois contreplaqué<\/strong>, apporte une <strong>touche contemporaine<\/strong> sans surcharger votre intérieur.<\/p>","color_bold_words":"text"}}},"block_order":["heading_w7nAbG","text_Wh6ibQ"],"settings":{"section_id":"","media_type":"image","height":"adapt","desktop_image_width":"medium","layout":"text_first","layout_style":"normal","remove_gap":false,"make_square":true,"text_container_max_width":700,"desktop_content_position":"middle","desktop_content_alignment":"center","mobile_content_alignment":"center","enable_animations":true,"animation":"fade-up","hide_desktop":false,"hide_mobile":false,"layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f9f9f9","cut_bg_color_vertical":-20,"cut_bg_color_vertical_mobile":28,"cut_bg_color_horizontal":-22,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"comparaison_list_UDGHDn":{"type":"comparaison-list","blocks":{"bullet_cBT4Pf":{"type":"bullet","settings":{"title":"Design moderne et épuré","tooltip":"<strong>Design moderne et épuré<\/strong> avec finitions soignées en bois contreplaqué.","col_1":"check","text_1":"👌","col_2":"cross","text_2":"€€€","col_3":"cross","text_3":"€€€","col_4":"cross","text_4":"€€€"}},"bullet_Rt3McB":{"type":"bullet","settings":{"title":"Éclairage LED intégré personnalisable","tooltip":"<strong>Ambiance Lumineuse : Éclairage LED intégré personnalisable<\/strong> (couleurs, intensité).","col_1":"check","text_1":"👌","col_2":"check","text_2":"€€€","col_3":"cross","text_3":"€€€","col_4":"cross","text_4":"€€€"}},"bullet_hnwRed":{"type":"bullet","settings":{"title":"Rangements astucieux","tooltip":"<strong>Rangements astucieux<\/strong> (étagères en verre, compartiments ouverts) pour une organisation optimale.","col_1":"check","text_1":"👌","col_2":"cross","text_2":"€€€","col_3":"cross","text_3":"€€€","col_4":"cross","text_4":"€€€"}},"bullet_cPgFFB":{"type":"bullet","settings":{"title":"Bois contreplaqué robuste","tooltip":"<strong>Bois contreplaqué robuste<\/strong> et résistant, conçu pour durer.","col_1":"check","text_1":"👌","col_2":"cross","text_2":"€€€","col_3":"cross","text_3":"€€€","col_4":"cross","text_4":"€€€"}},"bullet_VYkWYV":{"type":"bullet","settings":{"title":"Assemblage facile","tooltip":"<strong>Assemblage facile<\/strong> avec instructions claires, <strong>service client réactif<\/strong>.","col_1":"check","text_1":"👌","col_2":"cross","text_2":"€€€","col_3":"cross","text_3":"€€€","col_4":"cross","text_4":"€€€"}}},"block_order":["bullet_cBT4Pf","bullet_Rt3McB","bullet_hnwRed","bullet_cPgFFB","bullet_VYkWYV"],"settings":{"section_id":"","subheading":"","heading":"Pourquoi choisir L'ébéniste ?","heading_style":"2","description":"Découvrez pourquoi nos clients sont accros à notre <strong>Meuble TV LED L'ébéniste<\/strong>.","alignment":"center","brand_display_1":"img","brand_heading_1":"","col_enable_2":true,"brand_display_2":"img","brand_heading_2":"Les Autres Marques","col_enable_3":false,"brand_display_3":"text","brand_heading_3":"","col_enable_4":false,"brand_display_4":"img","brand_heading_4":"","enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"scheme","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"fade","separator_top_invert":true,"separator_bottom":"fade","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"rich_text_zFjKWH":{"type":"rich-text","blocks":{"heading_bxKqeQ":{"type":"heading","settings":{"subheading":"","heading":"Ambiance sur Mesure","heading_style":"2"}},"text_e693eK":{"type":"text","settings":{"description":"<p>Grâce à son <strong>éclairage LED personnalisable<\/strong>, créez l'atmosphère idéale pour chaque occasion. Que ce soit pour une soirée film, une ambiance relaxante ou une fête entre amis.<\/p>","color_bold_words":"text"}},"button_NWEmaF":{"type":"button","settings":{"button_text":"Découvrir","button_link":"shopify:\/\/products\/meuble-tv-avec-eclairage-led","button_style":"1","extra_button":false}}},"block_order":["heading_bxKqeQ","text_e693eK","button_NWEmaF"],"name":"t:sections.rich-text.presets.name","settings":{"section_id":"","alignment":"center","enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"specs_rdhLLj":{"type":"specs","blocks":{"spec_rXW6RB":{"type":"spec","settings":{"icon":"check_mark","heading":"Bonne Qualité","description":"Une conception haut de gamme en <strong>bois contreplaqué robuste<\/strong> pour des <strong>résultats esthétiques et durables<\/strong>."}},"spec_qEYJAL":{"type":"spec","settings":{"icon":"star","heading":"Style Extra","description":"Un <strong>design épuré<\/strong> et intemporel qui s'intègre parfaitement sans surcharger votre intérieur."}},"spec_XJqpVX":{"type":"spec","settings":{"icon":"snowflake","heading":"Ambiance instantanée","description":"Un <strong>éclairage LED modulable<\/strong> pour une atmosphère unique en quelques secondes, au gré de vos envies."}},"spec_KQqKV6":{"type":"spec","settings":{"icon":"box","heading":"Organisation ciblée","description":"Des <strong>rangements astucieux<\/strong> qui agissent là où d'autres meubles échouent, pour un salon toujours impeccable."}}},"block_order":["spec_rXW6RB","spec_qEYJAL","spec_XJqpVX","spec_KQqKV6"],"name":"t:sections.specs.name","settings":{"section_id":"","arrow":"curve","subheading":"","heading":"Le Meuble TV qu'il vous faut","heading_style":"2","description":"","alignment":"center","button_text":"Discover","button_link":"","button_style":"1","extra_button":false,"enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}},"reviews_two_Ti7Pjf":{"type":"reviews-two","blocks":{"testimonial_keVBHB":{"type":"testimonial","settings":{"rating":5,"title":"I recommend!","text":"<p>Comfortable all day long, even during long days at the office. They are completely discreet, I recommend them to anyone looking for a height boost.<\/p>","author_name":"Maxime","author_age":"37"}},"testimonial_ibYGXa":{"type":"testimonial","settings":{"rating":5,"title":"I recommend!","text":"<p>Comfortable all day long, even during long days at the office. They are completely discreet, I recommend them to anyone looking for a height boost.<\/p>","author_name":"Maxime","author_age":"37"}},"testimonial_Kagjng":{"type":"testimonial","settings":{"rating":5,"title":"I recommend!","text":"<p>Comfortable all day long, even during long days at the office. They are completely discreet, I recommend them to anyone looking for a height boost.<\/p>","author_name":"Maxime","author_age":"37"}}},"block_order":["testimonial_keVBHB","testimonial_ibYGXa","testimonial_Kagjng"],"name":"t:sections.reviews-two.name","settings":{"heading":"They speak better about us than we do","heading_style":"1","trustpilot_info":true,"rating":"4.7","reviews_count":"238","layout_width":"full","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":"","color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"customize_slider":false,"navigation":true,"pagination":true,"autoplay":true,"speed":4,"swiper_pagination_style":"dots","swiper_pagination_color":"accent","swiper_navigation_style":"square","swiper_navigation_color":"accent","enable_animations":true,"animation":"fade-up"}},"collapsible_content_CrtidL":{"type":"collapsible-content","blocks":{"collapsible_row_FRFLLt":{"type":"collapsible_row","settings":{"heading":"Les dimensions de 90x30 cm sont-elles suffisantes pour un grand téléviseur ?","icon":"question_mark","row_content":"<p>Les dimensions de <strong>90x30 cm<\/strong> sont idéales pour une <strong>optimisation de l'espace<\/strong> et conviennent parfaitement aux téléviseurs de taille moyenne, généralement jusqu'à <strong>43-50 pouces<\/strong>. Pour des téléviseurs plus grands, nous recommandons de vérifier la largeur de la base de votre écran par rapport à la surface du meuble pour assurer une <strong>stabilité optimale<\/strong> et une esthétique équilibrée.<\/p>","page":""}},"collapsible_row_dzh6Gt":{"type":"collapsible_row","settings":{"heading":"Le meuble TV est-il facile à assembler ?","icon":"question_mark","row_content":"<p>Oui, absolument ! Notre <strong>Meuble TV avec éclairage LED<\/strong> est conçu pour un <strong>assemblage simple et rapide<\/strong>. Toutes les pièces sont clairement identifiées et un <strong>manuel d'instructions détaillé<\/strong> est inclus pour vous guider pas à pas. Vous n'aurez besoin que de quelques outils de base, et en un rien de temps, votre nouveau meuble sera prêt à embellir votre salon.<\/p>","page":""}},"collapsible_row_V3QAXx":{"type":"collapsible_row","settings":{"heading":"L'éclairage LED est-il personnalisable ?","icon":"question_mark","row_content":"<p>Oui, l'<strong>éclairage LED intégré<\/strong> est entièrement <strong>personnalisable<\/strong>. Vous pouvez choisir parmi une <strong>large gamme de couleurs<\/strong> et d'effets lumineux pour créer l'ambiance parfaite qui correspond à votre humeur ou à votre décoration intérieure. Une télécommande intuitive est fournie, vous permettant de contrôler la lumière à distance pour une expérience des plus agréables.<\/p>","page":""}},"collapsible_row_zPpFGR":{"type":"collapsible_row","settings":{"heading":"Quelle est la capacité de poids maximale supportée par le meuble ?","icon":"question_mark","row_content":"<p>Le <strong>Meuble TV L'ébéniste<\/strong> est fabriqué en <strong>bois contreplaqué robuste<\/strong> et peut supporter un poids conséquent. La surface supérieure est conçue pour accueillir la plupart des <strong>téléviseurs modernes<\/strong> jusqu'à 50-55 pouces, avec une capacité de charge d'environ <strong>30 à 40 kg<\/strong>. Les étagères en verre ont également une excellente résistance pour vos équipements multimédias.<\/p>","page":""}},"collapsible_row_RFTXNy":{"type":"collapsible_row","settings":{"heading":"Comment entretenir mon meuble TV en bois contreplaqué ?","icon":"question_mark","row_content":"<p>L'entretien de votre <strong>Meuble TV<\/strong> est très simple. Un chiffon doux légèrement humide suffit pour nettoyer les surfaces en <strong>bois contreplaqué<\/strong> et les étagères en verre. Évitez les produits abrasifs ou les solvants qui pourraient endommager la finition. Pour l'éclairage LED, un dépoussiérage régulier est recommandé pour maintenir sa luminosité.<\/p>","page":""}}},"block_order":["collapsible_row_FRFLLt","collapsible_row_dzh6Gt","collapsible_row_V3QAXx","collapsible_row_zPpFGR","collapsible_row_RFTXNy"],"settings":{"section_id":"","subheading":"","heading":"Frequently Asked Questions","heading_style":"2","description":"","alignment":"center","desktop_content_position":"middle","enable_image":true,"height":"adapt","layout":"image_first","open_first_collapsible_row":false,"accordions_style":"2","secondary_bg_accordions":false,"remove_gap":false,"enable_animations":true,"animation":"fade-up","layout_width":"normal","padding_top":24,"padding_bottom":24,"padding_top_sm":24,"padding_bottom_sm":24,"color_palette":"background-1","enable_cut_bg_color":false,"cut_bg_color":"#f6f6f6","cut_bg_color_vertical":0,"cut_bg_color_vertical_mobile":0,"cut_bg_color_horizontal":0,"cut_bg_color_horizontal_mobile":0,"separator_top":"none","separator_top_invert":false,"separator_bottom":"none","separator_bottom_invert":false,"separator_animated":false,"separator_bg_color":""}}},"order":["42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3","marquee_logo_mVRefV","rich_text_ix8NJN","icons_6pxNUg","5b487781-6227-4db6-af44-deaf82bf3b71","image_with_text_A8Lw9M","comparaison_list_UDGHDn","rich_text_zFjKWH","specs_rdhLLj","reviews_two_Ti7Pjf","collapsible_content_CrtidL"]}
+{
+  "sections": {
+    "42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3": {
+      "type": "banner",
+      "blocks": {
+        "template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-0": {
+          "type": "heading",
+          "settings": {
+            "subheading": "",
+            "heading": "LISSEYA : Sculptez Votre Silhouette avec Style et Confort.",
+            "heading_style": "1",
+            "heading_font_size": 100,
+            "heading_font_size_mobile": 100,
+            "enable_slides": false,
+            "slides": "",
+            "margin_bottom": 24
+          }
+        },
+        "template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-2": {
+          "type": "button",
+          "settings": {
+            "button_text": "Découvrez Votre Style",
+            "button_link": "shopify://collections/all",
+            "button_style": "1",
+            "button_text_secondary": "",
+            "button_link_secondary": "",
+            "button_style_secondary": "2",
+            "extra_button": false,
+            "margin_bottom": 16
+          }
+        }
+      },
+      "block_order": [
+        "template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-0",
+        "template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-2"
+      ],
+      "settings": {
+        "section_id": "",
+        "image_overlay_opacity": 20,
+        "image_overlay_color": "foreground",
+        "height": "adapt",
+        "layout": "full",
+        "layout_orientation": "right",
+        "gutterless_mobile": true,
+        "media_type": "image",
+        "media_type_mobile": "image",
+        "lazy": false,
+        "content_container_width": 1000,
+        "text_color": "background",
+        "desktop_content_position": "bottom",
+        "mobile_content_position": "bottom",
+        "content_background_behavior": "transparent",
+        "enable_animations": false,
+        "animation": "fade-up",
+        "hide_desktop": false,
+        "hide_mobile": false,
+        "layout_width": "full",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "padding_top_sm": 0,
+        "padding_bottom_sm": 0,
+        "color_palette": "background-1",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "marquee_logo_mVRefV": {
+      "type": "marquee-logo",
+      "blocks": {
+        "marquee_GWLib8": {
+          "type": "marquee",
+          "settings": {}
+        },
+        "marquee_gDDFUU": {
+          "type": "marquee",
+          "settings": {}
+        },
+        "marquee_rMHcWT": {
+          "type": "marquee",
+          "settings": {}
+        },
+        "marquee_4Fk8k3": {
+          "type": "marquee",
+          "settings": {}
+        },
+        "marquee_z7PmRq": {
+          "type": "marquee",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "marquee_GWLib8",
+        "marquee_gDDFUU",
+        "marquee_rMHcWT",
+        "marquee_4Fk8k3",
+        "marquee_z7PmRq"
+      ],
+      "name": "t:sections.scrolling-gallery.name",
+      "settings": {
+        "subheading": "",
+        "heading": "",
+        "heading_style": "2",
+        "description": "",
+        "alignment": "center",
+        "image_ratio": "adapt",
+        "delay": 16,
+        "width": 100,
+        "gap": 24,
+        "border-radius": true,
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "padding_top_sm": 0,
+        "padding_bottom_sm": 0,
+        "color_palette": "",
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "rich_text_ix8NJN": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_NWLCEA": {
+          "type": "heading",
+          "settings": {
+            "subheading": "",
+            "heading": "Bienvenue chez LISSEYA, Votre Allié Minceur !",
+            "heading_style": "2"
+          }
+        },
+        "text_8PytgY": {
+          "type": "text",
+          "settings": {
+            "description": "<p>Chez LISSEYA, nous vous aidons à <strong>révéler votre meilleure version</strong> avec des vêtements innovants. Découvrez nos leggings 3D, conçus pour un <strong>confort absolu</strong> et une silhouette sublimée.</p>",
+            "color_bold_words": "text"
+          }
+        },
+        "button_8MdCa9": {
+          "type": "button",
+          "settings": {
+            "button_text": "Découvrez Votre Style",
+            "button_link": "",
+            "button_style": "2",
+            "extra_button": false
+          }
+        }
+      },
+      "block_order": [
+        "heading_NWLCEA",
+        "text_8PytgY",
+        "button_8MdCa9"
+      ],
+      "name": "t:sections.rich-text.presets.name",
+      "settings": {
+        "section_id": "",
+        "alignment": "center",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "scheme-8025707e-c779-4347-abd8-1dfe3e32da7a",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "icons_6pxNUg": {
+      "type": "icons",
+      "blocks": {
+        "icon_GiLNdX": {
+          "type": "icon",
+          "settings": {
+            "icon": "check_mark",
+            "heading": "Silhouette sculptée",
+            "description": "Obtenez un <strong>effet push-up</strong> immédiat qui sublime vos courbes.",
+            "heading_font_size": 24,
+            "heading_font_size_mobile": 21,
+            "button_text": "Discover",
+            "button_link": "",
+            "button_style": "2"
+          }
+        },
+        "icon_gzUFfj": {
+          "type": "icon",
+          "settings": {
+            "icon": "check_mark",
+            "heading": "Confort inégalé",
+            "description": "Profitez d'une matière <strong>douce et respirante</strong> pour toutes vos activités.",
+            "heading_font_size": 24,
+            "heading_font_size_mobile": 21,
+            "button_text": "Discover",
+            "button_link": "",
+            "button_style": "2"
+          }
+        },
+        "icon_6JfBXN": {
+          "type": "icon",
+          "settings": {
+            "icon": "check_mark",
+            "heading": "Style polyvalent",
+            "description": "Portez-le pour le sport ou au quotidien, restez <strong>toujours élégante</strong>.",
+            "heading_font_size": 24,
+            "heading_font_size_mobile": 21,
+            "button_text": "Discover",
+            "button_link": "",
+            "button_style": "2"
+          }
+        }
+      },
+      "block_order": [
+        "icon_GiLNdX",
+        "icon_gzUFfj",
+        "icon_6JfBXN"
+      ],
+      "name": "t:sections.icons.name",
+      "settings": {
+        "section_id": "",
+        "layout": "swiper",
+        "layout_style": "normal",
+        "icon__type": "complete",
+        "icon_width_desktop": 70,
+        "icon_width_mobile": 60,
+        "center_icons": true,
+        "slides_on_desktop": 3,
+        "slides_on_tablet": 2,
+        "slides_on_mobile": 1,
+        "preshot_swiper": true,
+        "loop": false,
+        "navigation": false,
+        "pagination": false,
+        "autoplay": true,
+        "speed": 4,
+        "subheading": "",
+        "heading": "",
+        "heading_style": "2",
+        "description": "",
+        "alignment": "center",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "5b487781-6227-4db6-af44-deaf82bf3b71": {
+      "type": "image-with-text",
+      "blocks": {
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-0": {
+          "type": "heading",
+          "settings": {
+            "heading": "Sculptez une Silhouette Parfaite Instantanément",
+            "heading_level": "2",
+            "heading_style": "2",
+            "icon": "none"
+          }
+        },
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-1": {
+          "type": "text",
+          "settings": {
+            "description": "<p>Nos leggings 3D <strong>redessinent vos formes</strong> pour une silhouette affinée et galbée. Vous vous sentirez <strong>immédiatement plus confiante</strong> et élégante dans toutes vos tenues.</p>",
+            "color_bold_words": "text"
+          }
+        },
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-2": {
+          "type": "button",
+          "settings": {
+            "button_text": "Découvrez Votre Style",
+            "button_link": "shopify://collections/all",
+            "button_style": "1",
+            "button_text_secondary": "",
+            "button_link_secondary": "",
+            "button_style_secondary": "2",
+            "extra_button": false
+          }
+        }
+      },
+      "block_order": [
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-0",
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-1",
+        "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-2"
+      ],
+      "settings": {
+        "section_id": "",
+        "media_type": "image",
+        "image": "shopify://shop_images/receptionniste-hotel-au-travail_23-2149661550.jpg",
+        "height": "adapt",
+        "desktop_image_width": "medium",
+        "layout": "image_first",
+        "layout_style": "card",
+        "remove_gap": false,
+        "make_square": true,
+        "text_container_max_width": 700,
+        "desktop_content_position": "middle",
+        "desktop_content_alignment": "center",
+        "mobile_content_alignment": "center",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "hide_desktop": false,
+        "hide_mobile": false,
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "scheme-5f1cb6ba-8889-4c50-a0ec-b86b53e43bd8",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f9f9f9",
+        "cut_bg_color_vertical": -20,
+        "cut_bg_color_vertical_mobile": 28,
+        "cut_bg_color_horizontal": -22,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "image_with_text_A8Lw9M": {
+      "type": "image-with-text",
+      "blocks": {
+        "heading_w7nAbG": {
+          "type": "heading",
+          "settings": {
+            "heading": "Adoptez un Confort Optimal en Toute Situation",
+            "heading_level": "2",
+            "heading_style": "2",
+            "icon": "none"
+          }
+        },
+        "text_Wh6ibQ": {
+          "type": "text",
+          "settings": {
+            "description": "<p>La matière extensible et sans coutures assure une <strong>liberté de mouvement totale</strong> sans aucune gêne. Profitez d'une sensation de <strong>seconde peau</strong>, idéale pour le sport ou la détente.</p>",
+            "color_bold_words": "text"
+          }
+        }
+      },
+      "block_order": [
+        "heading_w7nAbG",
+        "text_Wh6ibQ"
+      ],
+      "settings": {
+        "section_id": "",
+        "media_type": "image",
+        "height": "adapt",
+        "desktop_image_width": "medium",
+        "layout": "text_first",
+        "layout_style": "card",
+        "remove_gap": false,
+        "make_square": true,
+        "text_container_max_width": 700,
+        "desktop_content_position": "middle",
+        "desktop_content_alignment": "center",
+        "mobile_content_alignment": "center",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "hide_desktop": false,
+        "hide_mobile": false,
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "scheme-5f1cb6ba-8889-4c50-a0ec-b86b53e43bd8",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f9f9f9",
+        "cut_bg_color_vertical": -20,
+        "cut_bg_color_vertical_mobile": 28,
+        "cut_bg_color_horizontal": -22,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "comparaison_list_UDGHDn": {
+      "type": "comparaison-list",
+      "blocks": {
+        "bullet_cBT4Pf": {
+          "type": "bullet",
+          "settings": {
+            "title": "Effet push-up immédiat",
+            "tooltip": "La conception 3D <strong>soulève et galbe</strong> pour un fessier parfait.",
+            "col_1": "check",
+            "text_1": "👌",
+            "col_2": "cross",
+            "text_2": "€€€",
+            "col_3": "cross",
+            "text_3": "€€€",
+            "col_4": "cross",
+            "text_4": "€€€"
+          }
+        },
+        "bullet_Rt3McB": {
+          "type": "bullet",
+          "settings": {
+            "title": "Tissu respirant anti-transpiration",
+            "tooltip": "Profitez d'une sensation de <strong>fraîcheur durable</strong> même à l'effort.",
+            "col_1": "check",
+            "text_1": "👌",
+            "col_2": "check",
+            "text_2": "€€€",
+            "col_3": "cross",
+            "text_3": "€€€",
+            "col_4": "cross",
+            "text_4": "€€€"
+          }
+        },
+        "bullet_hnwRed": {
+          "type": "bullet",
+          "settings": {
+            "title": "Confort sans coutures",
+            "tooltip": "Zéro irritation, pour une <strong>liberté de mouvement</strong> maximale.",
+            "col_1": "check",
+            "text_1": "👌",
+            "col_2": "cross",
+            "text_2": "€€€",
+            "col_3": "cross",
+            "text_3": "€€€",
+            "col_4": "cross",
+            "text_4": "€€€"
+          }
+        },
+        "bullet_cPgFFB": {
+          "type": "bullet",
+          "settings": {
+            "title": "Maintien taille haute",
+            "tooltip": "Une ceinture élastique qui <strong>affine votre ventre</strong> et vos hanches.",
+            "col_1": "check",
+            "text_1": "👌",
+            "col_2": "cross",
+            "text_2": "€€€",
+            "col_3": "cross",
+            "text_3": "€€€",
+            "col_4": "cross",
+            "text_4": "€€€"
+          }
+        },
+        "bullet_VYkWYV": {
+          "type": "bullet",
+          "settings": {
+            "title": "Design 3D unique",
+            "tooltip": "Des motifs texturés pour un look <strong>moderne et stylé</strong>.",
+            "col_1": "check",
+            "text_1": "👌",
+            "col_2": "cross",
+            "text_2": "€€€",
+            "col_3": "cross",
+            "text_3": "€€€",
+            "col_4": "cross",
+            "text_4": "€€€"
+          }
+        }
+      },
+      "block_order": [
+        "bullet_cBT4Pf",
+        "bullet_Rt3McB",
+        "bullet_hnwRed",
+        "bullet_cPgFFB",
+        "bullet_VYkWYV"
+      ],
+      "settings": {
+        "section_id": "",
+        "subheading": "",
+        "heading": "Pourquoi choisir les Leggings 3D LISSEYA ?",
+        "heading_style": "2",
+        "description": "Découvrez ce qui rend nos leggings <strong>incomparables</strong> et essentiels.",
+        "alignment": "center",
+        "brand_display_1": "img",
+        "brand_heading_1": "",
+        "col_enable_2": true,
+        "brand_display_2": "img",
+        "brand_heading_2": "Les Autres Marques",
+        "col_enable_3": false,
+        "brand_display_3": "text",
+        "brand_heading_3": "",
+        "col_enable_4": false,
+        "brand_display_4": "img",
+        "brand_heading_4": "",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "scheme-8025707e-c779-4347-abd8-1dfe3e32da7a",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "fade",
+        "separator_top_invert": true,
+        "separator_bottom": "fade",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "rich_text_zFjKWH": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_bxKqeQ": {
+          "type": "heading",
+          "settings": {
+            "subheading": "",
+            "heading": "Révélez un Look Tendance et Versatile",
+            "heading_style": "2"
+          }
+        },
+        "text_e693eK": {
+          "type": "text",
+          "settings": {
+            "description": "<p>Grâce à son design 3D unique, ce legging <strong>modernise instantanément</strong> votre garde-robe. Il s'adapte à tous les styles, vous permettant d'être <strong>toujours au top</strong>.</p>",
+            "color_bold_words": "text"
+          }
+        },
+        "button_NWEmaF": {
+          "type": "button",
+          "settings": {
+            "button_text": "Découvrez Votre Style",
+            "button_link": "shopify://products/meuble-tv-avec-eclairage-led",
+            "button_style": "1",
+            "extra_button": false
+          }
+        }
+      },
+      "block_order": [
+        "heading_bxKqeQ",
+        "text_e693eK",
+        "button_NWEmaF"
+      ],
+      "name": "t:sections.rich-text.presets.name",
+      "settings": {
+        "section_id": "",
+        "alignment": "center",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "background-1",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "specs_rdhLLj": {
+      "type": "specs",
+      "blocks": {
+        "spec_rXW6RB": {
+          "type": "spec",
+          "settings": {
+            "icon": "check_mark",
+            "heading": "Effet Sculptant",
+            "description": "La technologie 3D <strong>redessine et sublime</strong> vos courbes naturelles."
+          }
+        },
+        "spec_qEYJAL": {
+          "type": "spec",
+          "settings": {
+            "icon": "star",
+            "heading": "Liberté Mouvement",
+            "description": "Sa matière élastique offre une <strong>souplesse incroyable</strong> sans restriction."
+          }
+        },
+        "spec_XJqpVX": {
+          "type": "spec",
+          "settings": {
+            "icon": "snowflake",
+            "heading": "Design Tendance",
+            "description": "Un motif unique qui <strong>modernise instantanément</strong> votre tenue."
+          }
+        },
+        "spec_KQqKV6": {
+          "type": "spec",
+          "settings": {
+            "icon": "box",
+            "heading": "Polyvalence Assurée",
+            "description": "Idéal pour le sport ou la ville, il s'adapte à <strong>toutes vos envies</strong>."
+          }
+        }
+      },
+      "block_order": [
+        "spec_rXW6RB",
+        "spec_qEYJAL",
+        "spec_XJqpVX",
+        "spec_KQqKV6"
+      ],
+      "name": "t:sections.specs.name",
+      "settings": {
+        "section_id": "",
+        "arrow": "curve",
+        "subheading": "",
+        "heading": "Le Legging 3D qu'il vous faut",
+        "heading_style": "2",
+        "description": "",
+        "alignment": "center",
+        "button_text": "Discover",
+        "button_link": "",
+        "button_style": "1",
+        "extra_button": false,
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "collapsible_content_CrtidL": {
+      "type": "collapsible-content",
+      "blocks": {
+        "collapsible_row_FRFLLt": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Les Leggings 3D sont-ils confortables à porter ?",
+            "icon": "question_mark",
+            "row_content": "<p>Absolument ! Nos Leggings 3D sont conçus avec un tissu ultra-doux et extensible, offrant un <strong>confort exceptionnel</strong> tout au long de la journée. Vous vous sentirez à l'aise, que ce soit pour le sport ou la détente, grâce à leur <strong>ajustement parfait</strong>.</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_dzh6Gt": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Comment choisir la bonne taille de Leggings 3D ?",
+            "icon": "question_mark",
+            "row_content": "<p>Nous vous recommandons de consulter notre <strong>guide des tailles détaillé</strong> disponible sur la page du produit. Prenez vos mesures et comparez-les pour trouver la taille idéale, garantissant ainsi un <strong>rendu optimal</strong> et un maintien impeccable.</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_V3QAXx": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Les Leggings 3D sont-ils opaques ?",
+            "icon": "question_mark",
+            "row_content": "<p>Oui, nos Leggings 3D sont fabriqués avec un tissu de haute qualité qui assure une <strong>opacité totale</strong>. Vous pouvez vous pencher, vous étirer et bouger en toute confiance, sans craindre la transparence, pour une <strong>liberté de mouvement maximale</strong>.</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_zPpFGR": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Comment entretenir mes Leggings 3D LISSEYA ?",
+            "icon": "question_mark",
+            "row_content": "<p>Pour préserver la qualité de vos Leggings 3D, nous conseillons un lavage en machine à froid avec des couleurs similaires. Évitez le sèche-linge et préférez un séchage à l'air libre pour maintenir l'<strong>élasticité du tissu</strong> et la <strong>vivacité des motifs</strong>.</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_RFTXNy": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Puis-je utiliser ces leggings pour le sport ?",
+            "icon": "question_mark",
+            "row_content": "<p>Oui, tout à fait ! Les Leggings 3D LISSEYA sont parfaits pour le sport. Leur tissu respirant évacue la transpiration et leur coupe offre un <strong>excellent maintien</strong>, les rendant idéaux pour le yoga, la course ou toute autre activité physique. Ils allient <strong>style et performance</strong>.</p>",
+            "page": ""
+          }
+        }
+      },
+      "block_order": [
+        "collapsible_row_FRFLLt",
+        "collapsible_row_dzh6Gt",
+        "collapsible_row_V3QAXx",
+        "collapsible_row_zPpFGR",
+        "collapsible_row_RFTXNy"
+      ],
+      "settings": {
+        "section_id": "",
+        "subheading": "",
+        "heading": "Questions Fréquentes",
+        "heading_style": "2",
+        "description": "",
+        "alignment": "center",
+        "desktop_content_position": "middle",
+        "enable_image": true,
+        "height": "adapt",
+        "layout": "image_first",
+        "open_first_collapsible_row": false,
+        "accordions_style": "2",
+        "secondary_bg_accordions": false,
+        "remove_gap": false,
+        "enable_animations": true,
+        "animation": "fade-up",
+        "layout_width": "normal",
+        "padding_top": 24,
+        "padding_bottom": 24,
+        "padding_top_sm": 24,
+        "padding_bottom_sm": 24,
+        "color_palette": "background-1",
+        "enable_cut_bg_color": false,
+        "cut_bg_color": "#f6f6f6",
+        "cut_bg_color_vertical": 0,
+        "cut_bg_color_vertical_mobile": 0,
+        "cut_bg_color_horizontal": 0,
+        "cut_bg_color_horizontal_mobile": 0,
+        "separator_top": "none",
+        "separator_top_invert": false,
+        "separator_bottom": "none",
+        "separator_bottom_invert": false,
+        "separator_animated": false,
+        "separator_bg_color": ""
+      }
+    },
+    "reviews_c569b74d": {
+      "type": "reviews-two",
+      "blocks": {
+        "9327fe5f4c454983": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Incroyable effet galbant !",
+            "text": "<p>J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.</p>",
+            "author_name": "Marie P.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "697ae792b68c4edd": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Confort et esthétique au rendez-vous",
+            "text": "<p>Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.</p>",
+            "author_name": "Sophie L.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "5a3f71c8891b4ccc": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon produit, mais taille un peu petit",
+            "text": "<p>Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.</p>",
+            "author_name": "Chloé M.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "a8cc0bdfe03c41be": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Mes fesses n'ont jamais été aussi belles !",
+            "text": "<p>Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.</p>",
+            "author_name": "Léa R.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "c5ffe77cfa89474b": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Qualité irréprochable et livraison rapide",
+            "text": "<p>J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.</p>",
+            "author_name": "Manon D.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "6b01ec9b68bb4ab4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un effet 'seconde peau' très agréable",
+            "text": "<p>Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !</p>",
+            "author_name": "Amélie B.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "7dac667a4fbf481b": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Parfait pour le fitness et le quotidien",
+            "text": "<p>J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !</p>",
+            "author_name": "Charlotte V.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "b0be0171a73642c5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Le meilleur legging que j'aie jamais eu !",
+            "text": "<p>Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.</p>",
+            "author_name": "Emma T.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "0f8cad6e6cf24b0b": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bon produit avec un petit bémol",
+            "text": "<p>Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.</p>",
+            "author_name": "Isabelle K.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "3741b4fdb7a44cf3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Effet fesses rebondies garanti !",
+            "text": "<p>Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.</p>",
+            "author_name": "Pauline N.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "813470d4ec8640b0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Superbe matière, très agréable",
+            "text": "<p>La matière de ce legging est incroyablement douce au toucher et très agréable à porter. On sent la qualité du tissu. L'effet de texture 3D est subtil mais très efficace pour sculpter la silhouette. Je suis ravie de mon achat.</p>",
+            "author_name": "Camille F.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "e2df564627074ba8": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un cadeau qui a fait son effet !",
+            "text": "<p>J'ai offert ce legging à ma sœur pour son anniversaire et elle est aux anges ! Elle m'a dit qu'il était super confortable et que l'effet sur les fesses était incroyable. Merci LISSEYA pour cette belle découverte.</p>",
+            "author_name": "Lucie H.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "8181dd5a147442dc": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Adieu la cellulite (visuellement) !",
+            "text": "<p>Je suis stupéfaite de voir à quel point ce legging masque l'apparence de la cellulite. Le motif 3D fait un travail incroyable. Je me sens beaucoup plus à l'aise et en confiance. C'est un vrai coup de cœur !</p>",
+            "author_name": "Clara S.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "7a11b2d8a973487b": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Résultats visibles dès le premier enfilage",
+            "text": "<p>Dès que j'ai mis le legging, j'ai vu la différence. L'effet liftant est immédiat et les fesses semblent plus fermes. La taille haute est aussi très appréciable pour un bon maintien. Je suis totalement satisfaite de mon achat.</p>",
+            "author_name": "Inès G.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "af80c50e078a41cc": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Idéal pour l'entraînement intensif",
+            "text": "<p>J'ai testé ce legging lors d'une séance de HIIT et il a tenu toutes ses promesses. Il reste en place, évacue bien la transpiration et l'effet galbant est toujours là. Je le recommande à toutes les sportives !</p>",
+            "author_name": "Anaïs J.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ade1d63fe3ea4961": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon maintien, un peu long pour moi",
+            "text": "<p>Le legging offre un excellent maintien et l'effet sculptant est réel. Mon seul petit bémol est qu'il est un peu long pour ma petite taille. Je dois le retrousser légèrement. Sinon, la qualité est top.</p>",
+            "author_name": "Mathilde C.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "a88d1f4365b34077": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ne bouge pas au lavage",
+            "text": "<p>J'ai été agréablement surprise par la résistance de ce legging. Après plusieurs lavages en machine, il n'a ni bougé, ni déteint, et l'élasticité est toujours la même. C'est un gage de qualité et de durabilité. J'en suis très contente.</p>",
+            "author_name": "Audrey W.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "8324416ecf744bd2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Sublime les formes sans être vulgaire",
+            "text": "<p>Ce legging est juste parfait. Il met en valeur les formes de manière élégante et subtile, sans jamais être vulgaire. Le motif 3D est très chic. Je l'ai déjà porté pour plusieurs occasions et j'ai eu beaucoup de compliments.</p>",
+            "author_name": "Céline E.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "bdfc165c25934193": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Effet ventre plat appréciable",
+            "text": "<p>En plus de l'effet liftant sur les fesses, j'ai remarqué que la taille haute du legging offrait un très bon maintien pour le ventre. L'effet est un ventre plus plat et une silhouette affinée. C'est un tout-en-un très efficace.</p>",
+            "author_name": "Laure O.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "3d1710d55bc94583": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Doux et agréable à porter toute la journée",
+            "text": "<p>Je porte ce legging pour travailler, et il est tellement doux et confortable que je pourrais le garder toute la journée. Le tissu ne gratte pas et ne serre pas. L'effet 3D est un plus qui me donne une allure plus dynamique.</p>",
+            "author_name": "Nathalie B.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "55b497540bb94b66": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Je recommande à 100 % !",
+            "text": "<p>Franchement, je suis bluffée par ce legging. Il est non seulement très esthétique avec son effet 3D, mais aussi d'une qualité incroyable. Il épouse parfaitement les formes et le résultat est très flatteur. Je le recommande vivement à toutes les femmes.</p>",
+            "author_name": "Élise M.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "38ada1f3a4fe43f4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un investissement qui en vaut la peine",
+            "text": "<p>Au début, j'hésitais un peu sur le prix, mais après avoir reçu et essayé le legging, je peux dire que c'est un excellent investissement. La qualité est supérieure et l'effet recherché est bien là. Je ne regrette absolument pas mon achat.</p>",
+            "author_name": "Justine R.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "9c7cef59b7d2446d": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bien, mais attention à la transparence",
+            "text": "<p>Le legging est très confortable et l'effet sculptant est visible. Cependant, j'ai l'impression qu'il peut être légèrement transparent si on l'étire beaucoup, surtout avec des sous-vêtements de couleur. À part ça, il est super.</p>",
+            "author_name": "Sandrine T.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "56dd5e8b79c646b9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Effet gainant parfait pour le post-partum",
+            "text": "<p>J'ai acheté ce legging après ma grossesse et il est parfait pour le post-partum. Il offre un excellent maintien au niveau du ventre et aide à se sentir plus gainée. L'effet sur les fesses est un bonus très appréciable. Je me sens beaucoup mieux.</p>",
+            "author_name": "Virginie P.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ed26c76ef9584a79": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Fidèle à la description et aux images",
+            "text": "<p>J'avais un peu peur que le rendu ne soit pas le même qu'en photo, mais je suis agréablement surprise : le legging est exactement comme sur le site. L'effet 3D est bien présent et la couleur est superbe. Je suis très contente.</p>",
+            "author_name": "Élodie L.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "7b52e1077dd148b8": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Matière respirante et non irritante",
+            "text": "<p>Ayant une peau sensible, je suis souvent prudente avec les textiles. Mais ce legging est très respirant et ne m'a causé aucune irritation. La matière est douce et l'effet visuel est très flatteur. Un vrai bonheur à porter.</p>",
+            "author_name": "Stéphanie A.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ca4b818f8e4946fa": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un effet 'wahou' immédiat",
+            "text": "<p>Dès que je l'ai essayé, j'ai eu un effet 'wahou' devant le miroir ! Mes fesses sont sublimées et ma silhouette est affinée. C'est le genre de vêtement qui donne instantanément confiance en soi. Je le porte avec tout.</p>",
+            "author_name": "Vanessa X.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "1dad6edc52754c58": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Excellent rapport qualité/prix",
+            "text": "<p>Pour la qualité du tissu, le rendu visuel et le confort, je trouve que le rapport qualité/prix est excellent. C'est un legging durable qui tiendra dans le temps. Je l'ai déjà recommandé à mes amies.</p>",
+            "author_name": "Sabrina Y.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "b02e7133284e4da1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Fait un très joli fessier",
+            "text": "<p>J'ai toujours été un peu complexée par mes fesses, mais ce legging a changé la donne. L'effet 3D est incroyable, il donne un galbe parfait et un aspect plus ferme. Je me sens enfin bien dans un legging. Merci LISSEYA !</p>",
+            "author_name": "Mélanie Z.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "f284a85267b94ca1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Tenue parfaite pendant l'exercice",
+            "text": "<p>Que ce soit pour le yoga, la course à pied ou la musculation, ce legging reste parfaitement en place. Pas besoin de le remonter toutes les cinq minutes. L'effet sculptant est un bonus qui ne gâche rien. J'en suis très satisfaite.</p>",
+            "author_name": "Laura U.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "8f7dbfd8426245b5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon produit, mais l'effet 3D est subtil",
+            "text": "<p>Le legging est très confortable et la qualité est bonne. L'effet 3D est présent, mais peut-être un peu plus subtil que ce que j'attendais d'après les photos. Cela dit, il galbe bien et je le porte avec plaisir.</p>",
+            "author_name": "Clémence I.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "8e3293b0a195433f": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un must-have dans la garde-robe",
+            "text": "<p>Ce legging est devenu un incontournable de ma garde-robe. Il est polyvalent, confortable et fait une silhouette de rêve. Je le porte aussi bien avec un sweat qu'avec une chemise. C'est un vrai passe-partout. Je le recommande à toutes.</p>",
+            "author_name": "Axelle Q.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "e45a5d49e1ec4e99": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Service client au top !",
+            "text": "<p>J'ai eu une question sur la taille avant de commander et le service client de LISSEYA a été très réactif et de bon conseil. Le legging est arrivé rapidement et correspond parfaitement à mes attentes. Je suis très satisfaite de l'expérience globale.</p>",
+            "author_name": "Delphine V.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "b8e267b5074945ed": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Tissu non transparent, enfin !",
+            "text": "<p>J'en avais marre des leggings transparents dès qu'on se penche. Celui-ci est parfaitement opaque, même en faisant des squats. C'est un énorme soulagement et un gage de confiance. L'effet galbant est un vrai plus !</p>",
+            "author_name": "Aurélie N.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "82271c8cb90a40dd": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Galbe naturel et confortable",
+            "text": "<p>L'effet galbant est très naturel, il ne donne pas un aspect artificiel. On se sent à l'aise et le tissu accompagne bien les mouvements. C'est le compromis parfait entre esthétique et confort. J'en suis très contente.</p>",
+            "author_name": "Jessica D.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "84b737ba7dcd4728": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ma silhouette est transformée",
+            "text": "<p>Je n'aurais jamais cru qu'un legging puisse autant transformer ma silhouette. Mes fesses sont plus rebondies et mes cuisses semblent plus fermes. C'est un vrai coup de boost pour ma confiance en moi. Merci LISSEYA !</p>",
+            "author_name": "Floriane K.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "365138e115af4680": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Idéal pour toutes les saisons",
+            "text": "<p>Le tissu de ce legging est suffisamment épais pour l'hiver et respirant pour le printemps/été. Je peux le porter toute l'année. L'effet 3D est toujours aussi efficace. Un achat vraiment rentable.</p>",
+            "author_name": "Marion H.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "c939e22da5e34279": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Joli et fonctionnel",
+            "text": "<p>Ce legging est à la fois très joli avec son motif 3D et très fonctionnel pour le sport. Il ne glisse pas et offre un bon soutien. C'est rare de trouver les deux réunis. Je suis agréablement surprise.</p>",
+            "author_name": "Noémie G.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "a798edfbc0124a5e": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Belle qualité, mais taille unique ?",
+            "text": "<p>La qualité du legging est excellente et l'effet sculptant est là. J'ai juste l'impression qu'il taille plutôt 'standard' et qu'il pourrait être moins adapté aux morphologies très fines ou très rondes. Sinon, rien à redire.</p>",
+            "author_name": "Ophélie C.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "dca23ffd671b431a": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un effet push-up qui dure",
+            "text": "<p>Contrairement à d'autres leggings, l'effet push-up de celui-ci ne s'estompe pas après quelques lavages. Il reste intact et continue de sublimer mes fesses. C'est un produit de qualité qui tient ses promesses sur le long terme.</p>",
+            "author_name": "Gwenaëlle F.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "30940057065d40d6": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Parfait pour se sentir belle",
+            "text": "<p>Ce legging est parfait pour les jours où l'on veut se sentir belle et confiante sans effort. Il galbe juste là où il faut et le tissu est très agréable. Je le porte souvent et je me sens toujours au top.</p>",
+            "author_name": "Angélique L.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "4c55424faa6e47b9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un coup de cœur inattendu",
+            "text": "<p>Je ne m'attendais pas à un tel coup de cœur pour un legging ! L'effet 3D est très original et le confort est incomparable. Je suis surprise de l'aimer autant. Un grand bravo à LISSEYA !</p>",
+            "author_name": "Coralie R.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "0fd3749563bb44a3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Fesses rebondies sans effort",
+            "text": "<p>J'ai toujours rêvé d'avoir des fesses plus rebondies et ce legging le fait sans effort. C'est magique ! Le tissu est résistant et ne se déforme pas. Je suis vraiment impressionnée par le résultat.</p>",
+            "author_name": "Émilie G.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "effb3887f5f04257": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bon maintien à la taille",
+            "text": "<p>J'apprécie énormément le bon maintien à la taille de ce legging. Il ne roule pas et reste bien en place, ce qui est essentiel pour le sport. L'effet sculptant est un bonus non négligeable. Je suis très satisfaite.</p>",
+            "author_name": "Fanny D.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "904bff34bf0b4efc": {
+          "type": "testimonial",
+          "settings": {
+            "title": "N'irrite pas la peau",
+            "text": "<p>J'ai la peau très sensible et je suis ravie de constater que ce legging n'irrite absolument pas. La matière est douce et ne gratte pas. L'effet 3D est subtil mais très efficace pour galber. Un excellent produit.</p>",
+            "author_name": "Hélène S.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "784128cdc86c49ab": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Parfait pour les journées actives",
+            "text": "<p>Je porte ce legging pour mes journées bien remplies et il est parfait. Il est confortable, ne compresse pas et l'effet sculptant me donne un coup de boost. Je me sens à l'aise et stylée. Je le recommande.</p>",
+            "author_name": "Julia M.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "42b1e68305e94ced": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon produit, mais coutures un peu visibles",
+            "text": "<p>Le legging est de bonne qualité et l'effet galbant est là. J'ai juste trouvé que les coutures au niveau des fesses étaient un peu plus visibles que sur les photos, mais cela reste un détail. Globalement, je suis contente.</p>",
+            "author_name": "Karine P.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "c4298a08d0c946c4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Effet amincissant garanti !",
+            "text": "<p>En plus de l'effet 3D sur les fesses, j'ai vraiment l'impression que ce legging affine ma silhouette et me donne un effet amincissant général. C'est un vrai atout pour se sentir bien. Je l'adore !</p>",
+            "author_name": "Lydie B.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "86352e69d98d4edf": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ne bouloche pas",
+            "text": "<p>Après plusieurs semaines d'utilisation et de lavages, le legging ne bouloche absolument pas. C'est un signe de très bonne qualité. L'effet 3D est toujours aussi présent et flatteur. Je suis très satisfaite de mon achat.</p>",
+            "author_name": "Morgane V.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "7fba753662b9467d": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un indispensable pour le sport",
+            "text": "<p>Ce legging est devenu un indispensable pour toutes mes séances de sport. Il est confortable, respirant et offre un excellent maintien. L'effet sculptant est un bonus qui me motive encore plus. Je ne peux plus m'en passer !</p>",
+            "author_name": "Nadia T.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "c6976264915341ce": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bonne élasticité",
+            "text": "<p>La très bonne élasticité du legging permet une grande liberté de mouvement. Il s'adapte parfaitement à ma morphologie sans serrer. L'effet 3D est bien là et le tissu est de qualité. Je suis ravie.</p>",
+            "author_name": "Océane H.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "623e726744984cec": {
+          "type": "testimonial",
+          "settings": {
+            "title": "J'ai eu des compliments !",
+            "text": "<p>J'ai porté ce legging pour la première fois la semaine dernière et j'ai eu plusieurs compliments sur ma silhouette. L'effet 3D fait vraiment son travail ! Je me sens super bien dedans. Merci LISSEYA.</p>",
+            "author_name": "Patricia L.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "6d8a6d55e99045f6": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Confortable, mais taille un peu grand",
+            "text": "<p>Le legging est très confortable et la matière est agréable. J'ai trouvé qu'il taillait un peu grand pour moi, j'aurais dû prendre une taille en dessous. Mais l'effet 3D est tout de même visible et il est de bonne qualité.</p>",
+            "author_name": "Quitterie R.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "829fa599773244e9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Parfait pour le yoga et le Pilates",
+            "text": "<p>Je pratique le yoga et le Pilates, et ce legging est idéal. Il permet une grande amplitude de mouvement sans se déformer. Le maintien est excellent et l'effet sculptant est un joli bonus. Je l'ai déjà recommandé à mes amies du cours.</p>",
+            "author_name": "Romane S.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "c0d8342c055643a2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un effet lifting immédiat",
+            "text": "<p>Je cherchais un legging qui donne un effet lifting immédiat aux fesses et celui-ci fait exactement ça. C'est bluffant ! Je me sens plus tonique et ma silhouette est plus harmonieuse. Un vrai coup de cœur.</p>",
+            "author_name": "Sabine T.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "d9019a9a493142ca": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Matière douce et non irritante",
+            "text": "<p>La matière est vraiment très douce au toucher et ne gratte pas, même après une longue journée. C'est un plaisir de le porter. L'effet 3D est discret mais efficace. Je suis très satisfaite de mon achat.</p>",
+            "author_name": "Théa U.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "7ddcbe8fc94340c4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Je me sens plus belle !",
+            "text": "<p>Ce legging me donne vraiment l'impression d'être plus belle. L'effet sculptant est incroyable et met en valeur mes formes. C'est un vêtement qui redonne confiance en soi. Je ne regrette pas du tout mon achat.</p>",
+            "author_name": "Ursula V.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ae3d9d561a374341": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bonne qualité pour le prix",
+            "text": "<p>Je suis agréablement surprise par la très bonne qualité de ce legging pour son prix. Le tissu est épais, opaque et l'effet 3D est vraiment bien fait. C'est un excellent rapport qualité-prix. Je recommande.</p>",
+            "author_name": "Valérie W.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "2e102cea5c2946e3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Superbe pour la danse",
+            "text": "<p>Je fais de la danse et ce legging est parfait. Il offre une grande liberté de mouvement, ne glisse pas et le maintien est excellent. L'effet sur les fesses est un plus pour se sentir élégante en mouvement. Je l'adore !</p>",
+            "author_name": "Wendy X.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "e6713a481a284bff": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très résistant aux entraînements",
+            "text": "<p>J'ai testé ce legging lors de plusieurs entraînements intenses et il a prouvé sa résistance. Il ne s'est pas déformé et les coutures n'ont pas bougé. C'est un produit très fiable. L'effet 3D est toujours là.</p>",
+            "author_name": "Xénia Y.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "0cda4161a95c4db9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un look moderne et stylé",
+            "text": "<p>J'adore le look moderne et stylé que donne ce legging. L'effet 3D est très tendance et change des leggings classiques. Je me sens à la fois confortable et à la mode. Je vais en acheter d'autres couleurs.</p>",
+            "author_name": "Yasmine Z.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "524e619a89ce463f": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Soutien parfait pour le ventre",
+            "text": "<p>La taille haute de ce legging offre un soutien parfait pour le ventre, sans le compresser. C'est très agréable et cela affine la silhouette. L'effet sur les fesses est bien visible. Je suis très satisfaite.</p>",
+            "author_name": "Zoé A.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "0550c89eb2f3494f": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ne marque pas les sous-vêtements",
+            "text": "<p>Un gros point positif : ce legging ne marque absolument pas les sous-vêtements, même les plus fins. Le tissu est suffisamment épais et le motif 3D aide à dissimuler. C'est un détail qui fait toute la différence.</p>",
+            "author_name": "Adeline B.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "729320dda19346f9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon effet, mais chaleur en été",
+            "text": "<p>L'effet galbant est vraiment bon et le legging est confortable. Mon seul petit bémol est qu'il peut être un peu chaud en plein été à cause de l'épaisseur du tissu. Sinon, la qualité est top pour les autres saisons.</p>",
+            "author_name": "Cassandra C.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "38cba90901944a7f": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un vrai atout confiance",
+            "text": "<p>Ce legging est un vrai atout confiance pour moi. Il me fait des fesses incroyables et je me sens beaucoup plus à l'aise dans mes vêtements. C'est un investissement qui en vaut la peine pour le moral ! Merci LISSEYA.</p>",
+            "author_name": "Diane D.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "28db21c0661f480d": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Facile à entretenir",
+            "text": "<p>J'apprécie que ce legging soit si facile à entretenir. Il passe en machine sans problème et sèche rapidement. L'effet 3D et le galbe sont toujours parfaits après de nombreux lavages. Très pratique au quotidien.</p>",
+            "author_name": "Éva E.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "78baddacaea94269": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Fidèle à la taille indiquée",
+            "text": "<p>J'ai commandé ma taille habituelle et le legging taille parfaitement. Pas de mauvaise surprise, il est bien ajusté sans serrer. L'effet 3D est vraiment réussi. Très satisfaite de mon achat en ligne.</p>",
+            "author_name": "Florence F.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ed76eda440f64592": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Le meilleur pour les fessiers",
+            "text": "<p>Si vous avez des complexes sur vos fessiers, ce legging est la solution ! Il met en valeur les fesses comme aucun autre. Le tissu est confortable et le design est très flatteur. Je le recommande les yeux fermés.</p>",
+            "author_name": "Gaëlle G.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "a2f0e60f4cfe47a0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ne glisse pas pendant le sport",
+            "text": "<p>Je suis très active et j'ai besoin d'un legging qui ne glisse pas. Celui-ci est parfait ! Il reste bien en place pendant mes séances de cardio et de musculation. L'effet 3D est un plus qui me plaît beaucoup.</p>",
+            "author_name": "Héloïse H.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "d8d90712d803438d": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Incroyable sur les photos",
+            "text": "<p>J'ai fait une séance photo avec ce legging et le rendu est incroyable ! L'effet 3D ressort super bien et les fesses sont magnifiées. C'est un legging très photogénique. Je suis conquise.</p>",
+            "author_name": "Ingrid I.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "3ad9da54b67e4a8c": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Bon produit, mais la couleur un peu différente",
+            "text": "<p>Le legging est de très bonne qualité et l'effet sculptant est là. J'ai trouvé que la couleur que j'ai commandée était légèrement différente des photos, un peu moins intense. Mais cela ne gâche pas le plaisir de le porter.</p>",
+            "author_name": "Jeanne J.",
+            "author_age": "",
+            "rating": 4
+          }
+        },
+        "63185025f4754b21": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Confortable pour les voyages",
+            "text": "<p>J'ai porté ce legging pour un long voyage en avion et il était incroyablement confortable. Le tissu est doux et ne compresse pas. L'effet 3D est un plus pour se sentir bien même en voyage. Je le recommande.</p>",
+            "author_name": "Kelly K.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "8362f55d7b8644f1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un boost de confiance instantané",
+            "text": "<p>Chaque fois que j'enfile ce legging, je ressens un boost de confiance instantané. L'effet sur les fesses est vraiment flatteur et je me sens plus belle. C'est un vêtement qui fait du bien au moral. Merci LISSEYA !</p>",
+            "author_name": "Lena L.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "323673702a484330": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Parfait pour les journées cocooning",
+            "text": "<p>Ce legging est parfait pour mes journées cocooning à la maison. Il est si confortable et doux. Mais l'effet 3D est toujours là pour me faire sentir bien même en mode détente. J'adore !</p>",
+            "author_name": "Maëlle M.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "cda0276079884e87": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Adhère bien au corps",
+            "text": "<p>Le legging adhère parfaitement au corps sans serrer. Il épouse les formes et offre un maintien idéal. L'effet 3D est très bien conçu et met en valeur les fesses. Je suis très satisfaite de cet achat.</p>",
+            "author_name": "Nina N.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "ffaf7084d0864ff9": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ne se déforme pas",
+            "text": "<p>Après plusieurs utilisations et lavages, le legging ne s'est absolument pas déformé. Il garde sa forme initiale et son élasticité. C'est un produit de qualité qui dure. L'effet 3D est toujours impeccable.</p>",
+            "author_name": "Olivia O.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "feadf3a670b54e35": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Très bon maintien lombaire",
+            "text": "<p>En plus de l'effet sur les fesses, j'ai remarqué un très bon maintien lombaire grâce à la taille haute. C'est un plus pour mon dos. Le legging est confortable et l'effet 3D est vraiment bluffant. Je le recommande.</p>",
+            "author_name": "Perrine P.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "0210284e9e1c4637": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Ma femme est ravie !",
+            "text": "<p>J'ai offert ce legging à ma femme et elle est absolument ravie ! Elle le trouve très confortable et l'effet sur les fesses est incroyable. Elle n'arrête pas de le porter. Merci LISSEYA pour ce super cadeau.</p>",
+            "author_name": "Quentin R.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "63b6aff268d141d0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Idéal pour les squats",
+            "text": "<p>Ce legging est idéal pour les squats car il est parfaitement opaque et ne glisse pas. L'effet 3D met les fesses en valeur, ce qui est motivant à la salle de sport. Je le recommande à toutes les sportives.</p>",
+            "author_name": "Romane S.",
+            "author_age": "",
+            "rating": 5
+          }
+        },
+        "76387c3b76dc4ec0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Un effet ventre plat discret",
+            "text": "<p>L'effet ventre plat que procure ce legging est discret mais très efficace. On se sent gainée sans être compressée. L'effet 3D est parfait pour les fesses. Je suis très satisfaite de cet achat.</p>",
+            "author_name": "Sarah T.",
+            "author_age": "",
+            "rating": 5
+          }
+        }
+      },
+      "block_order": [
+        "9327fe5f4c454983",
+        "697ae792b68c4edd",
+        "5a3f71c8891b4ccc",
+        "a8cc0bdfe03c41be",
+        "c5ffe77cfa89474b",
+        "6b01ec9b68bb4ab4",
+        "7dac667a4fbf481b",
+        "b0be0171a73642c5",
+        "0f8cad6e6cf24b0b",
+        "3741b4fdb7a44cf3",
+        "813470d4ec8640b0",
+        "e2df564627074ba8",
+        "8181dd5a147442dc",
+        "7a11b2d8a973487b",
+        "af80c50e078a41cc",
+        "ade1d63fe3ea4961",
+        "a88d1f4365b34077",
+        "8324416ecf744bd2",
+        "bdfc165c25934193",
+        "3d1710d55bc94583",
+        "55b497540bb94b66",
+        "38ada1f3a4fe43f4",
+        "9c7cef59b7d2446d",
+        "56dd5e8b79c646b9",
+        "ed26c76ef9584a79",
+        "7b52e1077dd148b8",
+        "ca4b818f8e4946fa",
+        "1dad6edc52754c58",
+        "b02e7133284e4da1",
+        "f284a85267b94ca1",
+        "8f7dbfd8426245b5",
+        "8e3293b0a195433f",
+        "e45a5d49e1ec4e99",
+        "b8e267b5074945ed",
+        "82271c8cb90a40dd",
+        "84b737ba7dcd4728",
+        "365138e115af4680",
+        "c939e22da5e34279",
+        "a798edfbc0124a5e",
+        "dca23ffd671b431a",
+        "30940057065d40d6",
+        "4c55424faa6e47b9",
+        "0fd3749563bb44a3",
+        "effb3887f5f04257",
+        "904bff34bf0b4efc",
+        "784128cdc86c49ab",
+        "42b1e68305e94ced",
+        "c4298a08d0c946c4",
+        "86352e69d98d4edf",
+        "7fba753662b9467d",
+        "c6976264915341ce",
+        "623e726744984cec",
+        "6d8a6d55e99045f6",
+        "829fa599773244e9",
+        "c0d8342c055643a2",
+        "d9019a9a493142ca",
+        "7ddcbe8fc94340c4",
+        "ae3d9d561a374341",
+        "2e102cea5c2946e3",
+        "e6713a481a284bff",
+        "0cda4161a95c4db9",
+        "524e619a89ce463f",
+        "0550c89eb2f3494f",
+        "729320dda19346f9",
+        "38cba90901944a7f",
+        "28db21c0661f480d",
+        "78baddacaea94269",
+        "ed76eda440f64592",
+        "a2f0e60f4cfe47a0",
+        "d8d90712d803438d",
+        "3ad9da54b67e4a8c",
+        "63185025f4754b21",
+        "8362f55d7b8644f1",
+        "323673702a484330",
+        "cda0276079884e87",
+        "ffaf7084d0864ff9",
+        "feadf3a670b54e35",
+        "0210284e9e1c4637",
+        "63b6aff268d141d0",
+        "76387c3b76dc4ec0"
+      ],
+      "settings": {
+        "heading": "Ils en parlent mieux que nous",
+        "heading_style": "1",
+        "trustpilot_info": true,
+        "rating": "4.8",
+        "reviews_count": "238",
+        "layout_width": "full",
+        "color_palette": "background-1",
+        "customize_slider": true,
+        "navigation": true,
+        "pagination": true,
+        "autoplay": true,
+        "speed": 4,
+        "swiper_pagination_style": "dots",
+        "swiper_pagination_color": "accent",
+        "swiper_navigation_style": "square",
+        "swiper_navigation_color": "accent",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "padding_top": 0,
+        "padding_bottom": 64,
+        "padding_top_sm": 0,
+        "padding_bottom_sm": 32
+      }
+    },
+    "reviews_5bdc0a6f": {
+      "type": "reviews",
+      "blocks": {
+        "a019766736674fc6": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Incroyable effet galbant !",
+            "description": "J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.",
+            "name": "Marie P.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "08a5cdf26b4c4f93": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Confort et esthétique au rendez-vous",
+            "description": "Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.",
+            "name": "Sophie L.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "fde6273ed69d47d6": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Bon produit, mais taille un peu petit",
+            "description": "Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.",
+            "name": "Chloé M.",
+            "verified": true,
+            "stars_rating": 4.0
+          }
+        },
+        "f0cb1b48a02b4f0e": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Mes fesses n'ont jamais été aussi belles !",
+            "description": "Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.",
+            "name": "Léa R.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "118c7ca27cbe4cc5": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Qualité irréprochable et livraison rapide",
+            "description": "J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.",
+            "name": "Manon D.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "860cb30e5d964e3c": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Un effet 'seconde peau' très agréable",
+            "description": "Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !",
+            "name": "Amélie B.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "89e888c46c8c4889": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Parfait pour le fitness et le quotidien",
+            "description": "J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !",
+            "name": "Charlotte V.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "d9ab16c0886f4ff9": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Le meilleur legging que j'aie jamais eu !",
+            "description": "Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.",
+            "name": "Emma T.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "3f6cb96086df42d5": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Très bon produit avec un petit bémol",
+            "description": "Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.",
+            "name": "Isabelle K.",
+            "verified": true,
+            "stars_rating": 4.0
+          }
+        },
+        "410f07225aa54f94": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "heading": "Effet fesses rebondies garanti !",
+            "description": "Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.",
+            "name": "Pauline N.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "be22bffc4f6247e0": {
+          "type": "text",
+          "settings": {
+            "heading": "Incroyable effet galbant !",
+            "description": "J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.",
+            "name": "Marie P.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "ded213dee372419b": {
+          "type": "text",
+          "settings": {
+            "heading": "Confort et esthétique au rendez-vous",
+            "description": "Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.",
+            "name": "Sophie L.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "cb1d53794ea04e35": {
+          "type": "text",
+          "settings": {
+            "heading": "Bon produit, mais taille un peu petit",
+            "description": "Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.",
+            "name": "Chloé M.",
+            "verified": true,
+            "stars_rating": 4.0
+          }
+        },
+        "a06a924422194e4b": {
+          "type": "text",
+          "settings": {
+            "heading": "Mes fesses n'ont jamais été aussi belles !",
+            "description": "Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.",
+            "name": "Léa R.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "149e94d9d951427b": {
+          "type": "text",
+          "settings": {
+            "heading": "Qualité irréprochable et livraison rapide",
+            "description": "J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.",
+            "name": "Manon D.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "af74cfafd2c74b0d": {
+          "type": "text",
+          "settings": {
+            "heading": "Un effet 'seconde peau' très agréable",
+            "description": "Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !",
+            "name": "Amélie B.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "0b123c5a7e184688": {
+          "type": "text",
+          "settings": {
+            "heading": "Parfait pour le fitness et le quotidien",
+            "description": "J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !",
+            "name": "Charlotte V.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "57144bd15aeb45d7": {
+          "type": "text",
+          "settings": {
+            "heading": "Le meilleur legging que j'aie jamais eu !",
+            "description": "Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.",
+            "name": "Emma T.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "299eaef7cfab4ec6": {
+          "type": "text",
+          "settings": {
+            "heading": "Très bon produit avec un petit bémol",
+            "description": "Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.",
+            "name": "Isabelle K.",
+            "verified": true,
+            "stars_rating": 4.0
+          }
+        },
+        "59c20c2bbc8d4fe7": {
+          "type": "text",
+          "settings": {
+            "heading": "Effet fesses rebondies garanti !",
+            "description": "Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.",
+            "name": "Pauline N.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "4ca303d6c0b5471b": {
+          "type": "text",
+          "settings": {
+            "heading": "Superbe matière, très agréable",
+            "description": "La matière de ce legging est incroyablement douce au toucher et très agréable à porter. On sent la qualité du tissu. L'effet de texture 3D est subtil mais très efficace pour sculpter la silhouette. Je suis ravie de mon achat.",
+            "name": "Camille F.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "8e488a0a879a427d": {
+          "type": "text",
+          "settings": {
+            "heading": "Un cadeau qui a fait son effet !",
+            "description": "J'ai offert ce legging à ma sœur pour son anniversaire et elle est aux anges ! Elle m'a dit qu'il était super confortable et que l'effet sur les fesses était incroyable. Merci LISSEYA pour cette belle découverte.",
+            "name": "Lucie H.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "8fa00361b508463d": {
+          "type": "text",
+          "settings": {
+            "heading": "Adieu la cellulite (visuellement) !",
+            "description": "Je suis stupéfaite de voir à quel point ce legging masque l'apparence de la cellulite. Le motif 3D fait un travail incroyable. Je me sens beaucoup plus à l'aise et en confiance. C'est un vrai coup de cœur !",
+            "name": "Clara S.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "4b0704df0b8244c4": {
+          "type": "text",
+          "settings": {
+            "heading": "Résultats visibles dès le premier enfilage",
+            "description": "Dès que j'ai mis le legging, j'ai vu la différence. L'effet liftant est immédiat et les fesses semblent plus fermes. La taille haute est aussi très appréciable pour un bon maintien. Je suis totalement satisfaite de mon achat.",
+            "name": "Inès G.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "c6b0b8ec9f2344d1": {
+          "type": "text",
+          "settings": {
+            "heading": "Idéal pour l'entraînement intensif",
+            "description": "J'ai testé ce legging lors d'une séance de HIIT et il a tenu toutes ses promesses. Il reste en place, évacue bien la transpiration et l'effet galbant est toujours là. Je le recommande à toutes les sportives !",
+            "name": "Anaïs J.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "9cfdea5a9fc54622": {
+          "type": "text",
+          "settings": {
+            "heading": "Bon maintien, un peu long pour moi",
+            "description": "Le legging offre un excellent maintien et l'effet sculptant est réel. Mon seul petit bémol est qu'il est un peu long pour ma petite taille. Je dois le retrousser légèrement. Sinon, la qualité est top.",
+            "name": "Mathilde C.",
+            "verified": true,
+            "stars_rating": 4.0
+          }
+        },
+        "818447fa9f2e488f": {
+          "type": "text",
+          "settings": {
+            "heading": "Ne bouge pas au lavage",
+            "description": "J'ai été agréablement surprise par la résistance de ce legging. Après plusieurs lavages en machine, il n'a ni bougé, ni déteint, et l'élasticité est toujours la même. C'est un gage de qualité et de durabilité. J'en suis très contente.",
+            "name": "Audrey W.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "88bbb822dec94f39": {
+          "type": "text",
+          "settings": {
+            "heading": "Sublime les formes sans être vulgaire",
+            "description": "Ce legging est juste parfait. Il met en valeur les formes de manière élégante et subtile, sans jamais être vulgaire. Le motif 3D est très chic. Je l'ai déjà porté pour plusieurs occasions et j'ai eu beaucoup de compliments.",
+            "name": "Céline E.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "80dda7261dcd4fad": {
+          "type": "text",
+          "settings": {
+            "heading": "Effet ventre plat appréciable",
+            "description": "En plus de l'effet liftant sur les fesses, j'ai remarqué que la taille haute du legging offrait un très bon maintien pour le ventre. L'effet est un ventre plus plat et une silhouette affinée. C'est un tout-en-un très efficace.",
+            "name": "Laure O.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        },
+        "bcbb090bb2b0476c": {
+          "type": "text",
+          "settings": {
+            "heading": "Doux et agréable à porter toute la journée",
+            "description": "Je porte ce legging pour travailler, et il est tellement doux et confortable que je pourrais le garder toute la journée. Le tissu ne gratte pas et ne serre pas. L'effet 3D est un plus qui me donne une allure plus dynamique.",
+            "name": "Nathalie B.",
+            "verified": true,
+            "stars_rating": 5.0
+          }
+        }
+      },
+      "block_order": [
+        "a019766736674fc6",
+        "08a5cdf26b4c4f93",
+        "fde6273ed69d47d6",
+        "f0cb1b48a02b4f0e",
+        "118c7ca27cbe4cc5",
+        "860cb30e5d964e3c",
+        "89e888c46c8c4889",
+        "d9ab16c0886f4ff9",
+        "3f6cb96086df42d5",
+        "410f07225aa54f94",
+        "be22bffc4f6247e0",
+        "ded213dee372419b",
+        "cb1d53794ea04e35",
+        "a06a924422194e4b",
+        "149e94d9d951427b",
+        "af74cfafd2c74b0d",
+        "0b123c5a7e184688",
+        "57144bd15aeb45d7",
+        "299eaef7cfab4ec6",
+        "59c20c2bbc8d4fe7",
+        "4ca303d6c0b5471b",
+        "8e488a0a879a427d",
+        "8fa00361b508463d",
+        "4b0704df0b8244c4",
+        "c6b0b8ec9f2344d1",
+        "9cfdea5a9fc54622",
+        "818447fa9f2e488f",
+        "88bbb822dec94f39",
+        "80dda7261dcd4fad",
+        "bcbb090bb2b0476c"
+      ],
+      "settings": {
+        "heading": "Avis clients",
+        "heading_style": "2",
+        "enable_rating": true,
+        "stars_style": "stars",
+        "layout": "swiper",
+        "layout_width": "normal",
+        "slides_on_desktop": 4,
+        "slides_on_tablet": 3,
+        "slides_on_mobile": 1,
+        "preshot_swiper": true,
+        "loop": true,
+        "navigation": true,
+        "pagination": true,
+        "autoplay": true,
+        "speed": 4,
+        "visible_grid_blocks": 6,
+        "color_palette": "background-1",
+        "enable_animations": true,
+        "animation": "fade-up",
+        "padding_top": 0,
+        "padding_bottom": 64,
+        "padding_top_sm": 0,
+        "padding_bottom_sm": 32
+      }
+    }
+  },
+  "order": [
+    "42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3",
+    "marquee_logo_mVRefV",
+    "rich_text_ix8NJN",
+    "icons_6pxNUg",
+    "5b487781-6227-4db6-af44-deaf82bf3b71",
+    "image_with_text_A8Lw9M",
+    "comparaison_list_UDGHDn",
+    "rich_text_zFjKWH",
+    "specs_rdhLLj",
+    "reviews_5bdc0a6f",
+    "reviews_c569b74d",
+    "collapsible_content_CrtidL"
+  ]
+}

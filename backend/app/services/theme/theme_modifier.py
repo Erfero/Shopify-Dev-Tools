@@ -243,7 +243,7 @@ def _remove_invalid_template_blocks(ed: Path) -> int:
 # ── Universal theme reconstruction ────────────────────────────────────────────
 
 _STORY_SIGNATURE_SECTIONS = {"comparaison-list", "specs", "icons", "ugc"}
-_REFERENCE_DIR = Path(__file__).parent.parent / "theme_reference"
+_REFERENCE_DIR = Path(__file__).parent.parent.parent / "theme_reference"
 
 
 def _is_story_structure(ed: Path) -> bool:

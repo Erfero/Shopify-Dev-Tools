@@ -156,8 +156,7 @@ async def _restore_session(session_id: str) -> dict | None:
             try:
                 _rebuild_to_story_structure(structure.extract_dir)
             except Exception as e:
-                logger.error("Session %s: _rebuild_to_story_structure failed: %s", session_id, e)
-                return None
+                logger.error("Session %s: _rebuild_to_story_structure failed (continuing): %s", session_id, e)
             for rel_path in EDITABLE_JSON_FILES:
                 file_path = structure.extract_dir / rel_path
                 if file_path.exists():

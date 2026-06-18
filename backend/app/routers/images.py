@@ -130,12 +130,12 @@ async def generate_images_endpoint(req: GenerateRequest):
         raw = await generate_dalle_images(req.dalle_prompt, req.landscape_count, req.portrait_count)
         images = [
             {
-                "id": f"dalle-{i}",
+                "id": f"flux-{i}",
                 "source": "DALL-E",
                 "orientation": img["orientation"],
                 "url": img["url"],
                 "thumb": img["url"],
-                "photographer": "DALL-E 3",
+                "photographer": "FLUX AI",
                 "alt": req.dalle_prompt[:120],
                 "query": req.dalle_prompt[:60],
             }

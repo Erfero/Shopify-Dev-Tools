@@ -585,7 +585,7 @@ export default function ImagesPage() {
                                 <Check className="h-3 w-3 text-background" />
                               </div>
                             )}
-                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.source}</span>
+                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
                           </button>
                         ))}
                       </div>
@@ -614,7 +614,7 @@ export default function ImagesPage() {
                                 <Check className="h-3 w-3 text-background" />
                               </div>
                             )}
-                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.source}</span>
+                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
                           </button>
                         ))}
                       </div>

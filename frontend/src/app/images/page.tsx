@@ -31,6 +31,7 @@ export default function ImagesPage() {
   // Product info
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
+  const [marketingAngles, setMarketingAngles] = useState("");
   const [productImage, setProductImage] = useState<File | null>(null);
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -75,7 +76,7 @@ export default function ImagesPage() {
     }
     setStep("analyzing");
     try {
-      const result = await analyzeProductImage(productImage, productName, productDescription);
+      const result = await analyzeProductImage(productImage, productName, productDescription, marketingAngles);
       setAnalysis(result);
       setLoadingSearch(true);
       const imgs = await searchImages(result.search_queries);
@@ -213,10 +214,21 @@ export default function ImagesPage() {
                     <textarea
                       value={productDescription}
                       onChange={e => setProductDescription(e.target.value)}
-                      placeholder="ex: Sérum anti-âge à base de vitamine C pure, réduit les taches, illumine le teint..."
-                      rows={5}
+                      placeholder="ex: Sérum anti-âge à base de vitamine C pure, réduit les taches, illumine le teint en 14 jours..."
+                      rows={3}
                       className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20 resize-none"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Angles marketing</label>
+                    <textarea
+                      value={marketingAngles}
+                      onChange={e => setMarketingAngles(e.target.value)}
+                      placeholder="ex: Résultats visibles en 7 jours, peau lumineuse avant/après, femmes 30-50 ans, routine beauté quotidienne, formule naturelle..."
+                      rows={3}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20 resize-none"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">Résultats attendus, public cible, arguments de vente — enrichit la recherche d&apos;images.</p>
                   </div>
                 </div>
               </div>
@@ -288,19 +300,31 @@ export default function ImagesPage() {
 
               {/* Analysis tags */}
               {analysis && (
-                <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Analyse IA du produit</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { label: "Catégorie", value: analysis.product_category },
-                      { label: "Cible", value: analysis.target_audience },
-                      { label: "Usage", value: analysis.usage_context },
-                    ].map(({ label, value }) => (
-                      <span key={label} className="rounded-full border border-border/50 bg-background px-2.5 py-0.5 text-xs">
-                        <span className="text-muted-foreground">{label} : </span>
-                        {value}
-                      </span>
-                    ))}
+                <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-4 space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Analyse IA du produit</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "Catégorie", value: analysis.product_category },
+                        { label: "Cible", value: analysis.target_audience },
+                        { label: "Usage", value: analysis.usage_context },
+                      ].map(({ label, value }) => (
+                        <span key={label} className="rounded-full border border-border/50 bg-background px-2.5 py-0.5 text-xs">
+                          <span className="text-muted-foreground">{label} : </span>
+                          {value}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Requêtes de recherche utilisées ({analysis.search_queries.length})</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysis.search_queries.map((q, i) => (
+                        <span key={i} className="rounded-full bg-foreground/5 border border-border/40 px-2.5 py-0.5 text-xs text-muted-foreground">
+                          {q}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -434,7 +458,7 @@ export default function ImagesPage() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setStep("product"); setSelected(new Set()); setImages([]); setAnalysis(null); setUploadResults(null); }}
+                  onClick={() => { setStep("product"); setSelected(new Set()); setImages([]); setAnalysis(null); setUploadResults(null); setProductImage(null); setProductImagePreview(null); setProductName(""); setProductDescription(""); setMarketingAngles(""); }}
                   className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
                 >
                   Nouvelle recherche

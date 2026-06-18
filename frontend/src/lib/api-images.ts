@@ -52,11 +52,13 @@ export async function analyzeProductImage(
   imageFile: File,
   productName: string,
   productDescription: string,
+  marketingAngles: string,
 ): Promise<AnalysisResult> {
   const fd = new FormData();
   fd.append("image", imageFile);
   fd.append("product_name", productName);
   fd.append("product_description", productDescription);
+  fd.append("marketing_angles", marketingAngles);
 
   const r = await apiFetch(`${API_BASE}/api/images/analyze`, { method: "POST", body: fd });
   const data = await r.json();

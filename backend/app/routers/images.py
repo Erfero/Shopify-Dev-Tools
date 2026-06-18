@@ -53,8 +53,9 @@ async def analyze_image(
     image: UploadFile = File(...),
     product_name: str = Form(...),
     product_description: str = Form(""),
+    marketing_angles: str = Form(""),
 ):
-    """Analyze product image with vision AI → search queries + DALL-E prompt."""
+    """Analyze product image + text info → specific search queries covering all image types."""
     if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Le fichier doit être une image.")
 
@@ -71,6 +72,7 @@ async def analyze_image(
             image.content_type,
             product_name,
             product_description,
+            marketing_angles,
         )
         return {"success": True, "analysis": analysis}
     except Exception as e:

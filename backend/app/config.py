@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 432000  # 5 days — matches output ZIP retention
     api_token: str = ""               # If set, all requests must include X-API-Token
 
+    # ── Image search ────────────────────────────────────────────────────────
+    pexels_api_key: str = ""        # https://www.pexels.com/api/
+    unsplash_access_key: str = ""   # https://unsplash.com/oauth/applications
+
     # ── Auth (JWT) ──────────────────────────────────────────────────────────
     jwt_secret: str = "change-me-in-production-use-a-long-random-string"
     admin_email: str = ""             # This email is auto-approved as admin on registration

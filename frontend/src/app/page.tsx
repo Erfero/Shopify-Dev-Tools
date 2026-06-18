@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck, BarChart2 } from "lucide-react";
+import { Layers, ArrowRight, Star, Paintbrush, LogOut, ShieldCheck, BarChart2, ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer, staggerItem, float } from "@/lib/motion";
 import { getUser, logout } from "@/lib/auth";
@@ -58,7 +58,7 @@ export default function Home() {
         </motion.div>
 
         {/* Tool cards */}
-        <div className="grid gap-4 sm:grid-cols-2 order-3 sm:order-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 order-3 sm:order-2">
           {/* Shopify Theme Customizer */}
           <motion.div variants={staggerItem}>
             <div
@@ -141,6 +141,38 @@ export default function Home() {
                 </motion.span>
               </div>
             </div>
+          </motion.div>
+        </div>
+
+          {/* Image Finder */}
+          <motion.div variants={staggerItem}>
+            <Link href="/images" className="group flex flex-col rounded-2xl border border-border/60 bg-foreground/1 p-6 transition-all hover:border-foreground/20 hover:bg-foreground/3 hover:shadow-sm cursor-pointer">
+              <motion.div
+                className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/5"
+                whileHover={{ scale: 1.08, rotate: -4 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <ImageIcon className="h-5 w-5 text-foreground/70" />
+              </motion.div>
+              <h2 className="text-base font-semibold">Image Finder</h2>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                Trouve des photos lifestyle correspondant exactement à ton produit et uploade-les directement sur Shopify.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {["Pexels + Unsplash", "Analyse IA", "Upload Shopify"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-foreground/4 px-2.5 py-0.5 text-xs text-foreground/60 border border-border/40"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-auto pt-5 flex items-center gap-1 text-xs font-medium text-foreground/50 group-hover:text-foreground/70 transition-colors">
+                Ouvrir
+                <ArrowRight className="h-3 w-3" />
+              </div>
+            </Link>
           </motion.div>
         </div>
 

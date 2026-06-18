@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db, cleanup_old_output_zips
 from app.routers import health, reviews, theme
+from app.routers.images import router as images_router
 from app.routers.theme import evict_expired_sessions
 from app.routers.auth_users import router as auth_router
 from app.routers.admin_analytics import router as admin_analytics_router
@@ -119,3 +120,4 @@ app.include_router(auth_router)
 app.include_router(admin_analytics_router)
 app.include_router(reviews.router, prefix="/api")
 app.include_router(theme.router)
+app.include_router(images_router)

@@ -138,7 +138,7 @@ export async function uploadImagesToShopify(
   images: ImageResult[],
   storeDomain: string,
   apiToken: string,
-): Promise<{ uploaded: number; results: ShopifyUploadResult[] }> {
+): Promise<{ uploaded: number; total: number; results: ShopifyUploadResult[] }> {
   const r = await apiFetch(`${API_BASE}/api/images/upload-shopify-bulk`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -154,5 +154,5 @@ export async function uploadImagesToShopify(
   });
   const data = await r.json();
   if (!r.ok) throw new Error(data.detail || "Upload échoué");
-  return { uploaded: data.uploaded, results: data.results };
+  return { uploaded: data.uploaded, total: data.total ?? data.results?.length ?? 0, results: data.results };
 }

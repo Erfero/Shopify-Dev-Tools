@@ -143,15 +143,26 @@ async def upload_image_to_shopify(
         create_resp.raise_for_status()
         create_data = create_resp.json()
 
-    create_errors = create_data.get("data", {}).get("fileCreate", {}).get("userErrors", [])
-    if create_errors:
-        raise Exception(f"Shopify fileCreate: {create_errors}")
+    # Top-level GraphQL errors (auth, rate-limit, etc.)
+    top_errors = create_data.get("errors")
+    if top_errors and not create_data.get("data"):
+        raise Exception(f"Shopify GraphQL: {top_errors}")
 
-    files = create_data.get("data", {}).get("fileCreate", {}).get("files", [])
+    file_create = (create_data.get("data") or {}).get("fileCreate") or {}
+    create_errors = file_create.get("userErrors", [])
+    if create_errors:
+        msgs = [e.get("message", "") for e in create_errors]
+        logger.warning("fileCreate userErrors for %s: %s", filename, msgs)
+        # Duplicate file → already in Shopify, count as success
+        if any("duplicate" in m.lower() or "already" in m.lower() for m in msgs):
+            return {"success": True, "id": "", "url": resource_url, "filename": filename, "note": "already_exists"}
+        raise Exception("; ".join(msgs))
+
+    files = file_create.get("files", [])
     if files:
         f = files[0]
         shopify_url = (
-            f.get("image", {}).get("url")
+            (f.get("image") or {}).get("url")
             or f.get("url")
             or resource_url
         )

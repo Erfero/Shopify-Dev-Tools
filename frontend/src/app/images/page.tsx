@@ -5,8 +5,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ImageIcon, Upload, Search, CheckSquare, CloudUpload,
   ChevronLeft, X, Check, Loader2, ArrowLeft, ExternalLink,
-  Sparkles, Store, Plus, Shapes, Copy, Download
+  Sparkles, Store, Plus, Shapes, Copy, Download,
+  Droplets, Sun, Moon, Star, Eye, Smile, Heart, Activity,
+  ShieldCheck, Zap, Leaf, Award, Gem, Clock, Timer, TrendingUp,
+  RefreshCw, Target, Feather, Sprout, Atom, Wind, Snowflake,
+  Flame, ThumbsUp, Layers, Package, Gift, Crown, Dna, Microscope,
+  Hand, Rainbow, Shield, BadgeCheck, ScanLine, Flower2, CircleCheckBig,
+  CircleCheck,
 } from "lucide-react";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+  droplets: Droplets, sun: Sun, moon: Moon, star: Star,
+  sparkles: Sparkles, eye: Eye, smile: Smile, heart: Heart,
+  activity: Activity, "shield-check": ShieldCheck, zap: Zap, leaf: Leaf,
+  award: Award, "check-circle-2": CircleCheck, gem: Gem, clock: Clock,
+  timer: Timer, "trending-up": TrendingUp, "refresh-cw": RefreshCw, target: Target,
+  feather: Feather, sprout: Sprout, atom: Atom, wind: Wind,
+  snowflake: Snowflake, flame: Flame, "thumbs-up": ThumbsUp, layers: Layers,
+  package: Package, gift: Gift, crown: Crown, dna: Dna,
+  microscope: Microscope, hand: Hand, "scan-line": ScanLine, "badge-check": BadgeCheck,
+  "circle-check-big": CircleCheckBig, "flower-2": Flower2, rainbow: Rainbow, shield: Shield,
+  "circle-check": CircleCheck,
+};
 import Link from "next/link";
 import {
   analyzeProductImage,
@@ -83,7 +103,7 @@ export default function ImagesPage() {
 
   // Upload
   const [uploading, setUploading] = useState(false);
-  const [uploadResults, setUploadResults] = useState<{ uploaded: number; urls: string[] } | null>(null);
+  const [uploadResults, setUploadResults] = useState<{ uploaded: number; total: number; urls: string[]; errors: string[] } | null>(null);
 
   useEffect(() => {
     const stores = loadStores();
@@ -161,6 +181,43 @@ export default function ImagesPage() {
     setStep("shopify");
   };
 
+  const downloadAsPng = async (svgContent: string, iconName: string) => {
+    if (!svgContent) { toast.error("SVG non disponible pour cet icône."); return; }
+    const size = 512;
+    const pad = 80;
+    const inner = size - pad * 2;
+    const fixed = svgContent
+      .replace(/width="100%"/g, `width="${inner}"`)
+      .replace(/height="100%"/g, `height="${inner}"`)
+      .replace(/currentColor/g, "#1f2937");
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+    await new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, pad, pad, inner, inner);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `${iconName}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+          }
+          resolve();
+        }, "image/png");
+      };
+      img.onerror = () => { toast.error("Erreur PNG."); resolve(); };
+      img.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(fixed)))}`;
+    });
+  };
+
   const addStore = () => {
     if (!newStoreName.trim() || !newStoreDomain.trim() || !newStoreToken.trim()) {
       toast.error("Tous les champs sont requis.");
@@ -195,11 +252,13 @@ export default function ImagesPage() {
     setUploading(true);
     try {
       const toUpload = images.filter(img => selected.has(img.id));
-      const { uploaded, results } = await uploadImagesToShopify(toUpload, store.domain, store.token);
+      const { uploaded, total, results } = await uploadImagesToShopify(toUpload, store.domain, store.token);
       const urls = results.filter(r => r.success).map(r => r.url);
-      setUploadResults({ uploaded, urls });
+      const errors = results.filter(r => !r.success).map((r, i) => `Image ${i + 1} : ${r.error ?? "erreur inconnue"}`);
+      setUploadResults({ uploaded, total, urls, errors });
       setStep("done");
-      toast.success(`${uploaded} image(s) uploadée(s) sur Shopify !`);
+      if (uploaded > 0) toast.success(`${uploaded}/${total} image(s) uploadée(s) sur Shopify !`);
+      else toast.error(`Upload échoué pour toutes les images. Voir les détails.`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Upload échoué";
       toast.error(msg);
@@ -585,34 +644,41 @@ export default function ImagesPage() {
                       key={icon.icon}
                       className="flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-foreground/[0.01] p-5 text-center"
                     >
-                      {icon.svg ? (
-                        <div
-                          className="w-12 h-12 text-foreground"
-                          dangerouslySetInnerHTML={{ __html: icon.svg }}
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-foreground/[0.05] flex items-center justify-center">
-                          <Shapes className="h-6 w-6 text-foreground/30" />
-                        </div>
-                      )}
+                      {(() => {
+                        const LucideIcon = ICON_MAP[icon.icon] ?? Star;
+                        return (
+                          <div className="w-14 h-14 rounded-2xl bg-foreground/[0.05] flex items-center justify-center">
+                            <LucideIcon className="w-8 h-8 text-foreground" strokeWidth={1.5} />
+                          </div>
+                        );
+                      })()}
                       <div>
                         <p className="font-semibold text-sm">{icon.label}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{icon.benefit}</p>
                       </div>
-                      <div className="flex gap-2 mt-auto w-full">
+                      <div className="flex gap-1.5 mt-auto w-full">
                         <button
                           onClick={() => { navigator.clipboard.writeText(icon.svg); toast.success("SVG copié !"); }}
-                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs hover:bg-muted transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
+                          title="Copier le code SVG"
                         >
                           <Copy className="h-3 w-3" /> Copier
                         </button>
                         <a
                           href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon.svg)}`}
                           download={`${icon.icon}.svg`}
-                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs hover:bg-muted transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
+                          title="Télécharger fichier .svg"
                         >
                           <Download className="h-3 w-3" /> SVG
                         </a>
+                        <button
+                          onClick={() => downloadAsPng(icon.svg, icon.icon)}
+                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
+                          title="Télécharger image .png (512×512)"
+                        >
+                          <Download className="h-3 w-3" /> PNG
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -762,11 +828,26 @@ export default function ImagesPage() {
                 <CheckSquare className="h-8 w-8 text-green-500" />
               </div>
               <div className="text-center">
-                <h2 className="text-xl font-semibold">{uploadResults.uploaded} image(s) uploadée(s) !</h2>
+                <h2 className="text-xl font-semibold">
+                  {uploadResults.uploaded}/{uploadResults.total} image(s) uploadée(s) !
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Tes images sont maintenant disponibles dans la médiathèque de ta boutique Shopify.
+                  {uploadResults.uploaded > 0
+                    ? "Tes images sont disponibles dans la médiathèque de ta boutique Shopify."
+                    : "Aucune image uploadée — voir les erreurs ci-dessous."}
                 </p>
               </div>
+
+              {uploadResults.errors.length > 0 && (
+                <div className="w-full max-w-lg space-y-1.5">
+                  <p className="text-xs font-medium text-destructive">Erreurs ({uploadResults.errors.length}) :</p>
+                  {uploadResults.errors.map((err, i) => (
+                    <div key={i} className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                      {err}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {uploadResults.urls.length > 0 && (
                 <div className="w-full max-w-lg space-y-2">

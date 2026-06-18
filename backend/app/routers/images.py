@@ -3,13 +3,16 @@ Images router — product image analysis, stock photo search, Shopify upload.
 """
 import logging
 
+from typing import Optional
+
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from app.config import settings
 from app.services.images.analyzer import analyze_product_image
+from app.services.images.generator import generate_dalle_images
 from app.services.images.shopify_uploader import upload_image_to_shopify
-from app.services.images.stock_searcher import search_all
+from app.services.images.stock_searcher import search_oriented
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/images", tags=["images"])
@@ -20,6 +23,8 @@ router = APIRouter(prefix="/api/images", tags=["images"])
 class SearchRequest(BaseModel):
     queries: list[str]
     per_query: int = 10
+    landscape_count: int = 2
+    portrait_count: int = 8
 
 
 class ShopifyUploadRequest(BaseModel):
@@ -36,6 +41,12 @@ class BulkUploadRequest(BaseModel):
     api_token: str
 
 
+class GenerateRequest(BaseModel):
+    dalle_prompt: str
+    landscape_count: int = 2
+    portrait_count: int = 8
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/config")
@@ -50,26 +61,30 @@ async def get_config():
 
 @router.post("/analyze")
 async def analyze_image(
-    image: UploadFile = File(...),
+    image: Optional[UploadFile] = File(None),
     product_name: str = Form(...),
     product_description: str = Form(""),
     marketing_angles: str = Form(""),
 ):
-    """Analyze product image + text info → specific search queries covering all image types."""
-    if not image.content_type or not image.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Le fichier doit être une image.")
+    """Analyze product image (optional) + text info → specific search queries."""
+    content: bytes | None = None
+    content_type = "image/jpeg"
 
-    content = await image.read()
-    if len(content) > 20 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Image trop volumineuse (max 20 Mo).")
+    if image is not None and image.filename:
+        if not image.content_type or not image.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Le fichier doit être une image.")
+        content = await image.read()
+        if len(content) > 20 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Image trop volumineuse (max 20 Mo).")
+        content_type = image.content_type
 
-    if not settings.openrouter_api_key:
+    if content is not None and not settings.openrouter_api_key:
         raise HTTPException(status_code=503, detail="Clé OpenRouter manquante.")
 
     try:
         analysis = await analyze_product_image(
             content,
-            image.content_type,
+            content_type,
             product_name,
             product_description,
             marketing_angles,
@@ -92,8 +107,37 @@ async def search_images(req: SearchRequest):
             detail="Aucune clé API stock photo configurée (PEXELS_API_KEY ou UNSPLASH_ACCESS_KEY).",
         )
 
-    results = await search_all(req.queries, per_query=min(req.per_query, 15))
+    results = await search_oriented(req.queries, req.landscape_count, req.portrait_count)
     return {"success": True, "images": results, "count": len(results)}
+
+
+@router.post("/generate")
+async def generate_images_endpoint(req: GenerateRequest):
+    """Generate images with DALL-E 3 via OpenRouter."""
+    if not settings.openrouter_api_key:
+        raise HTTPException(status_code=503, detail="Clé OpenRouter manquante.")
+    if not req.dalle_prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt vide.")
+
+    try:
+        raw = await generate_dalle_images(req.dalle_prompt, req.landscape_count, req.portrait_count)
+        images = [
+            {
+                "id": f"dalle-{i}",
+                "source": "DALL-E",
+                "orientation": img["orientation"],
+                "url": img["url"],
+                "thumb": img["url"],
+                "photographer": "DALL-E 3",
+                "alt": req.dalle_prompt[:120],
+                "query": req.dalle_prompt[:60],
+            }
+            for i, img in enumerate(raw)
+        ]
+        return {"success": True, "images": images, "count": len(images)}
+    except Exception as e:
+        logger.error("Image generation failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Génération échouée : {e}")
 
 
 @router.post("/upload-shopify")

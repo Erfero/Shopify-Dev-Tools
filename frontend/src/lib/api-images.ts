@@ -11,7 +11,8 @@ function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
 
 export interface ImageResult {
   id: string;
-  source: "Pexels" | "Unsplash";
+  source: "Pexels" | "Unsplash" | "DALL-E";
+  orientation: "landscape" | "portrait";
   url: string;
   thumb: string;
   photographer: string;
@@ -49,13 +50,13 @@ export async function getImagesConfig(): Promise<ImagesConfig> {
 }
 
 export async function analyzeProductImage(
-  imageFile: File,
+  imageFile: File | null,
   productName: string,
   productDescription: string,
   marketingAngles: string,
 ): Promise<AnalysisResult> {
   const fd = new FormData();
-  fd.append("image", imageFile);
+  if (imageFile) fd.append("image", imageFile);
   fd.append("product_name", productName);
   fd.append("product_description", productDescription);
   fd.append("marketing_angles", marketingAngles);
@@ -66,14 +67,42 @@ export async function analyzeProductImage(
   return data.analysis as AnalysisResult;
 }
 
-export async function searchImages(queries: string[]): Promise<ImageResult[]> {
+export async function searchImages(
+  queries: string[],
+  landscapeCount = 2,
+  portraitCount = 8,
+): Promise<ImageResult[]> {
   const r = await apiFetch(`${API_BASE}/api/images/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ queries, per_query: 10 }),
+    body: JSON.stringify({
+      queries,
+      per_query: 10,
+      landscape_count: landscapeCount,
+      portrait_count: portraitCount,
+    }),
   });
   const data = await r.json();
   if (!r.ok) throw new Error(data.detail || "Recherche échouée");
+  return data.images as ImageResult[];
+}
+
+export async function generateImages(
+  dallePrompt: string,
+  landscapeCount = 2,
+  portraitCount = 8,
+): Promise<ImageResult[]> {
+  const r = await apiFetch(`${API_BASE}/api/images/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dalle_prompt: dallePrompt,
+      landscape_count: landscapeCount,
+      portrait_count: portraitCount,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.detail || "Génération échouée");
   return data.images as ImageResult[];
 }
 

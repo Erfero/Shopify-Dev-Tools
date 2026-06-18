@@ -12,7 +12,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
-async def _search_pexels(query: str, per_page: int = 12) -> list[dict]:
+async def _search_pexels(query: str, per_page: int = 12, orientation: str = "landscape") -> list[dict]:
     if not settings.pexels_api_key:
         return []
     try:
@@ -23,7 +23,7 @@ async def _search_pexels(query: str, per_page: int = 12) -> list[dict]:
                 params={
                     "query": query,
                     "per_page": per_page,
-                    "orientation": "landscape",
+                    "orientation": orientation,
                     "size": "large",
                 },
             )
@@ -33,6 +33,7 @@ async def _search_pexels(query: str, per_page: int = 12) -> list[dict]:
             {
                 "id": f"pexels_{p['id']}",
                 "source": "Pexels",
+                "orientation": orientation,
                 "url": p["src"]["large2x"],
                 "thumb": p["src"]["medium"],
                 "photographer": p.get("photographer", ""),
@@ -42,11 +43,11 @@ async def _search_pexels(query: str, per_page: int = 12) -> list[dict]:
             for p in data.get("photos", [])
         ]
     except Exception as e:
-        logger.warning("Pexels search failed for %r: %s", query, e)
+        logger.warning("Pexels search failed for %r (%s): %s", query, orientation, e)
         return []
 
 
-async def _search_unsplash(query: str, per_page: int = 12) -> list[dict]:
+async def _search_unsplash(query: str, per_page: int = 12, orientation: str = "landscape") -> list[dict]:
     if not settings.unsplash_access_key:
         return []
     try:
@@ -57,7 +58,7 @@ async def _search_unsplash(query: str, per_page: int = 12) -> list[dict]:
                 params={
                     "query": query,
                     "per_page": per_page,
-                    "orientation": "landscape",
+                    "orientation": orientation,
                     "content_filter": "high",
                 },
             )
@@ -67,6 +68,7 @@ async def _search_unsplash(query: str, per_page: int = 12) -> list[dict]:
             {
                 "id": f"unsplash_{p['id']}",
                 "source": "Unsplash",
+                "orientation": orientation,
                 "url": p["urls"]["full"],
                 "thumb": p["urls"]["small"],
                 "photographer": p.get("user", {}).get("name", ""),
@@ -76,28 +78,49 @@ async def _search_unsplash(query: str, per_page: int = 12) -> list[dict]:
             for p in data.get("results", [])
         ]
     except Exception as e:
-        logger.warning("Unsplash search failed for %r: %s", query, e)
+        logger.warning("Unsplash search failed for %r (%s): %s", query, orientation, e)
         return []
 
 
-async def search_all(queries: list[str], per_query: int = 10) -> list[dict]:
-    """Search Pexels + Unsplash with up to 4 queries in parallel. Deduplicate."""
-    top_queries = queries[:4]
-    tasks = []
-    for q in top_queries:
-        tasks.append(_search_pexels(q, per_query))
-        tasks.append(_search_unsplash(q, per_query))
+async def search_oriented(
+    queries: list[str],
+    landscape_count: int = 2,
+    portrait_count: int = 8,
+) -> list[dict]:
+    """
+    Search Pexels + Unsplash for both orientations.
+    Returns up to landscape_count landscape + portrait_count portrait images.
+    """
+    l_queries = queries[:2] if queries else []
+    p_queries = queries[:4] if queries else []
 
-    nested = await asyncio.gather(*tasks, return_exceptions=True)
+    l_per = max(3, (landscape_count // max(len(l_queries), 1)) + 2)
+    p_per = max(4, (portrait_count // max(len(p_queries), 1)) + 2)
+
+    tasks = []
+    for q in l_queries:
+        tasks.append(_search_pexels(q, l_per, "landscape"))
+        tasks.append(_search_unsplash(q, l_per, "landscape"))
+    for q in p_queries:
+        tasks.append(_search_pexels(q, p_per, "portrait"))
+        tasks.append(_search_unsplash(q, p_per, "portrait"))
+
+    all_batches = await asyncio.gather(*tasks, return_exceptions=True)
 
     seen: set[str] = set()
-    results: list[dict] = []
-    for batch in nested:
+    landscapes: list[dict] = []
+    portraits: list[dict] = []
+
+    for batch in all_batches:
         if isinstance(batch, Exception):
             continue
         for img in batch:
-            if img["id"] not in seen:
-                seen.add(img["id"])
-                results.append(img)
+            if img["id"] in seen:
+                continue
+            seen.add(img["id"])
+            if img["orientation"] == "landscape":
+                landscapes.append(img)
+            else:
+                portraits.append(img)
 
-    return results
+    return landscapes[:landscape_count] + portraits[:portrait_count]

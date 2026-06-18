@@ -50,7 +50,7 @@ Retourne UNIQUEMENT ce JSON valide (pas de markdown, pas d'explication) :
 
 
 async def analyze_product_image(
-    image_bytes: bytes,
+    image_bytes: bytes | None,
     content_type: str,
     product_name: str,
     product_description: str,
@@ -58,12 +58,29 @@ async def analyze_product_image(
 ) -> dict:
     """
     Analyze product image + text info → highly specific search queries.
-    Uses: visual analysis + product name + description + marketing angles.
+    Image is optional: if None, skips vision and returns text-only queries.
     """
+    extra_queries = _build_extra_queries(product_name, product_description, marketing_angles)
+
+    # Text-only path (no image provided)
+    if not image_bytes:
+        words = product_name.lower().split()[:3]
+        base = f"{' '.join(words)} lifestyle product" if words else "lifestyle product"
+        queries = [base] + extra_queries
+        seen: set[str] = set()
+        deduped = [q for q in queries if not (q in seen or seen.add(q))]  # type: ignore[func-returns-value]
+        return {
+            "visual_description": "",
+            "product_category": product_name,
+            "target_audience": "",
+            "usage_context": "",
+            "search_queries": deduped[:10],
+            "dalle_prompt": "",
+        }
+
     b64 = base64.b64encode(image_bytes).decode()
     data_url = f"data:{content_type};base64,{b64}"
 
-    # Build a short name for query placeholders
     name_short = product_name.split()[0] if product_name else "product"
 
     prompt = _USER_TMPL.format(
@@ -71,7 +88,6 @@ async def analyze_product_image(
         name_short=name_short,
         desc=product_description or "Non renseignée",
         angles=marketing_angles or "Non renseignés",
-        # These placeholders will be filled by the AI
         benefit="{benefit}",
         context="{context}",
         audience="{audience}",
@@ -110,10 +126,7 @@ async def analyze_product_image(
 
     result = json.loads(raw)
 
-    # Always add product-name-based queries to boost specificity
-    extra_queries = _build_extra_queries(product_name, product_description, marketing_angles)
     existing = result.get("search_queries", [])
-    # Merge, deduplicate, keep up to 10
     all_queries = existing + [q for q in extra_queries if q not in existing]
     result["search_queries"] = all_queries[:10]
 

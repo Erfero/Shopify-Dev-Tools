@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ImageIcon, Upload, Search, CheckSquare, CloudUpload,
   ChevronLeft, X, Check, Loader2, ArrowLeft, ExternalLink,
-  Sparkles, Store
+  Sparkles, Store, Plus
 } from "lucide-react";
 import Link from "next/link";
 import {
   analyzeProductImage,
   searchImages,
+  generateImages,
   uploadImagesToShopify,
   type AnalysisResult,
   type ImageResult,
@@ -18,6 +19,26 @@ import {
 import { toast } from "sonner";
 
 type Step = "product" | "analyzing" | "gallery" | "shopify" | "done";
+
+interface SavedStore {
+  id: string;
+  name: string;
+  domain: string;
+  token: string;
+}
+
+const LS_KEY = "shopify_saved_stores";
+
+function loadStores(): SavedStore[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function persistStores(stores: SavedStore[]): void {
+  localStorage.setItem(LS_KEY, JSON.stringify(stores));
+}
 
 const sv = {
   initial: { opacity: 0, x: 24 },
@@ -39,16 +60,31 @@ export default function ImagesPage() {
   // Analysis
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
+  // Mode
+  const [mode, setMode] = useState<"search" | "generate">("search");
+
   // Gallery
   const [images, setImages] = useState<ImageResult[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loadingSearch, setLoadingSearch] = useState(false);
 
-  // Shopify
-  const [storeDomain, setStoreDomain] = useState("");
-  const [apiToken, setApiToken] = useState("");
+  // Saved stores
+  const [savedStores, setSavedStores] = useState<SavedStore[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState("");
+  const [showAddStore, setShowAddStore] = useState(false);
+  const [newStoreName, setNewStoreName] = useState("");
+  const [newStoreDomain, setNewStoreDomain] = useState("");
+  const [newStoreToken, setNewStoreToken] = useState("");
+
+  // Upload
   const [uploading, setUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState<{ uploaded: number; urls: string[] } | null>(null);
+
+  useEffect(() => {
+    const stores = loadStores();
+    setSavedStores(stores);
+    if (stores.length > 0) setSelectedStoreId(stores[0].id);
+  }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -70,22 +106,30 @@ export default function ImagesPage() {
   };
 
   const handleAnalyze = async () => {
-    if (!productName.trim() || !productImage) {
-      toast.error("Nom du produit et image requis.");
+    if (!productName.trim()) {
+      toast.error("Nom du produit requis.");
       return;
     }
     setStep("analyzing");
     try {
       const result = await analyzeProductImage(productImage, productName, productDescription, marketingAngles);
       setAnalysis(result);
-      setLoadingSearch(true);
-      const imgs = await searchImages(result.search_queries);
-      setImages(imgs);
-      setLoadingSearch(false);
-      setStep("gallery");
-      if (imgs.length === 0) {
-        toast.warning("Aucune image trouvée. Vérifie tes clés API Pexels/Unsplash.");
+
+      if (mode === "search") {
+        setLoadingSearch(true);
+        const imgs = await searchImages(result.search_queries, 2, 8);
+        setImages(imgs);
+        setLoadingSearch(false);
+        if (imgs.length === 0) toast.warning("Aucune image trouvée. Vérifie tes clés API Pexels/Unsplash.");
+      } else {
+        const prompt = result.dalle_prompt ||
+          `Professional lifestyle product photo of ${productName}, high quality, realistic, white background`;
+        const imgs = await generateImages(prompt, 2, 8);
+        setImages(imgs);
+        if (imgs.length === 0) toast.warning("Génération échouée. Vérifie ta clé OpenRouter.");
       }
+
+      setStep("gallery");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
       toast.error(msg);
@@ -102,13 +146,47 @@ export default function ImagesPage() {
     });
   };
 
+  const goToShopify = () => {
+    if (selected.size === 0) return;
+    if (savedStores.length === 0) setShowAddStore(true);
+    setStep("shopify");
+  };
+
+  const addStore = () => {
+    if (!newStoreName.trim() || !newStoreDomain.trim() || !newStoreToken.trim()) {
+      toast.error("Tous les champs sont requis.");
+      return;
+    }
+    const store: SavedStore = {
+      id: Date.now().toString(),
+      name: newStoreName.trim(),
+      domain: newStoreDomain.trim().replace(/^https?:\/\//, ""),
+      token: newStoreToken.trim(),
+    };
+    const updated = [...savedStores, store];
+    persistStores(updated);
+    setSavedStores(updated);
+    setSelectedStoreId(store.id);
+    setShowAddStore(false);
+    setNewStoreName(""); setNewStoreDomain(""); setNewStoreToken("");
+    toast.success("Boutique sauvegardée !");
+  };
+
+  const deleteStore = (id: string) => {
+    const updated = savedStores.filter(s => s.id !== id);
+    persistStores(updated);
+    setSavedStores(updated);
+    if (selectedStoreId === id) setSelectedStoreId(updated[0]?.id || "");
+  };
+
   const handleUpload = async () => {
     if (selected.size === 0) { toast.error("Sélectionne au moins une image."); return; }
-    if (!storeDomain.trim() || !apiToken.trim()) { toast.error("Domaine et token requis."); return; }
+    const store = savedStores.find(s => s.id === selectedStoreId);
+    if (!store) { toast.error("Sélectionne une boutique."); return; }
     setUploading(true);
     try {
       const toUpload = images.filter(img => selected.has(img.id));
-      const { uploaded, results } = await uploadImagesToShopify(toUpload, storeDomain, apiToken);
+      const { uploaded, results } = await uploadImagesToShopify(toUpload, store.domain, store.token);
       const urls = results.filter(r => r.success).map(r => r.url);
       setUploadResults({ uploaded, urls });
       setStep("done");
@@ -119,6 +197,19 @@ export default function ImagesPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const resetAll = () => {
+    setStep("product");
+    setSelected(new Set());
+    setImages([]);
+    setAnalysis(null);
+    setUploadResults(null);
+    setProductImage(null);
+    setProductImagePreview(null);
+    setProductName("");
+    setProductDescription("");
+    setMarketingAngles("");
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -164,7 +255,7 @@ export default function ImagesPage() {
               <div className="grid gap-6 sm:grid-cols-2">
                 {/* Image drop zone */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Image du produit <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium mb-2">Image du produit <span className="text-muted-foreground text-xs font-normal">(optionnel — améliore la précision)</span></label>
                   <div
                     onDragOver={e => e.preventDefault()}
                     onDrop={onImageDrop}
@@ -233,14 +324,40 @@ export default function ImagesPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                {/* Mode toggle */}
+                <div className="flex gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
+                  <button
+                    onClick={() => setMode("search")}
+                    className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
+                      mode === "search"
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    Trouver des photos
+                  </button>
+                  <button
+                    onClick={() => setMode("generate")}
+                    className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
+                      mode === "generate"
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Générer avec DALL-E
+                  </button>
+                </div>
+
                 <button
                   onClick={handleAnalyze}
-                  disabled={!productName.trim() || !productImage}
+                  disabled={!productName.trim()}
                   className="flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
                 >
-                  <Sparkles className="h-4 w-4" />
-                  Analyser &amp; rechercher
+                  {mode === "search" ? <Search className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  {mode === "search" ? "Rechercher des photos" : "Générer avec DALL-E"}
                 </button>
               </div>
             </motion.div>
@@ -261,7 +378,10 @@ export default function ImagesPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                {["Analyse visuelle IA", "Recherche Pexels", "Recherche Unsplash"].map((label, i) => (
+                {(mode === "search"
+                  ? ["Analyse visuelle IA", "Recherche Pexels", "Recherche Unsplash"]
+                  : ["Analyse du produit", "Génération DALL-E 3"]
+                ).map((label, i) => (
                   <span key={i} className="rounded-full border border-border/60 bg-foreground/[0.03] px-3 py-1 text-xs text-muted-foreground animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>
                     {label}
                   </span>
@@ -277,7 +397,7 @@ export default function ImagesPage() {
                 <div>
                   <h2 className="text-xl font-semibold">Sélectionne tes images</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {images.length} images trouvées · {selected.size} sélectionnée(s)
+                    {images.filter(i => i.orientation === "landscape").length} landscape · {images.filter(i => i.orientation === "portrait").length} portrait · {selected.size} sélectionnée(s)
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -288,7 +408,7 @@ export default function ImagesPage() {
                     <ChevronLeft className="h-4 w-4" /> Modifier
                   </button>
                   <button
-                    onClick={() => selected.size > 0 && setStep("shopify")}
+                    onClick={goToShopify}
                     disabled={selected.size === 0}
                     className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
                   >
@@ -330,10 +450,23 @@ export default function ImagesPage() {
               )}
 
               {loadingSearch ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="aspect-video rounded-xl bg-foreground/[0.04] animate-pulse" />
-                  ))}
+                <div className="space-y-6">
+                  <div>
+                    <div className="h-3.5 w-28 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
+                    <div className="grid grid-cols-2 gap-3">
+                      {Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="aspect-video rounded-xl bg-foreground/[0.04] animate-pulse" />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="h-3.5 w-28 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
+                    <div className="grid grid-cols-4 gap-3">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="aspect-[3/4] rounded-xl bg-foreground/[0.04] animate-pulse" />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : images.length === 0 ? (
                 <div className="flex flex-col items-center py-20 gap-3 text-muted-foreground">
@@ -341,91 +474,191 @@ export default function ImagesPage() {
                   <p className="text-sm">Aucune image trouvée. Vérifie tes clés API Pexels / Unsplash.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {images.map(img => (
-                    <button
-                      key={img.id}
-                      onClick={() => toggleSelect(img.id)}
-                      className={`group relative rounded-xl overflow-hidden border-2 transition-all focus:outline-none ${
-                        selected.has(img.id)
-                          ? "border-foreground shadow-md"
-                          : "border-transparent hover:border-foreground/30"
-                      }`}
-                    >
-                      <img
-                        src={img.thumb}
-                        alt={img.alt}
-                        className="w-full aspect-video object-cover"
-                        loading="lazy"
-                      />
-                      {/* Selection overlay */}
-                      <div className={`absolute inset-0 bg-foreground/40 transition-opacity ${selected.has(img.id) ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
-                      {selected.has(img.id) && (
-                        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
-                          <Check className="h-3 w-3 text-background" />
-                        </div>
-                      )}
-                      {/* Source badge */}
-                      <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">
-                        {img.source}
-                      </span>
-                    </button>
-                  ))}
+                <div className="space-y-6">
+                  {/* Landscape 16:9 */}
+                  {images.filter(img => img.orientation === "landscape").length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Landscape 16:9 · {images.filter(img => img.orientation === "landscape").length} image(s)
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {images.filter(img => img.orientation === "landscape").map(img => (
+                          <button
+                            key={img.id}
+                            onClick={() => toggleSelect(img.id)}
+                            className={`group relative rounded-xl overflow-hidden border-2 transition-all focus:outline-none ${
+                              selected.has(img.id) ? "border-foreground shadow-md" : "border-transparent hover:border-foreground/30"
+                            }`}
+                          >
+                            <img src={img.thumb} alt={img.alt} className="w-full aspect-video object-cover" loading="lazy" />
+                            <div className={`absolute inset-0 bg-foreground/40 transition-opacity ${selected.has(img.id) ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
+                            {selected.has(img.id) && (
+                              <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
+                                <Check className="h-3 w-3 text-background" />
+                              </div>
+                            )}
+                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.source}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Portrait 3:4 */}
+                  {images.filter(img => img.orientation === "portrait").length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Portrait 3:4 · {images.filter(img => img.orientation === "portrait").length} image(s)
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {images.filter(img => img.orientation === "portrait").map(img => (
+                          <button
+                            key={img.id}
+                            onClick={() => toggleSelect(img.id)}
+                            className={`group relative rounded-xl overflow-hidden border-2 transition-all focus:outline-none ${
+                              selected.has(img.id) ? "border-foreground shadow-md" : "border-transparent hover:border-foreground/30"
+                            }`}
+                          >
+                            <img src={img.thumb} alt={img.alt} className="w-full aspect-[3/4] object-cover" loading="lazy" />
+                            <div className={`absolute inset-0 bg-foreground/40 transition-opacity ${selected.has(img.id) ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
+                            {selected.has(img.id) && (
+                              <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
+                                <Check className="h-3 w-3 text-background" />
+                              </div>
+                            )}
+                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.source}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
           )}
 
-          {/* ── STEP 4: Shopify credentials ──────────────────────────────── */}
+          {/* ── STEP 4: Store picker ──────────────────────────────────────── */}
           {step === "shopify" && (
             <motion.div key="shopify" {...sv} className="space-y-6 max-w-lg mx-auto">
               <div>
-                <button onClick={() => setStep("gallery")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
+                <button onClick={() => setStep("gallery")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
                   <ChevronLeft className="h-4 w-4" /> Retour à la galerie
                 </button>
-                <h2 className="text-xl font-semibold">Connexion Shopify</h2>
+                <h2 className="text-xl font-semibold">Choisir une boutique</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {selected.size} image(s) sélectionnée(s) — entre les credentials de la boutique cible.
+                  {selected.size} image(s) à uploader
                 </p>
               </div>
 
-              <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-5 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Domaine Shopify</label>
-                  <input
-                    type="text"
-                    value={storeDomain}
-                    onChange={e => setStoreDomain(e.target.value)}
-                    placeholder="ma-boutique.myshopify.com"
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Token Admin API</label>
-                  <input
-                    type="password"
-                    value={apiToken}
-                    onChange={e => setApiToken(e.target.value)}
-                    placeholder="shpat_xxxxxxxxxxxxxxxxxxxx"
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Shopify Admin → Paramètres → Applications → Développer des apps → créer une app avec les scopes <code className="bg-muted px-1 rounded">write_files, read_files</code>
-                  </p>
-                </div>
-              </div>
+              {/* Saved store cards */}
+              {savedStores.length > 0 && !showAddStore && (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {savedStores.map(store => (
+                    <button
+                      key={store.id}
+                      onClick={() => setSelectedStoreId(store.id)}
+                      className={`group relative flex flex-col text-left rounded-xl border-2 p-4 transition-all ${
+                        selectedStoreId === store.id
+                          ? "border-foreground bg-foreground/[0.03]"
+                          : "border-border/60 hover:border-foreground/30"
+                      }`}
+                    >
+                      <Store className="h-4 w-4 mb-2 text-foreground/50" />
+                      <span className="font-semibold text-sm">{store.name}</span>
+                      <span className="text-xs text-muted-foreground mt-0.5 truncate">{store.domain}</span>
+                      {selectedStoreId === store.id && (
+                        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
+                          <Check className="h-3 w-3 text-background" />
+                        </div>
+                      )}
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteStore(store.id); }}
+                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 rounded-full p-1 text-muted-foreground hover:text-red-500 transition-all"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </button>
+                  ))}
 
-              <button
-                onClick={handleUpload}
-                disabled={uploading || !storeDomain.trim() || !apiToken.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground py-3 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
-              >
-                {uploading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Upload en cours…</>
-                ) : (
-                  <><CloudUpload className="h-4 w-4" /> Uploader {selected.size} image(s) sur Shopify</>
-                )}
-              </button>
+                  <button
+                    onClick={() => setShowAddStore(true)}
+                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 p-4 hover:border-foreground/30 text-muted-foreground hover:text-foreground transition-all min-h-[88px]"
+                  >
+                    <Plus className="h-5 w-5 mb-1" />
+                    <span className="text-sm">Ajouter une boutique</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Add store form */}
+              {(savedStores.length === 0 || showAddStore) && (
+                <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-5 space-y-4">
+                  <p className="text-sm font-medium">
+                    {savedStores.length === 0 ? "Ajoute ta première boutique" : "Nouvelle boutique"}
+                  </p>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">Nom affiché</label>
+                    <input
+                      type="text"
+                      value={newStoreName}
+                      onChange={e => setNewStoreName(e.target.value)}
+                      placeholder="ex: CurmaParis"
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">Domaine Shopify</label>
+                    <input
+                      type="text"
+                      value={newStoreDomain}
+                      onChange={e => setNewStoreDomain(e.target.value)}
+                      placeholder="ma-boutique.myshopify.com"
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1.5">Token Admin API</label>
+                    <input
+                      type="password"
+                      value={newStoreToken}
+                      onChange={e => setNewStoreToken(e.target.value)}
+                      placeholder="shpat_xxxxxxxxxxxxxxxxxxxx"
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={addStore}
+                      className="flex-1 rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background hover:opacity-80 transition-opacity"
+                    >
+                      Sauvegarder
+                    </button>
+                    {showAddStore && savedStores.length > 0 && (
+                      <button
+                        onClick={() => setShowAddStore(false)}
+                        className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload button */}
+              {!showAddStore && selectedStoreId && (
+                <button
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground py-3 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
+                >
+                  {uploading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Upload en cours…</>
+                  ) : (
+                    <><CloudUpload className="h-4 w-4" /> Uploader {selected.size} image(s)</>
+                  )}
+                </button>
+              )}
             </motion.div>
           )}
 
@@ -458,7 +691,7 @@ export default function ImagesPage() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setStep("product"); setSelected(new Set()); setImages([]); setAnalysis(null); setUploadResults(null); setProductImage(null); setProductImagePreview(null); setProductName(""); setProductDescription(""); setMarketingAngles(""); }}
+                  onClick={resetAll}
                   className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
                 >
                   Nouvelle recherche

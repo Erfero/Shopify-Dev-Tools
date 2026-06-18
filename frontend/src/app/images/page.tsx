@@ -34,9 +34,11 @@ import {
   generateImages,
   findProductIcons,
   uploadImagesToShopify,
+  getImagesConfig,
   type AnalysisResult,
   type ImageResult,
   type IconResult,
+  type ImagesConfig,
 } from "@/lib/api-images";
 import { toast } from "sonner";
 
@@ -84,6 +86,7 @@ export default function ImagesPage() {
 
   // Mode
   const [mode, setMode] = useState<"search" | "generate" | "icons">("search");
+  const [config, setConfig] = useState<ImagesConfig | null>(null);
 
   // Icons
   const [icons, setIcons] = useState<IconResult[]>([]);
@@ -109,6 +112,7 @@ export default function ImagesPage() {
     const stores = loadStores();
     setSavedStores(stores);
     if (stores.length > 0) setSelectedStoreId(stores[0].id);
+    getImagesConfig().then(setConfig).catch(() => {});
   }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -152,7 +156,7 @@ export default function ImagesPage() {
           `Professional lifestyle product photo of ${productName}, high quality, realistic, white background`;
         const imgs = await generateImages(prompt, 2, 8);
         setImages(imgs);
-        if (imgs.length === 0) toast.warning("Génération échouée. Vérifie ta clé OpenRouter.");
+        if (imgs.length === 0) toast.warning("Génération échouée. Vérifie ta clé TOGETHER_API_KEY sur Render.");
         setStep("gallery");
       } else {
         const icns = await findProductIcons(productName, productDescription, marketingAngles, 5);
@@ -406,12 +410,19 @@ export default function ImagesPage() {
                     Trouver des photos
                   </button>
                   <button
-                    disabled
-                    title="Nécessite une clé OpenAI directe — bientôt disponible"
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium opacity-35 cursor-not-allowed"
+                    onClick={() => config?.together ? setMode("generate") : undefined}
+                    disabled={!config?.together}
+                    title={config?.together ? "Générer des images avec FLUX AI" : "Ajoute TOGETHER_API_KEY dans Render pour activer"}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      mode === "generate"
+                        ? "bg-foreground text-background"
+                        : config?.together
+                          ? "hover:bg-foreground/[0.06]"
+                          : "opacity-35 cursor-not-allowed"
+                    }`}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    DALL-E (bientôt)
+                    {config?.together ? "Générer avec FLUX" : "FLUX (clé manquante)"}
                   </button>
                   <button
                     onClick={() => setMode("icons")}
@@ -432,7 +443,7 @@ export default function ImagesPage() {
                   {mode === "search" && <Search className="h-4 w-4" />}
                   {mode === "generate" && <Sparkles className="h-4 w-4" />}
                   {mode === "icons" && <Shapes className="h-4 w-4" />}
-                  {mode === "search" ? "Rechercher des photos" : mode === "generate" ? "Générer avec DALL-E" : "Trouver des icônes"}
+                  {mode === "search" ? "Rechercher des photos" : mode === "generate" ? "Générer avec FLUX" : "Trouver des icônes"}
                 </button>
               </div>
             </motion.div>

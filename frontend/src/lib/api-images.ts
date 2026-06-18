@@ -47,6 +47,7 @@ export interface IconResult {
 export interface ImagesConfig {
   pexels: boolean;
   unsplash: boolean;
+  together: boolean;
   vision_model: string;
 }
 

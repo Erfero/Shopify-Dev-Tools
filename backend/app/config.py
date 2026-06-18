@@ -51,9 +51,10 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 432000  # 5 days — matches output ZIP retention
     api_token: str = ""               # If set, all requests must include X-API-Token
 
-    # ── Image search ────────────────────────────────────────────────────────
+    # ── Image search & generation ────────────────────────────────────────────
     pexels_api_key: str = ""        # https://www.pexels.com/api/
     unsplash_access_key: str = ""   # https://unsplash.com/oauth/applications
+    together_api_key: str = ""      # https://api.together.xyz — FLUX image generation
 
     # ── Auth (JWT) ──────────────────────────────────────────────────────────
     jwt_secret: str = "change-me-in-production-use-a-long-random-string"

@@ -63,6 +63,7 @@ async def get_config():
     return {
         "pexels": bool(settings.pexels_api_key),
         "unsplash": bool(settings.unsplash_access_key),
+        "together": bool(settings.together_api_key),
         "vision_model": settings.vision_model,
     }
 

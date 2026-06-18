@@ -120,24 +120,32 @@ async def _restore_session(session_id: str) -> dict | None:
         try:
             with open(path, encoding="utf-8") as f:
                 meta = json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Session %s: cannot read disk meta: %s", session_id, e)
 
     extract_dir = Path(meta.get("extract_dir", "")) if meta else Path("")
 
     # Disk files missing → rebuild from DB ZIP cache (survives Render restarts)
     # Note: Path("").exists() returns True (CWD), so we must also check the path is non-empty
     if not meta.get("extract_dir") or not extract_dir.exists():
-        result = await get_theme_zip(session_id)
+        logger.info("Session %s: disk files missing, attempting DB restoration", session_id)
+        try:
+            result = await get_theme_zip(session_id)
+        except Exception as e:
+            logger.error("Session %s: DB ZIP fetch failed: %s", session_id, e)
+            return None
         if result is None:
+            logger.warning("Session %s: no ZIP found in DB — session cannot be restored", session_id)
             return None
         filename, zip_bytes = result
+        logger.info("Session %s: ZIP retrieved from DB (%d bytes), extracting…", session_id, len(zip_bytes))
         tmp_zip = settings.temp_path / f"_restore_{session_id}.zip"
         settings.temp_path.mkdir(parents=True, exist_ok=True)
         try:
             tmp_zip.write_bytes(zip_bytes)
             structure = extract_theme(tmp_zip)
-        except Exception:
+        except Exception as e:
+            logger.error("Session %s: ZIP extraction failed: %s", session_id, e)
             return None
         finally:
             tmp_zip.unlink(missing_ok=True)
@@ -145,7 +153,11 @@ async def _restore_session(session_id: str) -> dict | None:
         # Rebuild non-Story themes (Basic, Sylys…) to Story structure on restore too,
         # since the DB ZIP holds the original unmodified theme.
         if not _is_story_structure(structure.extract_dir):
-            _rebuild_to_story_structure(structure.extract_dir)
+            try:
+                _rebuild_to_story_structure(structure.extract_dir)
+            except Exception as e:
+                logger.error("Session %s: _rebuild_to_story_structure failed: %s", session_id, e)
+                return None
             for rel_path in EDITABLE_JSON_FILES:
                 file_path = structure.extract_dir / rel_path
                 if file_path.exists():
@@ -162,8 +174,11 @@ async def _restore_session(session_id: str) -> dict | None:
 
         # Disk meta was empty — try to restore config fields from DB
         if not meta.get("language"):
-            db_config = await get_session_config(session_id) or {}
-            meta.update(db_config)
+            try:
+                db_config = await get_session_config(session_id) or {}
+                meta.update(db_config)
+            except Exception as e:
+                logger.warning("Session %s: cannot load config from DB: %s", session_id, e)
 
         session = {
             "structure": structure,
@@ -187,6 +202,7 @@ async def _restore_session(session_id: str) -> dict | None:
             "created_at": meta.get("created_at", datetime.now().isoformat()),
         }
         _save_session_meta(session_id, session)
+        logger.info("Session %s: successfully restored from DB", session_id)
         return session
 
     structure = ThemeStructure(session_id=session_id, extract_dir=extract_dir)
@@ -324,8 +340,9 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     # Save ZIP to DB so the session can be rebuilt after a server restart
     try:
         await save_theme_zip(structure.session_id, theme_file.filename, content)
+        logger.info("Session %s: ZIP saved to DB (%d bytes)", structure.session_id, len(content))
     except Exception as e:
-        logger.warning("Could not save ZIP to DB for session %s: %s", structure.session_id, e)
+        logger.error("Session %s: CRITICAL — ZIP save to DB failed: %s", structure.session_id, e)
 
     return UploadResponse(
         session_id=structure.session_id,

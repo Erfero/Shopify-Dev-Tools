@@ -310,9 +310,6 @@ def apply_generated_texts(
     hp = all_results.get("homepage", {})
     pp = all_results.get("product_page", {})
 
-    # ── -1. Remove invalid blocks (e.g. 'social_proof' dropped in Story Theme 3.5.0)
-    _remove_invalid_template_blocks(ed)
-
     # ── 0. Colors: JSON write on settings_data.json (MUST run before text surgery on same file)
     if "colors" in all_results:
         if _apply_colors(ed, pf, all_results["colors"]):
@@ -322,6 +319,10 @@ def apply_generated_texts(
     if "reviews" in all_results:
         for rel in _inject_testimonials(ed, pf, all_results["reviews"], language=language):
             modified.add(rel)
+
+    # ── 1b. Remove invalid blocks AFTER all JSON writes (so pf cache is current)
+    # Shopify rejects templates with unknown block types (e.g. cross_sell dropped in Story 3.5.0)
+    _remove_invalid_template_blocks(ed)
 
     # ── 2. Homepage text surgery
     if hp:

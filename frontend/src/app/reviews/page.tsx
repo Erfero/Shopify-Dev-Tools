@@ -14,7 +14,7 @@ import { CSVHistoryPanel } from "@/components/reviews/CSVHistoryPanel";
 import { MultiProductForm, MultiProductConfig } from "@/components/reviews/MultiProductForm";
 import { MultiImageUpload } from "@/components/reviews/MultiImageUpload";
 import { GenderedImageUpload } from "@/components/reviews/GenderedImageUpload";
-import { deleteSession, SSEEvent } from "@/lib/api-reviews";
+import { deleteSession, SSEEvent, toAbsoluteUrl } from "@/lib/api-reviews";
 import { addPendingEntry, getEntries, CSVEntry } from "@/lib/csvHistory";
 import { getToken, getUser } from "@/lib/auth";
 import { API } from "@/lib/config";
@@ -147,7 +147,12 @@ export default function ReviewsPage() {
           signal: controller.signal,
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!resp.ok) { setError(`Erreur serveur ${resp.status}`); setIsGenerating(false); return; }
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          setError((body as { detail?: string }).detail || `Erreur serveur ${resp.status}`);
+          setIsGenerating(false);
+          return;
+        }
         const reader = resp.body?.getReader();
         if (!reader) { setError("Flux SSE non disponible"); setIsGenerating(false); return; }
         const dec = new TextDecoder();
@@ -218,7 +223,8 @@ export default function ReviewsPage() {
           });
           if (!resp.ok) return [];
           const data = await resp.json();
-          return data.urls ?? [];
+          const rawUrls: string[] = data.urls ?? [];
+          return rawUrls.map(toAbsoluteUrl);
         }
 
         const perProductUrls = await Promise.all(
@@ -272,7 +278,12 @@ export default function ReviewsPage() {
           signal: controller.signal,
           headers: tokenMulti ? { Authorization: `Bearer ${tokenMulti}` } : {},
         });
-        if (!resp.ok) { setError(`Erreur serveur ${resp.status}`); setIsGenerating(false); return; }
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          setError((body as { detail?: string }).detail || `Erreur serveur ${resp.status}`);
+          setIsGenerating(false);
+          return;
+        }
         const reader = resp.body?.getReader();
         if (!reader) { setError("Flux SSE non disponible"); setIsGenerating(false); return; }
         const dec = new TextDecoder();

@@ -46,7 +46,7 @@ async def save_image_locally(image_data: bytes, filename: str) -> str:
     with open(file_path, "wb") as f:
         f.write(image_data)
 
-    return f"{settings.BACKEND_URL}/uploads/{unique_name}"
+    return f"/uploads/{unique_name}"
 
 
 async def process_image(image_data: bytes, filename: str) -> str:

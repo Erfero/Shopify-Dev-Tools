@@ -77,8 +77,8 @@ export default function ImagesPage() {
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [marketingAngles, setMarketingAngles] = useState("");
-  const [productImage, setProductImage] = useState<File | null>(null);
-  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Analysis
@@ -135,19 +135,26 @@ export default function ImagesPage() {
 
   const onImageDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setProductImage(file);
-      setProductImagePreview(URL.createObjectURL(file));
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+    if (files.length > 0) {
+      setProductImages(prev => [...prev, ...files]);
+      setProductImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
     }
   }, []);
 
   const onImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProductImage(file);
-      setProductImagePreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
+    if (files.length > 0) {
+      setProductImages(prev => [...prev, ...files]);
+      setProductImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+      e.target.value = "";
     }
+  };
+
+  const removeImage = (i: number) => {
+    URL.revokeObjectURL(productImagePreviews[i]);
+    setProductImages(prev => prev.filter((_, idx) => idx !== i));
+    setProductImagePreviews(prev => prev.filter((_, idx) => idx !== i));
   };
 
   const handleAnalyze = async () => {
@@ -157,7 +164,7 @@ export default function ImagesPage() {
     }
     setStep("analyzing");
     try {
-      const result = await analyzeProductImage(productImage, productName, productDescription, marketingAngles);
+      const result = await analyzeProductImage(productImages[0] ?? null, productName, productDescription, marketingAngles);
       setAnalysis(result);
 
       if (mode === "search") {
@@ -229,12 +236,13 @@ export default function ImagesPage() {
   const downloadAsPng = async (svgContent: string, iconName: string) => {
     if (!svgContent) { toast.error("SVG non disponible pour cet icône."); return; }
     const size = 512;
-    const pad = 80;
-    const inner = size - pad * 2;
+    const pad = 64;
+    const inner = size - pad * 2; // 384
+    // Replace currentColor with solid black and fix dimensions to inner size
     const fixed = svgContent
-      .replace(/width="100%"/g, `width="${inner}"`)
-      .replace(/height="100%"/g, `height="${inner}"`)
-      .replace(/currentColor/g, "#1f2937");
+      .replace(/width="[^"]*"/g, `width="${inner}"`)
+      .replace(/height="[^"]*"/g, `height="${inner}"`)
+      .replace(/currentColor/g, "#000000");
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
@@ -243,8 +251,10 @@ export default function ImagesPage() {
     ctx.fillRect(0, 0, size, size);
     await new Promise<void>((resolve) => {
       const img = new Image();
+      let objUrl = "";
       img.onload = () => {
         ctx.drawImage(img, pad, pad, inner, inner);
+        URL.revokeObjectURL(objUrl);
         canvas.toBlob((blob) => {
           if (blob) {
             const a = document.createElement("a");
@@ -258,9 +268,30 @@ export default function ImagesPage() {
           resolve();
         }, "image/png");
       };
-      img.onerror = () => { toast.error("Erreur PNG."); resolve(); };
-      img.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(fixed)))}`;
+      img.onerror = () => { URL.revokeObjectURL(objUrl); toast.error("Erreur rendu PNG."); resolve(); };
+      // Use Blob URL — more reliable than base64 data URI for SVG in canvas
+      const svgBlob = new Blob([fixed], { type: "image/svg+xml" });
+      objUrl = URL.createObjectURL(svgBlob);
+      img.src = objUrl;
     });
+  };
+
+  const downloadSvg = (svgContent: string, iconName: string) => {
+    if (!svgContent) { toast.error("SVG non disponible pour cet icône."); return; }
+    // Replace currentColor with black and set explicit size for standalone SVG
+    const fixed = svgContent
+      .replace(/currentColor/g, "#000000")
+      .replace(/width="[^"]*"/g, 'width="64"')
+      .replace(/height="[^"]*"/g, 'height="64"');
+    const blob = new Blob([fixed], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${iconName}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const addStore = () => {
@@ -319,8 +350,9 @@ export default function ImagesPage() {
     setIcons([]);
     setAnalysis(null);
     setUploadResults(null);
-    setProductImage(null);
-    setProductImagePreview(null);
+    productImagePreviews.forEach(URL.revokeObjectURL);
+    setProductImages([]);
+    setProductImagePreviews([]);
     setProductName("");
     setProductDescription("");
     setMarketingAngles("");
@@ -367,36 +399,52 @@ export default function ImagesPage() {
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
-                {/* Image drop zone */}
+                {/* Image drop zone — multiple images */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Image du produit <span className="text-muted-foreground text-xs font-normal">(optionnel — améliore la précision)</span></label>
+                  <label className="block text-sm font-medium mb-2">
+                    Images du produit <span className="text-muted-foreground text-xs font-normal">(optionnel — améliore la précision)</span>
+                  </label>
                   <div
                     onDragOver={e => e.preventDefault()}
                     onDrop={onImageDrop}
                     onClick={() => fileRef.current?.click()}
-                    className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 bg-foreground/[0.01] p-6 cursor-pointer hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all min-h-[200px]"
+                    className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 bg-foreground/[0.01] p-4 cursor-pointer hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all min-h-[200px]"
                   >
-                    {productImagePreview ? (
-                      <>
-                        <img src={productImagePreview} alt="produit" className="max-h-40 rounded-lg object-contain" />
-                        <button
-                          onClick={e => { e.stopPropagation(); setProductImage(null); setProductImagePreview(null); }}
-                          className="absolute top-2 right-2 rounded-full bg-background border border-border p-1 hover:bg-muted"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                        <p className="mt-2 text-xs text-muted-foreground">{productImage?.name}</p>
-                      </>
+                    {productImagePreviews.length > 0 ? (
+                      <div className="w-full space-y-3" onClick={e => e.stopPropagation()}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {productImagePreviews.map((preview, i) => (
+                            <div key={i} className="relative group">
+                              <img src={preview} alt={`produit ${i + 1}`} className="w-full h-20 rounded-lg object-cover" />
+                              <button
+                                onClick={e => { e.stopPropagation(); removeImage(i); }}
+                                className="absolute top-0.5 right-0.5 rounded-full bg-background/90 border border-border p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}
+                            className="flex items-center justify-center h-20 rounded-lg border-2 border-dashed border-border/40 bg-foreground/[0.02] hover:bg-foreground/[0.05] transition-colors"
+                          >
+                            <Plus className="h-5 w-5 text-muted-foreground" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          {productImagePreviews.length} image{productImagePreviews.length > 1 ? "s" : ""} · clique <Plus className="inline h-3 w-3" /> pour en ajouter
+                        </p>
+                      </div>
                     ) : (
                       <>
                         <Upload className="h-8 w-8 text-foreground/30 mb-3" />
                         <p className="text-sm text-muted-foreground text-center">
-                          Glisse ton image ici<br />
-                          <span className="text-xs">ou clique pour choisir</span>
+                          Glisse tes images ici<br />
+                          <span className="text-xs">ou clique pour choisir (plusieurs possibles)</span>
                         </p>
                       </>
                     )}
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onImageSelect} />
+                    <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onImageSelect} />
                   </div>
                 </div>
 
@@ -741,14 +789,13 @@ export default function ImagesPage() {
                         >
                           <Copy className="h-3 w-3" /> Copier
                         </button>
-                        <a
-                          href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon.svg)}`}
-                          download={`${icon.icon}.svg`}
+                        <button
+                          onClick={() => downloadSvg(icon.svg, icon.icon)}
                           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
                           title="Télécharger fichier .svg"
                         >
                           <Download className="h-3 w-3" /> SVG
-                        </a>
+                        </button>
                         <button
                           onClick={() => downloadAsPng(icon.svg, icon.icon)}
                           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"

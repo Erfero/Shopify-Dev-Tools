@@ -294,6 +294,41 @@ export default function ImagesPage() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadImage = async (img: ImageResult) => {
+    try {
+      const resp = await fetch(img.url);
+      if (!resp.ok) throw new Error();
+      const blob = await resp.blob();
+      const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+      const safe = (img.alt || img.source).replace(/[^a-z0-9]/gi, "_").slice(0, 40);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${safe}.${ext}`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast.success("Image téléchargée !");
+    } catch {
+      window.open(img.url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const downloadSelected = async () => {
+    const toDownload = images.filter(img => selected.has(img.id));
+    if (toDownload.length === 0) return;
+    for (const img of toDownload) {
+      await downloadImage(img);
+      await new Promise(r => setTimeout(r, 350));
+    }
+  };
+
+  const downloadAllIconsPng = async () => {
+    for (const icon of icons) {
+      await downloadAsPng(icon.svg, icon.icon);
+      await new Promise(r => setTimeout(r, 200));
+    }
+  };
+
   const addStore = () => {
     if (!newStoreName.trim() || !newStoreDomain.trim() || !newStoreToken.trim()) {
       toast.error("Tous les champs sont requis.");
@@ -602,7 +637,7 @@ export default function ImagesPage() {
                     {images.filter(i => i.orientation === "landscape").length} landscape · {images.filter(i => i.orientation === "portrait").length} portrait · {selected.size} sélectionnée(s)
                   </p>
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex gap-2 shrink-0 flex-wrap">
                   <button
                     onClick={() => setStep("product")}
                     className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors"
@@ -610,12 +645,20 @@ export default function ImagesPage() {
                     <ChevronLeft className="h-4 w-4" /> Modifier
                   </button>
                   <button
+                    onClick={downloadSelected}
+                    disabled={selected.size === 0}
+                    className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30"
+                  >
+                    <Download className="h-4 w-4" />
+                    Télécharger ({selected.size})
+                  </button>
+                  <button
                     onClick={goToShopify}
                     disabled={selected.size === 0}
                     className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
                   >
                     <Store className="h-4 w-4" />
-                    Uploader sur Shopify ({selected.size})
+                    Shopify ({selected.size})
                   </button>
                 </div>
               </div>
@@ -700,6 +743,14 @@ export default function ImagesPage() {
                               </div>
                             )}
                             <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
+                            <button
+                              type="button"
+                              onClick={e => { e.stopPropagation(); downloadImage(img); }}
+                              className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full bg-black/60 p-1 transition-opacity hover:bg-black/80"
+                              title="Télécharger"
+                            >
+                              <Download className="h-3 w-3 text-white" />
+                            </button>
                           </button>
                         ))}
                       </div>
@@ -729,6 +780,14 @@ export default function ImagesPage() {
                               </div>
                             )}
                             <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
+                            <button
+                              type="button"
+                              onClick={e => { e.stopPropagation(); downloadImage(img); }}
+                              className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full bg-black/60 p-1 transition-opacity hover:bg-black/80"
+                              title="Télécharger"
+                            >
+                              <Download className="h-3 w-3 text-white" />
+                            </button>
                           </button>
                         ))}
                       </div>
@@ -742,19 +801,29 @@ export default function ImagesPage() {
           {/* ── STEP ICONS ───────────────────────────────────────────────── */}
           {step === "icons" && (
             <motion.div key="icons" {...sv} className="space-y-6">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <h2 className="text-xl font-semibold">Icônes produit</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {icons.length} icônes générées pour les avantages de ton produit
                   </p>
                 </div>
-                <button
-                  onClick={() => setStep("product")}
-                  className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors shrink-0"
-                >
-                  <ChevronLeft className="h-4 w-4" /> Modifier
-                </button>
+                <div className="flex gap-2 shrink-0 flex-wrap">
+                  {icons.length > 0 && (
+                    <button
+                      onClick={downloadAllIconsPng}
+                      className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                    >
+                      <Download className="h-4 w-4" /> Tout télécharger (PNG)
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setStep("product")}
+                    className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" /> Modifier
+                  </button>
+                </div>
               </div>
 
               {icons.length === 0 ? (

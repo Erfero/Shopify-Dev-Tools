@@ -57,6 +57,11 @@ export function getAuthHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
+export function isRemembered(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem(TOKEN_KEY);
+}
+
 export function logout(): void {
   clearAuth();
   window.location.href = "/login";

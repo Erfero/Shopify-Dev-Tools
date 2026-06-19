@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { isAuthenticated, isSessionExpired, updateActivity, logout } from "@/lib/auth";
+import { isAuthenticated, isSessionExpired, isRemembered, updateActivity, logout } from "@/lib/auth";
 
 /**
  * Logs out the user after SESSION_TIMEOUT_MS of inactivity (default 4h).
+ * Skipped when the user chose "Se souvenir de moi" (token in localStorage).
  * Call this hook once in any protected client page/layout.
  */
 export function useSessionTimeout() {
   useEffect(() => {
     if (!isAuthenticated()) return;
+
+    // "Se souvenir de moi" was checked → token lives in localStorage for 30 days.
+    // Do NOT apply the short inactivity timeout in that case.
+    if (isRemembered()) return;
 
     // Check immediately on mount
     if (isSessionExpired()) {

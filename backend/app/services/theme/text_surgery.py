@@ -29,15 +29,19 @@ def _replace_once(raw: str, field: str, old_enc: str, new_enc: str) -> tuple[str
 
     Tries both compact  ("field":"value")
     and pretty-printed  ("field": "value") formats.
+    Also falls back to unescaped / for themes that don't use Shopify's \\/ convention.
     Returns (new_raw, was_changed).
     """
     for sep in ('":"', '": "'):
-        # Build the pattern around the value so we don't accidentally
-        # match a substring of a longer value.
+        replacement = f'"{field}{sep}{new_enc}"'
         pattern = f'"{field}{sep}{old_enc}"'
         if pattern in raw:
-            replacement = f'"{field}{sep}{new_enc}"'
             return raw.replace(pattern, replacement, 1), True
+        # Also try with unescaped / (some customer themes don't use Shopify's \/ convention)
+        if "\\/" in old_enc:
+            plain_pattern = f'"{field}{sep}{old_enc.replace("\\/", "/")}"'
+            if plain_pattern in raw:
+                return raw.replace(plain_pattern, replacement, 1), True
     return raw, False
 
 

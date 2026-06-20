@@ -567,6 +567,8 @@ async def apply_theme(
         language = session.get("language", "fr")
         target_gender = session.get("target_gender", "femme")
         store_name = session.get("store_name", "")
+        delivery_delay = session.get("delivery_delay", "")
+        return_policy_days = session.get("return_policy_days", "30")
 
         # Refresh parsed_files from current disk state before applying.
         # This ensures re-apply works correctly: if the user goes back to preview
@@ -582,7 +584,7 @@ async def apply_theme(
                 except Exception:
                     pass  # Keep stale cache entry if read fails
 
-        modified_files = apply_generated_texts(structure, all_results, language=language, target_gender=target_gender, store_name=store_name)
+        modified_files = apply_generated_texts(structure, all_results, language=language, target_gender=target_gender, store_name=store_name, delivery_delay=delivery_delay, return_policy_days=return_policy_days)
 
         # NOTE: translate_remaining_texts is intentionally NOT called here.
         # Translation already ran during the Generate step (POST /generate).

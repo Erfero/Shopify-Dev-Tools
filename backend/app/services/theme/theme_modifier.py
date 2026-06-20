@@ -300,6 +300,8 @@ def apply_generated_texts(
     language: str = "fr",
     target_gender: str = "femme",
     store_name: str = "",
+    delivery_delay: str = "",
+    return_policy_days: str = "30",
 ) -> set[str]:
     """Apply all generated texts to theme files. Returns set of modified rel-paths."""
     modified: set[str] = set()
@@ -339,7 +341,7 @@ def apply_generated_texts(
 
     # ── 3c. Product page text surgery (needs hp for shared sections)
     if pp:
-        if _apply_product_page(ed, pf, pp, hp, language, target_gender):
+        if _apply_product_page(ed, pf, pp, hp, language, target_gender, delivery_delay, return_policy_days):
             modified.add("templates/product.json")
 
     # ── 4. FAQ (both pages)
@@ -391,7 +393,7 @@ def _section_by_type(data: dict, stype: str) -> tuple[str, dict] | None:
 
 
 def _sections_by_type(data: dict, stype: str) -> list[tuple[str, dict]]:
-    order = data.get("order", [])
+    order = data.get("order") or list(data.get("sections", {}).keys())
     return [
         (sid, data["sections"][sid])
         for sid in order
@@ -1135,7 +1137,7 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
 
 # ── Product page ──────────────────────────────────────────────────────────────
 
-def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = "fr", target_gender: str = "femme") -> bool:
+def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = "fr", target_gender: str = "femme", delivery_delay: str = "", return_policy_days: str = "30") -> bool:
     """Apply product_page data + shared homepage data to templates/product.json."""
     rel = "templates/product.json"
     data = _data(pf, rel)
@@ -1219,26 +1221,67 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         if pp.get("adoption"):
             _rep(reps, "text3", str(s.get("text3", "")),
                  _sanitize_richtext(pp["adoption"].get("text", "")))
-        # D4 — Delivery accordion (heading4 / text4)
-        di = pp.get("delivery_info", {})
-        if di.get("heading"):
-            _rep(reps, "heading4", str(s.get("heading4", "")), di["heading"])
-        if di.get("text"):
-            _rep(reps, "text4", str(s.get("text4", "")), _sanitize_richtext(di["text"]))
+        # D4 — Delivery accordion (heading4 / text4) — hardcoded multilingual
+        _delivery_h4 = {
+            "fr": "Informations sur la livraison",
+            "en": "Delivery information",
+            "de": "Lieferinformationen",
+            "da": "Leveringsoplysninger",
+            "sv": "Leveransinformation",
+            "no": "Leveringsinformasjon",
+            "fi": "Toimitusehdot",
+            "es": "Información de envío",
+            "pt": "Informações de entrega",
+            "it": "Informazioni sulla spedizione",
+            "nl": "Leveringsinformatie",
+            "pl": "Informacje o dostawie",
+            "ru": "Информация о доставке",
+        }
+        _delivery_t4_tpl = {
+            "fr": "<p>Nos délais de livraison sont de <strong>{d}</strong>. Livraison suivie incluse.</p><p>Satisfait ou remboursé sous <strong>{r} jours</strong>.</p>",
+            "en": "<p>Our delivery times are <strong>{d}</strong>. Tracked shipping included.</p><p>Satisfied or refunded within <strong>{r} days</strong>.</p>",
+            "de": "<p>Unsere Lieferzeiten betragen <strong>{d}</strong>. Sendungsverfolgung inklusive.</p><p>Zufrieden oder Geld zurück innerhalb von <strong>{r} Tagen</strong>.</p>",
+            "da": "<p>Vores leveringstider er <strong>{d}</strong>. Sporbar levering inkluderet.</p><p>Tilfreds eller pengene tilbage inden for <strong>{r} dage</strong>.</p>",
+            "sv": "<p>Våra leveranstider är <strong>{d}</strong>. Spårbar leverans ingår.</p><p>Nöjd eller pengarna tillbaka inom <strong>{r} dagar</strong>.</p>",
+            "no": "<p>Våre leveringstider er <strong>{d}</strong>. Sporet levering inkludert.</p><p>Fornøyd eller pengene tilbake innen <strong>{r} dager</strong>.</p>",
+            "fi": "<p>Toimitusaikamme on <strong>{d}</strong>. Seurattava toimitus sisältyy.</p><p>Tyytyväinen tai rahat takaisin <strong>{r} päivän</strong> kuluessa.</p>",
+            "es": "<p>Nuestros plazos de entrega son de <strong>{d}</strong>. Envío con seguimiento incluido.</p><p>Satisfecho o reembolsado en <strong>{r} días</strong>.</p>",
+            "pt": "<p>Nossos prazos de entrega são de <strong>{d}</strong>. Envio rastreado incluído.</p><p>Satisfeito ou reembolsado em <strong>{r} dias</strong>.</p>",
+            "it": "<p>I nostri tempi di consegna sono di <strong>{d}</strong>. Spedizione tracciata inclusa.</p><p>Soddisfatto o rimborsato entro <strong>{r} giorni</strong>.</p>",
+            "nl": "<p>Onze levertijden zijn <strong>{d}</strong>. Getraceerde verzending inbegrepen.</p><p>Tevreden of terugbetaald binnen <strong>{r} dagen</strong>.</p>",
+            "pl": "<p>Nasze czasy dostawy wynoszą <strong>{d}</strong>. Przesyłka śledzona w zestawie.</p><p>Zadowolony lub zwrot pieniędzy w ciągu <strong>{r} dni</strong>.</p>",
+            "ru": "<p>Сроки доставки составляют <strong>{d}</strong>. Включено отслеживание.</p><p>Удовлетворены или вернём деньги в течение <strong>{r} дней</strong>.</p>",
+        }
+        _h4 = _delivery_h4.get(_lang, _delivery_h4["en"])
+        _t4_raw = _delivery_t4_tpl.get(_lang, _delivery_t4_tpl["en"]).format(
+            d=delivery_delay or "3-5 jours", r=return_policy_days or "30"
+        )
+        _rep(reps, "heading4", str(s.get("heading4", "")), _h4)
+        _rep(reps, "text4", str(s.get("text4", "")), _sanitize_richtext(_t4_raw))
         break
 
-    # D5 — Delivery estimation block labels in main-product
-    di = pp.get("delivery_info", {})
-    if di:
-        for _, blk in _blocks_by_type(msec, "delivery_estimation"):
-            bs = blk.get("settings", {})
-            if di.get("today_label"):
-                _rep(reps, "today_info", str(bs.get("today_info", "")), di["today_label"])
-            if di.get("ready_label"):
-                _rep(reps, "ready_info", str(bs.get("ready_info", "")), di["ready_label"])
-            if di.get("delivered_label"):
-                _rep(reps, "delivered_info", str(bs.get("delivered_info", "")), di["delivered_label"])
-            break
+    # D5 — Delivery estimation block labels (hardcoded multilingual)
+    _today_l = {
+        "fr": "Commande", "en": "Order", "de": "Bestellung", "da": "Bestilling",
+        "sv": "Beställning", "no": "Bestilling", "fi": "Tilaus", "es": "Pedido",
+        "pt": "Pedido", "it": "Ordine", "nl": "Bestelling", "pl": "Zamówienie", "ru": "Заказ",
+    }
+    _ready_l = {
+        "fr": "Commande Prête", "en": "Order Ready", "de": "Bestellung Bereit",
+        "da": "Ordre Klar", "sv": "Order Klar", "no": "Ordre Klar", "fi": "Tilaus Valmis",
+        "es": "Pedido Listo", "pt": "Pedido Pronto", "it": "Ordine Pronto",
+        "nl": "Bestelling Klaar", "pl": "Zamówienie Gotowe", "ru": "Заказ Готов",
+    }
+    _delivered_l = {
+        "fr": "Livraison", "en": "Delivery", "de": "Lieferung", "da": "Levering",
+        "sv": "Leverans", "no": "Levering", "fi": "Toimitus", "es": "Entrega",
+        "pt": "Entrega", "it": "Consegna", "nl": "Levering", "pl": "Dostawa", "ru": "Доставка",
+    }
+    for _, blk in _blocks_by_type(msec, "delivery_estimation"):
+        _rep(reps, "today_info", _s(blk, "today_info"), _today_l.get(_lang, _today_l["en"]))
+        _rep(reps, "ready_info", _s(blk, "ready_info"), _ready_l.get(_lang, _ready_l["en"]))
+        _rep(reps, "delivered_info", _s(blk, "delivered_info"), _delivered_l.get(_lang, _delivered_l["en"]))
+        break
 
     # F — Image-with-text sections (3 sections, each gets a different advantage):
     #   image-with-text #1 ← advantages[4]  (5e avantage vendeur)
@@ -1305,31 +1348,83 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
             _rep(reps, "description", _s(blk, "description"),
                  _inline(benefits[i].get("text", "")))
 
-    # J — Static section headings (marquee-logo, ugc)
-    sh = pp.get("section_headings", {})
+    # J — Static section headings: marquee-logo, ugc (hardcoded multilingual)
+    _marquee_h = {
+        "fr": "Ils parlent de nous :", "en": "They talk about us:",
+        "de": "Sie sprechen über uns:", "da": "De taler om os:", "sv": "De pratar om oss:",
+        "no": "De snakker om oss:", "fi": "He puhuvat meistä:", "es": "Hablan de nosotros:",
+        "pt": "Eles falam de nós:", "it": "Parlano di noi:", "nl": "Ze praten over ons:",
+        "pl": "Mówią o nas:", "ru": "Они говорят о нас:",
+    }
+    _ugc_h = {
+        "fr": "Ils ont utilisé notre produit et sont satisfaits",
+        "en": "They used our product and are satisfied",
+        "de": "Sie haben unser Produkt verwendet und sind zufrieden",
+        "da": "De har brugt vores produkt og er tilfredse",
+        "sv": "De har använt vår produkt och är nöjda",
+        "no": "De har brukt produktet vårt og er fornøyde",
+        "fi": "He ovat käyttäneet tuotettamme ja ovat tyytyväisiä",
+        "es": "Han usado nuestro producto y están satisfechos",
+        "pt": "Eles usaram nosso produto e estão satisfeitos",
+        "it": "Hanno usato il nostro prodotto e sono soddisfatti",
+        "nl": "Ze hebben ons product gebruikt en zijn tevreden",
+        "pl": "Używali naszego produktu i są zadowoleni",
+        "ru": "Они использовали наш продукт и довольны",
+    }
     for _, sec in _sections_by_type(data, "marquee-logo"):
-        if sh.get("marquee"):
-            _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
-                 sh["marquee"])
+        _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
+             _marquee_h.get(_lang, _marquee_h["en"]))
     for _, sec in _sections_by_type(data, "ugc"):
-        if sh.get("ugc"):
-            _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
-                 sh["ugc"])
+        _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
+             _ugc_h.get(_lang, _ugc_h["en"]))
 
-    # K — main-product text blocks and buy button
-    if sh:
-        for i, (_, blk) in enumerate(_blocks_by_type(msec, "text")):
-            s = blk.get("settings", {})
-            old_text = str(s.get("text", ""))
-            if i == 0 and sh.get("product_tagline"):
-                _rep(reps, "text", old_text, sh["product_tagline"])
-            elif i == 1 and sh.get("delivery_promo"):
-                _rep(reps, "text", old_text, sh["delivery_promo"])
-        for _, blk in _blocks_by_type(msec, "buy_buttons"):
-            s = blk.get("settings", {})
-            if sh.get("buy_button"):
-                _rep(reps, "button_text", str(s.get("button_text", "")), sh["buy_button"])
-            break
+    # K — main-product: product tagline, delivery promo, buy button (hardcoded multilingual)
+    _tagline = {
+        "fr": "Qualité Supérieure. Livraison Gratuite",
+        "en": "Superior Quality. Free Shipping",
+        "de": "Überlegene Qualität. Kostenloser Versand",
+        "da": "Overlegen kvalitet. Gratis forsendelse",
+        "sv": "Överlägsen kvalitet. Gratis frakt",
+        "no": "Overlegen kvalitet. Gratis frakt",
+        "fi": "Ylivoimainen laatu. Ilmainen toimitus",
+        "es": "Calidad Superior. Envío Gratuito",
+        "pt": "Qualidade Superior. Frete Grátis",
+        "it": "Qualità Superiore. Spedizione Gratuita",
+        "nl": "Superieure Kwaliteit. Gratis Verzending",
+        "pl": "Wyższa Jakość. Darmowa Dostawa",
+        "ru": "Превосходное Качество. Бесплатная Доставка",
+    }
+    _promo = {
+        "fr": "🚚 Livraison Gratuite Seulement Aujourd'hui",
+        "en": "🚚 Free Shipping Today Only",
+        "de": "🚚 Kostenloser Versand Nur Heute",
+        "da": "🚚 Gratis Fragt Kun I Dag",
+        "sv": "🚚 Gratis Frakt Endast Idag",
+        "no": "🚚 Gratis Frakt Kun I Dag",
+        "fi": "🚚 Ilmainen Toimitus Vain Tänään",
+        "es": "🚚 Envío Gratuito Solo Hoy",
+        "pt": "🚚 Frete Grátis Somente Hoje",
+        "it": "🚚 Spedizione Gratuita Solo Oggi",
+        "nl": "🚚 Gratis Verzending Alleen Vandaag",
+        "pl": "🚚 Darmowa Dostawa Tylko Dziś",
+        "ru": "🚚 Бесплатная Доставка Только Сегодня",
+    }
+    _btn_text = {
+        "fr": "AJOUTER AU PANIER", "en": "ADD TO CART", "de": "IN DEN WARENKORB",
+        "da": "TILFØJ TIL KURV", "sv": "LÄGG I VARUKORG", "no": "LEGG I HANDLEKURV",
+        "fi": "LISÄÄ OSTOSKORIIN", "es": "AÑADIR AL CARRITO", "pt": "ADICIONAR AO CARRINHO",
+        "it": "AGGIUNGI AL CARRELLO", "nl": "IN WINKELWAGEN", "pl": "DODAJ DO KOSZYKA",
+        "ru": "ДОБАВИТЬ В КОРЗИНУ",
+    }
+    for i, (_, blk) in enumerate(_blocks_by_type(msec, "text")):
+        old_text = _s(blk, "text")
+        if i == 0:
+            _rep(reps, "text", old_text, _tagline.get(_lang, _tagline["en"]))
+        elif i == 1:
+            _rep(reps, "text", old_text, _promo.get(_lang, _promo["en"]))
+    for _, blk in _blocks_by_type(msec, "buy_buttons"):
+        _rep(reps, "button_text", _s(blk, "button_text"), _btn_text.get(_lang, _btn_text["en"]))
+        break
 
     return apply_replacements(ed / rel, reps) > 0
 

@@ -479,6 +479,11 @@ def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str, ai_u
             break
 
     if found_sec is not None:
+        # Update heading in existing section to match the selected language
+        if found_sec.get("settings") is not None:
+            _h = _REVIEWS_HEADING.get(language) or ai_ui.get("reviews_heading") or _REVIEWS_HEADING["en"]
+            if _h:
+                found_sec["settings"]["heading"] = _h
         _fill_index_reviews_mixed_blocks(found_sec, reviews)
     else:
         new_id = f"reviews_{uuid.uuid4().hex[:8]}"
@@ -558,12 +563,24 @@ def _inject_into_template(
             break
 
     if found_sec is not None:
+        # Also update the section heading in the right language
+        if found_sec.get("settings") is not None:
+            if section_type == "reviews-two":
+                _h = _REVIEWS_TWO_HEADING.get(language) or ai_ui.get("reviews_two_heading") or _REVIEWS_TWO_HEADING["en"]
+            else:
+                _h = _REVIEWS_HEADING.get(language) or ai_ui.get("reviews_heading") or _REVIEWS_HEADING["en"]
+            if _h:
+                found_sec["settings"]["heading"] = _h
         if section_type == "reviews":
             _fill_reviews_mixed_blocks(found_sec, reviews)
         else:
             _fill_review_blocks(found_sec, block_type, reviews, target_count)
     else:
-        # Section missing — create it with all 15 review blocks pre-filled
+        # Only create the section if its Liquid file exists in this theme.
+        # If not (e.g. Sylys has no reviews-two.liquid), skip to avoid a broken section.
+        liquid_file = ed / "sections" / f"{section_type}.liquid"
+        if not liquid_file.exists():
+            return False
         new_id = f"reviews_{uuid.uuid4().hex[:8]}"
         new_sec = _make_review_section(section_type, block_type, reviews, target_count, language, ai_ui=ai_ui)
         data.setdefault("sections", {})[new_id] = new_sec
@@ -1121,7 +1138,13 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
     _, msec = main
 
     reps: list[tuple[str, str, str]] = []
-    for _, blk in _blocks_by_type(msec, "description-faq"):
+    # Try all description block type names used across Story theme variants
+    _desc_blocks = (
+        _blocks_by_type(msec, "description-faq")
+        or _blocks_by_type(msec, "description-text")
+        or _blocks_by_type(msec, "description")
+    )
+    for _, blk in _desc_blocks:
         s = blk.get("settings", {})
         for key, val in [("heading1", h1), ("heading2", h2), ("heading3", h3)]:
             old = str(s.get(key, ""))
@@ -1216,8 +1239,13 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         h2 = ai_ui.get("accordion_how_it_works") or _fixed_headings["en"][1]
         h3 = _fixed_headings["en"][2]  # dynamic plural form, no ai_ui key for it
 
-    # C/D/E — Bloc description-faq: product_description, how_it_works, adoption
-    for _, blk in _blocks_by_type(msec, "description-faq"):
+    # C/D/E — Bloc description-faq (also description-text in Basic, description in Sylys)
+    _desc_blks = (
+        _blocks_by_type(msec, "description-faq")
+        or _blocks_by_type(msec, "description-text")
+        or _blocks_by_type(msec, "description")
+    )
+    for _, blk in _desc_blks:
         s = blk.get("settings", {})
         # heading1 = "Description" (fixe)
         _rep(reps, "heading1", str(s.get("heading1", "")), h1)
@@ -1651,7 +1679,8 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_ui: dic
             continue
         for _, blk in sec.get("blocks", {}).items():
             btype = blk.get("type", "")
-            if btype == "announcement-timer":
+            # announcement-fade and plain announcement are used by some themes instead of announcement-timer
+            if btype in ("announcement-timer", "announcement-fade", "announcement"):
                 _rep(reps, "text", _s(blk, "text"), _inline(_timer_text))
             elif btype == "announcement-marquee":
                 _marquee_texts = {
@@ -2048,6 +2077,38 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_
                 _rep(reps, "delivered_info", str(bs.get("delivered_info", "")), delivered)
 
         break  # Only first cart-drawer section
+
+    # Fallback for themes that store cart settings as inline top-level keys in
+    # current{} instead of a cart-drawer section (e.g. Sylys, Love themes).
+    # These use: cart_button_text, cart_upsell_title, cart_upsell_button_text,
+    # cart_protection_text, cart_savings_text, cart_subtotal_text, cart_total_text,
+    # cart_footer_text, timer_timeout_text, cart_module_timer_text
+    _has_inline_cart = any(k in cur for k in ("cart_button_text", "cart_module_timer_text"))
+    _has_cart_drawer = any(s.get("type") == "cart-drawer" for s in cur.get("sections", {}).values())
+    if _has_inline_cart and not _has_cart_drawer:
+        _cart_footer_val_inline = (
+            _cart_footer.get(_lang2)
+            or (f"<strong>{ai_ui['cart_footer']}</strong>" if ai_ui.get("cart_footer") else None)
+            or _cart_footer["en"]
+        )
+        _rep(reps, "cart_button_text",        str(cur.get("cart_button_text", "")),
+             _cart_button.get(_lang2) or ai_ui.get("cart_button") or _cart_button["en"])
+        _rep(reps, "cart_upsell_title",       str(cur.get("cart_upsell_title", "")),
+             _upsell_titles.get(_lang2) or ai_ui.get("cart_upsell_title") or _upsell_titles["en"])
+        _rep(reps, "cart_upsell_button_text", str(cur.get("cart_upsell_button_text", "")),
+             _upsell_btn.get(_lang2) or ai_ui.get("cart_upsell_button") or _upsell_btn["en"])
+        _rep(reps, "cart_protection_text",    str(cur.get("cart_protection_text", "")),
+             _protection.get(_lang2) or ai_ui.get("cart_protection") or _protection["en"])
+        _rep(reps, "cart_savings_text",       str(cur.get("cart_savings_text", "")),
+             _savings.get(_lang2) or ai_ui.get("cart_savings") or _savings["en"])
+        _rep(reps, "cart_subtotal_text",      str(cur.get("cart_subtotal_text", "")),
+             _subtotal.get(_lang2) or ai_ui.get("cart_subtotal") or _subtotal["en"])
+        _rep(reps, "cart_total_text",         str(cur.get("cart_total_text", "")),
+             _total.get(_lang2) or ai_ui.get("cart_total") or _total["en"])
+        _rep(reps, "cart_footer_text",        str(cur.get("cart_footer_text", "")),
+             _cart_footer_val_inline)
+        _rep(reps, "cart_module_timer_text",  str(cur.get("cart_module_timer_text", "")),
+             timer_text)
 
     return apply_replacements(ed / rel, reps) > 0
 

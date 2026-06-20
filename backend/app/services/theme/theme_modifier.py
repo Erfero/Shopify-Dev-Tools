@@ -1272,9 +1272,18 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
             "ru": "<p>Сроки доставки составляют <strong>{d}</strong>. Включено отслеживание.</p><p>Удовлетворены или вернём деньги в течение <strong>{r} дней</strong>.</p>",
         }
         _h4 = _delivery_h4.get(_lang) or ai_ui.get("delivery_heading") or _delivery_h4["en"]
-        _t4_raw = _delivery_t4_tpl.get(_lang, _delivery_t4_tpl["en"]).format(
-            d=delivery_delay or "3-5 jours", r=return_policy_days or "30"
-        )
+        if ai_ui.get("delivery_body"):
+            # AI-translated delivery body for non-13 languages: replace $delay/$return placeholders
+            _body = (
+                ai_ui["delivery_body"]
+                .replace("$delay", delivery_delay or "3-5 days")
+                .replace("$return", return_policy_days or "30")
+            )
+            _t4_raw = f"<p>{_body}</p>"
+        else:
+            _t4_raw = _delivery_t4_tpl.get(_lang, _delivery_t4_tpl["en"]).format(
+                d=delivery_delay or "3-5 jours", r=return_policy_days or "30"
+            )
         _rep(reps, "heading4", str(s.get("heading4", "")), _h4)
         _rep(reps, "text4", str(s.get("text4", "")), _sanitize_richtext(_t4_raw))
         break
@@ -1696,10 +1705,16 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
         "pl": f"DOŁĄCZ DO ZESPOŁU {_store_upper}!",
         "ru": f"ПРИСОЕДИНЯЙТЕСЬ К КОМАНДЕ {_store_upper}!",
     }
-    _newsletter_heading = _newsletter_headings.get(_lang2, _newsletter_headings["en"])
-
     reps: list[tuple[str, str, str]] = []
     footer = gt.get("footer", {})
+
+    # Use AI-generated newsletter heading for non-13 languages (it includes the store name),
+    # otherwise use the hardcoded multilingual dict.
+    _newsletter_heading = (
+        footer.get("newsletter_heading")
+        or _newsletter_headings.get(_lang2)
+        or _newsletter_headings["en"]
+    )
 
     for _, sec in data.get("sections", {}).items():
         stype = sec.get("type", "")
@@ -1983,13 +1998,14 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_
     settings_txt = gt.get("settings", {})
     cur = data.get("current", {})
 
-    # Top-level settings (fixed translations, AI override if present)
+    # Top-level settings — ai_ui first so non-13-lang AI translations win over
+    # the English-fallback values injected by _STATIC_UI for unknown languages.
     _rep(reps, "product_card_button_text",
          str(cur.get("product_card_button_text", "")),
-         settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2) or ai_ui.get("product_card_button") or _product_card_btn["en"])
+         ai_ui.get("product_card_button") or settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2) or _product_card_btn["en"])
     _rep(reps, "timer_timeout_text",
          str(cur.get("timer_timeout_text", "")),
-         settings_txt.get("timer_timeout_text") or _timeout.get(_lang2) or ai_ui.get("timer_timeout") or _timeout["en"])
+         ai_ui.get("timer_timeout") or settings_txt.get("timer_timeout_text") or _timeout.get(_lang2) or _timeout["en"])
 
     # Cart-drawer section — always use hardcoded translations for reliability.
     # AI-generated cart values are unreliable (often wrong language).

@@ -437,12 +437,13 @@ IMPORTANT : Des images du produit sont jointes. Adapte les textes globaux au pro
     "tracking_button": "Track",
     "tracking_label": "Order tracking number",
     "contact_order_number": "Order Number",
-    "contact_send": "Send"
+    "contact_send": "Send",
+    "delivery_body": "Our delivery times are $delay. Tracked shipping included. Satisfied or refunded within $return days."
   }},"""
         ui_constraint = f"""- TRANSLATE ALL "ui" values into perfect {lang}. Each value shown above is the English reference — replace it with the correct {lang} translation. Rules:
   * buy_button and cart_button must be ALL-CAPS
   * header_timer and header_marquee must be ALL-CAPS
-  * Keep "$time" exactly as "$time" (it is a placeholder, do NOT translate it)
+  * Keep "$time", "$delay" and "$return" exactly as-is (they are placeholders, do NOT translate them)
   * Keep "🚚" and "⭐" emojis exactly as-is
   * Keep "4.8/5" and "9860" as numbers, do not change them
   * "🔐 Secure Payment" part of cart_footer: translate "Secure Payment" only"""

@@ -56,6 +56,7 @@ export default function ThemePage() {
   const [showHistory, setShowHistory] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const lastConfigRef = useRef<StoreConfig | null>(null);
+  const themeFileRef = useRef<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const generateAbortRef = useRef<AbortController | null>(null);
 
@@ -129,6 +130,7 @@ export default function ThemePage() {
   }, [uploadData, appStep, previewData]);
 
   const handleFileSelected = useCallback(async (file: File) => {
+    themeFileRef.current = file;
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
@@ -166,35 +168,64 @@ export default function ThemePage() {
     setGenerationError(null);
     setPreviewData(null);
     setIsGenerating(true);
+
+    const onStep = (step: GenerationStep) => {
+      setGenerationSteps((prev) => {
+        const idx = prev.findIndex((s) => s.step === step.step);
+        if (idx >= 0) { const u = [...prev]; u[idx] = step; return u; }
+        return [...prev, step];
+      });
+      if (step.step === "preview" && step.status === "done" && step.data) {
+        const newData = step.data as Record<string, unknown>;
+        setPreviewData(newData);
+        pushToHistory(newData);
+        setAppStep("preview");
+      }
+      if (step.status === "error") {
+        setGenerationError(step.message || "Une erreur est survenue lors de la génération.");
+      }
+    };
+
     try {
       await generateTheme(
         { session_id: uploadData.session_id, ...config },
-        (step) => {
-          setGenerationSteps((prev) => {
-            const idx = prev.findIndex((s) => s.step === step.step);
-            if (idx >= 0) { const u = [...prev]; u[idx] = step; return u; }
-            return [...prev, step];
-          });
-          if (step.step === "preview" && step.status === "done" && step.data) {
-            const newData = step.data as Record<string, unknown>;
-            setPreviewData(newData);
-            pushToHistory(newData);
-            setAppStep("preview");
-          }
-          if (step.status === "error") {
-            setGenerationError(step.message || "Une erreur est survenue lors de la génération.");
-          }
-        },
+        onStep,
         controller.signal,
       );
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
+
+      // Session expired because Render restarted — attempt transparent recovery
+      const isSessionGone = err instanceof Error && err.message.includes("re-uploader");
+      if (isSessionGone) {
+        if (themeFileRef.current) {
+          try {
+            toast.info("Reconnexion au serveur…", { duration: 3000 });
+            setGenerationSteps([]);
+            const recovered = await uploadTheme(themeFileRef.current);
+            setUploadData(recovered);
+            await generateTheme({ session_id: recovered.session_id, ...config }, onStep, controller.signal);
+            return;
+          } catch (retryErr) {
+            if (retryErr instanceof Error && retryErr.name === "AbortError") return;
+            // Recovery failed — fall through to reset
+          }
+        }
+        // File no longer in memory (page was refreshed) or recovery failed
+        toast.info("Session expirée. Veuillez re-sélectionner votre thème — vos informations ont été sauvegardées.");
+        setGenerationError(null);
+        setUploadData(null);
+        setAppStep("upload");
+        return;
+      }
+
       setGenerationError(err instanceof Error ? err.message : "Erreur lors de la génération");
+      setAppStep("configure");
     } finally {
       setIsGenerating(false);
       if (generateAbortRef.current === controller) generateAbortRef.current = null;
     }
-  }, [uploadData]);
+  }, [uploadData, pushToHistory]);
 
   const handleCancelGeneration = useCallback(() => {
     generateAbortRef.current?.abort();
@@ -234,6 +265,7 @@ export default function ThemePage() {
     setHistoryIndex(-1);
     historyIndexRef.current = -1;
     lastConfigRef.current = null;
+    themeFileRef.current = null;
     localStorage.removeItem("theme_session");
   }, []);
 

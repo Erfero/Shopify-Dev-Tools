@@ -522,6 +522,8 @@ def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str, ai_u
                 found_sec["settings"]["heading"] = _h
         _fill_index_reviews_mixed_blocks(found_sec, reviews)
     else:
+        if not (ed / "sections" / "reviews.liquid").exists():
+            return False
         new_id = f"reviews_{uuid.uuid4().hex[:8]}"
         new_sec = _make_review_section(
             "reviews", "text", reviews, _INDEX_REVIEWS_TEXT_COUNT, language,
@@ -1182,6 +1184,29 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
     )
     for _, blk in _desc_blocks:
         s = blk.get("settings", {})
+
+        # Some themes (e.g. Basic's description-text) have no heading/text fields
+        # in their block settings at all — text surgery would find nothing to replace.
+        # In that case, inject the fields directly via JSON write so that
+        # _apply_product_page can subsequently update text1-text4 via text surgery.
+        _required = ("heading1", "heading2", "heading3", "text1", "text2", "text3", "heading4", "text4")
+        if any(k not in s for k in _required):
+            s["heading1"] = h1
+            s["heading2"] = h2
+            s["heading3"] = h3
+            for k in ("text1", "text2", "text3", "text4"):
+                s.setdefault(k, "")
+            s.setdefault("heading4", "")
+            write_theme_json(ed / rel, data, comment, is_compact)
+            from app.utils.json_handler import read_theme_json, detect_json_format
+            try:
+                new_data, new_comment = read_theme_json(ed / rel)
+                pf[rel] = (new_data, new_comment, detect_json_format(ed / rel))
+            except Exception:
+                pass
+            return True
+
+        # All fields exist — use text surgery to update headings
         for key, val in [("heading1", h1), ("heading2", h2), ("heading3", h3)]:
             old = str(s.get(key, ""))
             if old != val:

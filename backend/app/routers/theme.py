@@ -42,6 +42,9 @@ router = APIRouter(prefix="/api/theme", tags=["theme"], dependencies=[Depends(ve
 _ALLOWED_LANGUAGES = {
     "fr", "en", "de", "da", "sv", "no", "fi", "es", "pt", "it", "nl", "pl", "ru",
 }
+# All language codes accepted — AI handles any language natively.
+# _ALLOWED_LANGUAGES is kept for reference (fully-localised static labels)
+# but is no longer used as a hard block.
 
 # ── In-memory session store ───────────────────────────────────────────────────
 
@@ -384,12 +387,6 @@ async def generate_theme(
         raise HTTPException(
             status_code=400,
             detail=f"Maximum {_MAX_PRODUCTS} produits par requête.",
-        )
-
-    if language not in _ALLOWED_LANGUAGES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Langue '{language}' non supportée. Langues acceptées : {', '.join(sorted(_ALLOWED_LANGUAGES))}.",
         )
 
     session["language"] = language

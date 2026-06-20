@@ -230,10 +230,9 @@ def _remove_invalid_template_blocks(ed: Path) -> int:
                     changed = True
 
             if changed:
-                template_file.write_text(
-                    json.dumps(data, ensure_ascii=False, separators=(",", ":")),
-                    encoding="utf-8",
-                )
+                json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+                json_str = json_str.replace("/", "\\/")
+                template_file.write_text(json_str, encoding="utf-8")
         except Exception:
             continue
 
@@ -412,11 +411,12 @@ def _blocks_by_type(section: dict, btype: str) -> list[tuple[str, dict]]:
 
 
 def _s(block: dict, key: str) -> str:
-    return str(block.get("settings", {}).get(key, ""))
+    val = block.get("settings", {}).get(key, "")
+    return "" if val is None else str(val)
 
 
 def _rep(reps: list, field: str, old: str, new: str) -> None:
-    if old and new and old != new:
+    if new and old != new:
         reps.append((field, old, new))
 
 

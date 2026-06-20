@@ -265,31 +265,67 @@ def _is_story_structure(ed: Path) -> bool:
 def _rebuild_to_story_structure(ed: Path) -> bool:
     """Rebuild index.json and product.json to match Story Theme structure.
 
-    Uses the uploaded theme's own Liquid section files — only copies truly missing
-    Liquid files (e.g. reviews-two.liquid) from the reference bundle.
+    Uses the Story-3.5.0 reference template JSONs bundled in theme_reference/.
+    Strategy:
+    - Only includes sections whose .liquid file already exists in the uploaded theme
+      (Sylys without reviews-two.liquid won't get a broken section; Basic gets it).
+    - For product.json: replaces the reference's main-product section with the
+      uploaded theme's own main-product section, so that the block types match the
+      theme's own main-product.liquid schema (e.g. Sylys uses 'description' blocks,
+      not 'description-faq').
+    - Never modifies or copies .liquid files — only rewrites JSON template files.
     Returns True if any files were written.
     """
-    changed = False
     templates_dir = ed / "templates"
     sections_dir = ed / "sections"
 
-    # ── 1. Copy reference template JSONs ─────────────────────────────────────
+    # Liquid stems available in the uploaded theme: stem == section type
+    existing_liquid: set[str] = set()
+    if sections_dir.exists():
+        existing_liquid = {f.stem for f in sections_dir.glob("*.liquid")}
+
+    changed = False
     for tmpl_name in ("index.json", "product.json"):
         ref_file = _REFERENCE_DIR / "templates" / tmpl_name
         if not ref_file.exists():
             continue
-        target = templates_dir / tmpl_name
-        shutil.copy2(ref_file, target)
-        changed = True
+        try:
+            ref_data = json.loads(ref_file.read_text(encoding="utf-8"))
+        except Exception:
+            continue
 
-    # ── 2. Copy only missing Liquid section files from reference ─────────────
-    ref_sections = _REFERENCE_DIR / "sections"
-    if ref_sections.exists():
-        for ref_liquid in ref_sections.glob("*.liquid"):
-            target = sections_dir / ref_liquid.name
-            if not target.exists():
-                shutil.copy2(ref_liquid, target)
-                changed = True
+        # Keep sections whose liquid file exists in the uploaded theme.
+        filtered_sections: dict = {}
+        for sid, sec in ref_data.get("sections", {}).items():
+            if sec.get("type", "") in existing_liquid:
+                filtered_sections[sid] = sec
+
+        # For product.json: replace the reference main-product section with the
+        # uploaded theme's own (preserves correct block types for that theme's liquid).
+        if tmpl_name == "product.json":
+            target_path = templates_dir / tmpl_name
+            if target_path.exists():
+                try:
+                    existing_data = json.loads(target_path.read_text(encoding="utf-8"))
+                    for sid, sec in existing_data.get("sections", {}).items():
+                        if sec.get("type") == "main-product":
+                            # The reference always uses key "main" for main-product
+                            if "main" in filtered_sections:
+                                filtered_sections["main"] = sec
+                            break
+                except Exception:
+                    pass
+
+        ref_order: list = ref_data.get("order", list(ref_data.get("sections", {}).keys()))
+        filtered_order = [sid for sid in ref_order if sid in filtered_sections]
+
+        target_data = {**ref_data, "sections": filtered_sections, "order": filtered_order}
+
+        (templates_dir / tmpl_name).write_text(
+            json.dumps(target_data, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        changed = True
 
     return changed
 

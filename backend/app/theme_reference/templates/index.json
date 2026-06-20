@@ -7,7 +7,7 @@
           "type": "heading",
           "settings": {
             "subheading": "",
-            "heading": "LISSEYA : Sculptez Votre Silhouette avec Style et Confort.",
+            "heading": "Glynne : Révélez une Peau Lumineuse, Naturellement Sublimée.",
             "heading_style": "1",
             "heading_font_size": 100,
             "heading_font_size_mobile": 100,
@@ -19,7 +19,7 @@
         "template--19360652722473__42f1fbd7-9a5f-4361-bee4-1dd38dc77aa3-168655670373b01bcd-2": {
           "type": "button",
           "settings": {
-            "button_text": "Découvrez Votre Style",
+            "button_text": "Découvrir le Savon Curcuma",
             "button_link": "shopify://collections/all",
             "button_style": "1",
             "button_text_secondary": "",
@@ -140,21 +140,21 @@
           "type": "heading",
           "settings": {
             "subheading": "",
-            "heading": "Bienvenue chez LISSEYA, Votre Allié Minceur !",
+            "heading": "Bienvenue chez Glynne !",
             "heading_style": "2"
           }
         },
         "text_8PytgY": {
           "type": "text",
           "settings": {
-            "description": "<p>Chez LISSEYA, nous vous aidons à <strong>révéler votre meilleure version</strong> avec des vêtements innovants. Découvrez nos leggings 3D, conçus pour un <strong>confort absolu</strong> et une silhouette sublimée.</p>",
+            "description": "<p>Découvrez notre gamme de soins naturels, conçue pour <strong>sublimer votre beauté</strong> au quotidien. Notre savon au curcuma est une invitation à retrouver une peau éclatante et saine.</p>",
             "color_bold_words": "text"
           }
         },
         "button_8MdCa9": {
           "type": "button",
           "settings": {
-            "button_text": "Découvrez Votre Style",
+            "button_text": "Découvrir le Savon Curcuma",
             "button_link": "",
             "button_style": "2",
             "extra_button": false
@@ -199,8 +199,8 @@
           "type": "icon",
           "settings": {
             "icon": "check_mark",
-            "heading": "Silhouette sculptée",
-            "description": "Obtenez un <strong>effet push-up</strong> immédiat qui sublime vos courbes.",
+            "heading": "Unifie le Teint",
+            "description": "Le curcuma <strong>réduit les imperfections</strong> pour un teint plus harmonieux.",
             "heading_font_size": 24,
             "heading_font_size_mobile": 21,
             "button_text": "Discover",
@@ -212,8 +212,8 @@
           "type": "icon",
           "settings": {
             "icon": "check_mark",
-            "heading": "Confort inégalé",
-            "description": "Profitez d'une matière <strong>douce et respirante</strong> pour toutes vos activités.",
+            "heading": "Action Anti-âge",
+            "description": "Ses antioxydants <strong>protègent la peau</strong> et luttent contre le vieillissement.",
             "heading_font_size": 24,
             "heading_font_size_mobile": 21,
             "button_text": "Discover",
@@ -225,8 +225,8 @@
           "type": "icon",
           "settings": {
             "icon": "check_mark",
-            "heading": "Style polyvalent",
-            "description": "Portez-le pour le sport ou au quotidien, restez <strong>toujours élégante</strong>.",
+            "heading": "Nettoyage Profond",
+            "description": "Élimine les impuretés pour une peau <strong>visiblement plus pure</strong> et fraîche.",
             "heading_font_size": 24,
             "heading_font_size_mobile": 21,
             "button_text": "Discover",
@@ -291,7 +291,7 @@
         "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-0": {
           "type": "heading",
           "settings": {
-            "heading": "Sculptez une Silhouette Parfaite Instantanément",
+            "heading": "Retrouvez un Teint Uniforme en Seulement 2 Semaines",
             "heading_level": "2",
             "heading_style": "2",
             "icon": "none"
@@ -300,14 +300,14 @@
         "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-1": {
           "type": "text",
           "settings": {
-            "description": "<p>Nos leggings 3D <strong>redessinent vos formes</strong> pour une silhouette affinée et galbée. Vous vous sentirez <strong>immédiatement plus confiante</strong> et élégante dans toutes vos tenues.</p>",
+            "description": "<p>Dites adieu aux taches et aux irrégularités qui ternissent votre peau. Obtenez un teint <strong>visiblement plus homogène</strong> et lumineux.</p>",
             "color_bold_words": "text"
           }
         },
         "template--19360652722473__5b487781-6227-4db6-af44-deaf82bf3b71-16865770816bacdf68-2": {
           "type": "button",
           "settings": {
-            "button_text": "Découvrez Votre Style",
+            "button_text": "Découvrir le Savon Curcuma",
             "button_link": "shopify://collections/all",
             "button_style": "1",
             "button_text_secondary": "",
@@ -366,7 +366,7 @@
         "heading_w7nAbG": {
           "type": "heading",
           "settings": {
-            "heading": "Adoptez un Confort Optimal en Toute Situation",
+            "heading": "Révélez l'Éclat Naturel de Votre Peau Instantanément",
             "heading_level": "2",
             "heading_style": "2",
             "icon": "none"
@@ -375,7 +375,7 @@
         "text_Wh6ibQ": {
           "type": "text",
           "settings": {
-            "description": "<p>La matière extensible et sans coutures assure une <strong>liberté de mouvement totale</strong> sans aucune gêne. Profitez d'une sensation de <strong>seconde peau</strong>, idéale pour le sport ou la détente.</p>",
+            "description": "<p>Le savon au curcuma exfolie en douceur, faisant ressortir votre <strong>lumière intérieure</strong>. Votre peau paraît immédiatement plus fraîche et revitalisée.</p>",
             "color_bold_words": "text"
           }
         }
@@ -427,8 +427,8 @@
         "bullet_cBT4Pf": {
           "type": "bullet",
           "settings": {
-            "title": "Effet push-up immédiat",
-            "tooltip": "La conception 3D <strong>soulève et galbe</strong> pour un fessier parfait.",
+            "title": "Teint uniforme 2 semaines",
+            "tooltip": "Le curcuma <strong>réduit visiblement</strong> les taches et imperfections.",
             "col_1": "check",
             "text_1": "👌",
             "col_2": "cross",
@@ -442,8 +442,8 @@
         "bullet_Rt3McB": {
           "type": "bullet",
           "settings": {
-            "title": "Tissu respirant anti-transpiration",
-            "tooltip": "Profitez d'une sensation de <strong>fraîcheur durable</strong> même à l'effort.",
+            "title": "Formule naturelle enrichie",
+            "tooltip": "Des ingrédients <strong>d'origine végétale</strong> pour une peau saine.",
             "col_1": "check",
             "text_1": "👌",
             "col_2": "check",
@@ -457,8 +457,8 @@
         "bullet_hnwRed": {
           "type": "bullet",
           "settings": {
-            "title": "Confort sans coutures",
-            "tooltip": "Zéro irritation, pour une <strong>liberté de mouvement</strong> maximale.",
+            "title": "Action exfoliante douce",
+            "tooltip": "Élimine les cellules mortes <strong>sans agresser</strong> l'épiderme.",
             "col_1": "check",
             "text_1": "👌",
             "col_2": "cross",
@@ -472,8 +472,8 @@
         "bullet_cPgFFB": {
           "type": "bullet",
           "settings": {
-            "title": "Maintien taille haute",
-            "tooltip": "Une ceinture élastique qui <strong>affine votre ventre</strong> et vos hanches.",
+            "title": "Éclat immédiat garanti",
+            "tooltip": "Votre peau est <strong>lumineuse dès la 1ère</strong> utilisation.",
             "col_1": "check",
             "text_1": "👌",
             "col_2": "cross",
@@ -487,8 +487,8 @@
         "bullet_VYkWYV": {
           "type": "bullet",
           "settings": {
-            "title": "Design 3D unique",
-            "tooltip": "Des motifs texturés pour un look <strong>moderne et stylé</strong>.",
+            "title": "Antioxydant puissant",
+            "tooltip": "Le curcuma <strong>protège activement</strong> la peau du vieillissement.",
             "col_1": "check",
             "text_1": "👌",
             "col_2": "cross",
@@ -510,9 +510,9 @@
       "settings": {
         "section_id": "",
         "subheading": "",
-        "heading": "Pourquoi choisir les Leggings 3D LISSEYA ?",
+        "heading": "Pourquoi choisir Glynne ?",
         "heading_style": "2",
-        "description": "Découvrez ce qui rend nos leggings <strong>incomparables</strong> et essentiels.",
+        "description": "Notre savon au curcuma offre des <strong>bénéfices inégalés</strong> pour votre peau.",
         "alignment": "center",
         "brand_display_1": "img",
         "brand_heading_1": "",
@@ -554,21 +554,21 @@
           "type": "heading",
           "settings": {
             "subheading": "",
-            "heading": "Révélez un Look Tendance et Versatile",
+            "heading": "Boostez Votre Confiance avec une Peau Saine et Rayonnante",
             "heading_style": "2"
           }
         },
         "text_e693eK": {
           "type": "text",
           "settings": {
-            "description": "<p>Grâce à son design 3D unique, ce legging <strong>modernise instantanément</strong> votre garde-robe. Il s'adapte à tous les styles, vous permettant d'être <strong>toujours au top</strong>.</p>",
+            "description": "<p>Une peau belle et saine renforce votre estime de soi, vous faisant vous sentir <strong>radieuse chaque jour</strong>. Affichez une confiance inébranlable.</p>",
             "color_bold_words": "text"
           }
         },
         "button_NWEmaF": {
           "type": "button",
           "settings": {
-            "button_text": "Découvrez Votre Style",
+            "button_text": "Découvrir le Savon Curcuma",
             "button_link": "shopify://products/meuble-tv-avec-eclairage-led",
             "button_style": "1",
             "extra_button": false
@@ -613,32 +613,32 @@
           "type": "spec",
           "settings": {
             "icon": "check_mark",
-            "heading": "Effet Sculptant",
-            "description": "La technologie 3D <strong>redessine et sublime</strong> vos courbes naturelles."
+            "heading": "Éclat Naturel",
+            "description": "Ravive le teint pour une peau <strong>visiblement plus lumineuse</strong>."
           }
         },
         "spec_qEYJAL": {
           "type": "spec",
           "settings": {
             "icon": "star",
-            "heading": "Liberté Mouvement",
-            "description": "Sa matière élastique offre une <strong>souplesse incroyable</strong> sans restriction."
+            "heading": "Peau Douce",
+            "description": "Laisse la peau <strong>parfaitement douce</strong> et soyeuse au toucher."
           }
         },
         "spec_XJqpVX": {
           "type": "spec",
           "settings": {
             "icon": "snowflake",
-            "heading": "Design Tendance",
-            "description": "Un motif unique qui <strong>modernise instantanément</strong> votre tenue."
+            "heading": "Action Purifiante",
+            "description": "Nettoie en profondeur et aide à <strong>réduire les impuretés</strong>."
           }
         },
         "spec_KQqKV6": {
           "type": "spec",
           "settings": {
             "icon": "box",
-            "heading": "Polyvalence Assurée",
-            "description": "Idéal pour le sport ou la ville, il s'adapte à <strong>toutes vos envies</strong>."
+            "heading": "Ingrédients Soigneux",
+            "description": "Formule respectueuse, enrichie en <strong>bienfaits du curcuma</strong>."
           }
         }
       },
@@ -653,7 +653,7 @@
         "section_id": "",
         "arrow": "curve",
         "subheading": "",
-        "heading": "Le Legging 3D qu'il vous faut",
+        "heading": "Le savon curcuma qu'il vous faut",
         "heading_style": "2",
         "description": "",
         "alignment": "center",
@@ -689,45 +689,45 @@
         "collapsible_row_FRFLLt": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Les Leggings 3D sont-ils confortables à porter ?",
+            "heading": "Le savon au curcuma est-il efficace ?",
             "icon": "question_mark",
-            "row_content": "<p>Absolument ! Nos Leggings 3D sont conçus avec un tissu ultra-doux et extensible, offrant un <strong>confort exceptionnel</strong> tout au long de la journée. Vous vous sentirez à l'aise, que ce soit pour le sport ou la détente, grâce à leur <strong>ajustement parfait</strong>.</p>",
+            "row_content": "<p>Oui, absolument ! Le savon au curcuma de Glynne est <strong>formulé pour l'efficacité</strong>. Il est reconnu pour ses propriétés antioxydantes et anti-inflammatoires, aidant à unifier le teint et à réduire les imperfections. Vous constaterez une <strong>amélioration notable</strong> de l'aspect de votre peau avec une utilisation régulière.</p>",
             "page": ""
           }
         },
         "collapsible_row_dzh6Gt": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Comment choisir la bonne taille de Leggings 3D ?",
+            "heading": "Combien de temps avant des résultats visibles ?",
             "icon": "question_mark",
-            "row_content": "<p>Nous vous recommandons de consulter notre <strong>guide des tailles détaillé</strong> disponible sur la page du produit. Prenez vos mesures et comparez-les pour trouver la taille idéale, garantissant ainsi un <strong>rendu optimal</strong> et un maintien impeccable.</p>",
+            "row_content": "<p>Les résultats peuvent varier selon les individus, mais de nombreux utilisateurs rapportent des améliorations après <strong>quelques semaines d'utilisation quotidienne</strong>. Pour des changements plus profonds, notamment sur les taches et l'éclat, une utilisation constante sur <strong>1 à 2 mois est recommandée</strong>.</p>",
             "page": ""
           }
         },
         "collapsible_row_V3QAXx": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Les Leggings 3D sont-ils opaques ?",
+            "heading": "Puis-je utiliser le savon sur mon visage ?",
             "icon": "question_mark",
-            "row_content": "<p>Oui, nos Leggings 3D sont fabriqués avec un tissu de haute qualité qui assure une <strong>opacité totale</strong>. Vous pouvez vous pencher, vous étirer et bouger en toute confiance, sans craindre la transparence, pour une <strong>liberté de mouvement maximale</strong>.</p>",
+            "row_content": "<p>Oui, ce savon est <strong>parfaitement adapté</strong> à l'utilisation sur le visage et le corps. Sa formule douce nettoie sans agresser, laissant la peau fraîche et purifiée. Pour les peaux sensibles, nous recommandons un test sur une petite zone avant une application plus large afin de garantir une <strong>tolérance optimale</strong>.</p>",
             "page": ""
           }
         },
         "collapsible_row_zPpFGR": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Comment entretenir mes Leggings 3D LISSEYA ?",
+            "heading": "Le curcuma tache-t-il la peau ou les vêtements ?",
             "icon": "question_mark",
-            "row_content": "<p>Pour préserver la qualité de vos Leggings 3D, nous conseillons un lavage en machine à froid avec des couleurs similaires. Évitez le sèche-linge et préférez un séchage à l'air libre pour maintenir l'<strong>élasticité du tissu</strong> et la <strong>vivacité des motifs</strong>.</p>",
+            "row_content": "<p>Le savon au curcuma de Glynne est conçu pour ne pas tacher la peau lorsqu'il est rincé correctement. Cependant, comme tout produit à base de curcuma, il est conseillé de rincer abondamment et d'éviter le contact direct avec des vêtements clairs avant que la peau ne soit sèche pour prévenir toute <strong>décoloration potentielle</strong> des tissus. L'utilisation d'une <strong>serviette foncée est une bonne pratique</strong>.</p>",
             "page": ""
           }
         },
         "collapsible_row_RFTXNy": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Puis-je utiliser ces leggings pour le sport ?",
+            "heading": "Quels sont les bienfaits principaux de ce savon ?",
             "icon": "question_mark",
-            "row_content": "<p>Oui, tout à fait ! Les Leggings 3D LISSEYA sont parfaits pour le sport. Leur tissu respirant évacue la transpiration et leur coupe offre un <strong>excellent maintien</strong>, les rendant idéaux pour le yoga, la course ou toute autre activité physique. Ils allient <strong>style et performance</strong>.</p>",
+            "row_content": "<p>Les bienfaits du savon au curcuma sont multiples : il aide à <strong>unifier le teint</strong>, à réduire l'apparence des taches sombres, à améliorer l'éclat de la peau et à la purifier grâce à ses propriétés antiseptiques. C'est un excellent choix pour une peau <strong>visiblement plus saine et lumineuse</strong>.</p>",
             "page": ""
           }
         }
@@ -782,800 +782,800 @@
         "9327fe5f4c454983": {
           "type": "testimonial",
           "settings": {
-            "title": "Incroyable effet galbant !",
-            "text": "<p>J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.</p>",
+            "title": "Une peau éclatante grâce au curcuma !",
+            "text": "<p>J'ai été agréablement surprise par ce savon au curcuma. La couleur jaune orangé est très fidèle à l'ingrédient principal et l'odeur est délicate. Ma peau est visiblement plus lumineuse et les petites imperfections se sont estompées après seulement quelques semaines d'utilisation.</p>",
             "author_name": "Marie P.",
-            "author_age": "",
+            "author_age": "32",
             "rating": 5
           }
         },
         "697ae792b68c4edd": {
           "type": "testimonial",
           "settings": {
-            "title": "Confort et esthétique au rendez-vous",
-            "text": "<p>Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.</p>",
+            "title": "Livraison rapide et produit conforme !",
+            "text": "<p>La livraison a été super rapide, j'ai reçu mon savon curcuma en à peine deux jours. Le packaging était soigné et le savon est exactement comme sur les photos, avec cette belle couleur naturelle. Je suis très contente de mon achat et de l'efficacité du produit.</p>",
             "author_name": "Sophie L.",
-            "author_age": "",
+            "author_age": "28",
             "rating": 5
           }
         },
         "5a3f71c8891b4ccc": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon produit, mais taille un peu petit",
-            "text": "<p>Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.</p>",
+            "title": "Bon produit, mais l'odeur pourrait être plus présente",
+            "text": "<p>Le savon au curcuma est efficace, ma peau est plus douce et mon teint plus unifié. J'apprécie sa forme rectangulaire qui tient bien en main. Le seul petit bémol est que l'odeur du curcuma est très subtile, j'aurais aimé qu'elle soit un peu plus prononcée. Cependant, cela reste un très bon produit.</p>",
             "author_name": "Chloé M.",
-            "author_age": "",
+            "author_age": "35",
             "rating": 4
           }
         },
         "a8cc0bdfe03c41be": {
           "type": "testimonial",
           "settings": {
-            "title": "Mes fesses n'ont jamais été aussi belles !",
-            "text": "<p>Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.</p>",
+            "title": "Idéal pour ma peau sensible et acnéique",
+            "text": "<p>J'ai une peau très sensible et sujette à l'acné, et ce savon au curcuma est une révélation. Il nettoie en douceur sans dessécher et j'ai remarqué une nette amélioration de mes boutons. La mousse est onctueuse et le savon dure longtemps.</p>",
             "author_name": "Léa R.",
-            "author_age": "",
+            "author_age": "24",
             "rating": 5
           }
         },
         "c5ffe77cfa89474b": {
           "type": "testimonial",
           "settings": {
-            "title": "Qualité irréprochable et livraison rapide",
-            "text": "<p>J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.</p>",
+            "title": "Un teint frais et lumineux chaque matin",
+            "text": "<p>J'utilise ce savon chaque matin et mon teint est visiblement plus frais et lumineux. J'adore la sensation de propreté qu'il laisse, sans tiraillement. La barre de savon est généreuse et semble durable. C'est devenu mon indispensable.</p>",
             "author_name": "Manon D.",
-            "author_age": "",
+            "author_age": "41",
             "rating": 5
           }
         },
         "6b01ec9b68bb4ab4": {
           "type": "testimonial",
           "settings": {
-            "title": "Un effet 'seconde peau' très agréable",
-            "text": "<p>Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !</p>",
+            "title": "Super rapport qualité/prix !",
+            "text": "<p>Pour le prix, ce savon au curcuma est une excellente affaire. La qualité est au rendez-vous, le savon est bien dur et ne fond pas trop vite. Les résultats sur ma peau sont bluffants, je n'ai plus besoin de mille produits. Je recommande vivement !</p>",
             "author_name": "Amélie B.",
-            "author_age": "",
+            "author_age": "30",
             "rating": 5
           }
         },
         "7dac667a4fbf481b": {
           "type": "testimonial",
           "settings": {
-            "title": "Parfait pour le fitness et le quotidien",
-            "text": "<p>J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !</p>",
+            "title": "Le packaging est très mignon",
+            "text": "<p>J'ai été attirée par le packaging simple et élégant, et je n'ai pas été déçue. Le savon est bien présenté, et sa couleur jaune est très attrayante. C'est un plaisir de l'utiliser chaque jour, et ma peau l'adore. Une très belle découverte !</p>",
             "author_name": "Charlotte V.",
-            "author_age": "",
+            "author_age": "26",
             "rating": 5
           }
         },
         "b0be0171a73642c5": {
           "type": "testimonial",
           "settings": {
-            "title": "Le meilleur legging que j'aie jamais eu !",
-            "text": "<p>Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.</p>",
+            "title": "Un cadeau apprécié par ma mère",
+            "text": "<p>J'ai offert ce savon au curcuma à ma mère pour son anniversaire et elle est ravie. Elle m'a dit que sa peau était plus douce et qu'elle adorait la sensation après utilisation. C'était une excellente idée de cadeau ! Elle l'utilise quotidiennement.</p>",
             "author_name": "Emma T.",
-            "author_age": "",
+            "author_age": "38",
             "rating": 5
           }
         },
         "0f8cad6e6cf24b0b": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bon produit avec un petit bémol",
-            "text": "<p>Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.</p>",
+            "title": "Adieu les taches pigmentaires !",
+            "text": "<p>Avec l'âge, j'ai développé quelques taches pigmentaires et ce savon au curcuma m'a vraiment aidée. Elles sont moins visibles et mon teint est plus homogène. La barre est agréable à tenir et à utiliser. Je suis bluffée par son efficacité.</p>",
             "author_name": "Isabelle K.",
-            "author_age": "",
-            "rating": 4
+            "author_age": "52",
+            "rating": 5
           }
         },
         "3741b4fdb7a44cf3": {
           "type": "testimonial",
           "settings": {
-            "title": "Effet fesses rebondies garanti !",
-            "text": "<p>Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.</p>",
+            "title": "Ma peau n'a jamais été aussi saine",
+            "text": "<p>J'utilise ce savon depuis un mois et ma peau n'a jamais été aussi saine. Moins de rougeurs, moins de boutons, et un éclat naturel. La couleur du savon est très jolie et il a une bonne prise en main. Vraiment un produit top !</p>",
             "author_name": "Pauline N.",
-            "author_age": "",
+            "author_age": "29",
             "rating": 5
           }
         },
         "813470d4ec8640b0": {
           "type": "testimonial",
           "settings": {
-            "title": "Superbe matière, très agréable",
-            "text": "<p>La matière de ce legging est incroyablement douce au toucher et très agréable à porter. On sent la qualité du tissu. L'effet de texture 3D est subtil mais très efficace pour sculpter la silhouette. Je suis ravie de mon achat.</p>",
+            "title": "Un allié contre le masque de grossesse",
+            "text": "<p>Après ma grossesse, j'avais un masque qui me complexait. Ce savon au curcuma a fait des miracles ! Les taches se sont estompées et mon teint est plus uniforme. La barre est épaisse et dure longtemps, c'est très économique.</p>",
             "author_name": "Camille F.",
-            "author_age": "",
+            "author_age": "33",
             "rating": 5
           }
         },
         "e2df564627074ba8": {
           "type": "testimonial",
           "settings": {
-            "title": "Un cadeau qui a fait son effet !",
-            "text": "<p>J'ai offert ce legging à ma sœur pour son anniversaire et elle est aux anges ! Elle m'a dit qu'il était super confortable et que l'effet sur les fesses était incroyable. Merci LISSEYA pour cette belle découverte.</p>",
+            "title": "Facile à utiliser et agréable",
+            "text": "<p>Le savon est très facile à utiliser, il mousse bien et se rince sans laisser de film. L'odeur est très légère et agréable. J'apprécie la texture douce qu'il laisse sur ma peau. C'est un vrai plaisir quotidien.</p>",
             "author_name": "Lucie H.",
-            "author_age": "",
+            "author_age": "25",
             "rating": 5
           }
         },
         "8181dd5a147442dc": {
           "type": "testimonial",
           "settings": {
-            "title": "Adieu la cellulite (visuellement) !",
-            "text": "<p>Je suis stupéfaite de voir à quel point ce legging masque l'apparence de la cellulite. Le motif 3D fait un travail incroyable. Je me sens beaucoup plus à l'aise et en confiance. C'est un vrai coup de cœur !</p>",
+            "title": "Fini les tiraillements après la douche",
+            "text": "<p>Avant, ma peau tirait énormément après la douche. Avec ce savon au curcuma, je n'ai plus du tout cette sensation désagréable. Ma peau est confortable et hydratée. La couleur du savon est magnifique, on dirait un petit lingot d'or.</p>",
             "author_name": "Clara S.",
-            "author_age": "",
+            "author_age": "37",
             "rating": 5
           }
         },
         "7a11b2d8a973487b": {
           "type": "testimonial",
           "settings": {
-            "title": "Résultats visibles dès le premier enfilage",
-            "text": "<p>Dès que j'ai mis le legging, j'ai vu la différence. L'effet liftant est immédiat et les fesses semblent plus fermes. La taille haute est aussi très appréciable pour un bon maintien. Je suis totalement satisfaite de mon achat.</p>",
+            "title": "Un produit naturel qui tient ses promesses",
+            "text": "<p>J'étais à la recherche d'un produit naturel pour ma routine et ce savon au curcuma est parfait. Il tient toutes ses promesses : peau nette, lumineuse et douce. J'aime le fait qu'il soit compact et qu'il n'y ait pas de gaspillage.</p>",
             "author_name": "Inès G.",
-            "author_age": "",
+            "author_age": "22",
             "rating": 5
           }
         },
         "af80c50e078a41cc": {
           "type": "testimonial",
           "settings": {
-            "title": "Idéal pour l'entraînement intensif",
-            "text": "<p>J'ai testé ce legging lors d'une séance de HIIT et il a tenu toutes ses promesses. Il reste en place, évacue bien la transpiration et l'effet galbant est toujours là. Je le recommande à toutes les sportives !</p>",
+            "title": "Beaucoup mieux que les nettoyants liquides",
+            "text": "<p>J'ai toujours utilisé des nettoyants visage liquides, mais ce savon au curcuma les surpasse. Ma peau est plus propre et plus saine. La barre est solide et ne se désintègre pas. C'est un excellent investissement pour ma peau.</p>",
             "author_name": "Anaïs J.",
-            "author_age": "",
+            "author_age": "45",
             "rating": 5
           }
         },
         "ade1d63fe3ea4961": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon maintien, un peu long pour moi",
-            "text": "<p>Le legging offre un excellent maintien et l'effet sculptant est réel. Mon seul petit bémol est qu'il est un peu long pour ma petite taille. Je dois le retrousser légèrement. Sinon, la qualité est top.</p>",
+            "title": "Longévité impressionnante !",
+            "text": "<p>Ce savon dure vraiment longtemps ! Je l'utilise tous les jours depuis plus d'un mois et il n'a pas beaucoup diminué. Sa couleur vive reste intacte. C'est un produit très économique en plus d'être efficace pour ma peau.</p>",
             "author_name": "Mathilde C.",
-            "author_age": "",
-            "rating": 4
+            "author_age": "31",
+            "rating": 5
           }
         },
         "a88d1f4365b34077": {
           "type": "testimonial",
           "settings": {
-            "title": "Ne bouge pas au lavage",
-            "text": "<p>J'ai été agréablement surprise par la résistance de ce legging. Après plusieurs lavages en machine, il n'a ni bougé, ni déteint, et l'élasticité est toujours la même. C'est un gage de qualité et de durabilité. J'en suis très contente.</p>",
+            "title": "Efficace mais un peu salissant",
+            "text": "<p>Le savon est très efficace pour unifier le teint et réduire les imperfections, je vois de vrais résultats. Sa couleur jaune intense est très belle. Cependant, il a tendance à laisser des traces jaunes sur le porte-savon si on ne le rince pas bien. Mais les bénéfices l'emportent largement !</p>",
             "author_name": "Audrey W.",
-            "author_age": "",
-            "rating": 5
+            "author_age": "27",
+            "rating": 4
           }
         },
         "8324416ecf744bd2": {
           "type": "testimonial",
           "settings": {
-            "title": "Sublime les formes sans être vulgaire",
-            "text": "<p>Ce legging est juste parfait. Il met en valeur les formes de manière élégante et subtile, sans jamais être vulgaire. Le motif 3D est très chic. Je l'ai déjà porté pour plusieurs occasions et j'ai eu beaucoup de compliments.</p>",
+            "title": "Mon teint est plus frais et reposé",
+            "text": "<p>Depuis que j'utilise ce savon, mon teint est plus frais et je parais moins fatiguée. C'est un vrai coup de boost pour ma peau. La prise en main de la barre est confortable, et elle mousse agréablement. Je suis conquise !</p>",
             "author_name": "Céline E.",
-            "author_age": "",
+            "author_age": "39",
             "rating": 5
           }
         },
         "bdfc165c25934193": {
           "type": "testimonial",
           "settings": {
-            "title": "Effet ventre plat appréciable",
-            "text": "<p>En plus de l'effet liftant sur les fesses, j'ai remarqué que la taille haute du legging offrait un très bon maintien pour le ventre. L'effet est un ventre plus plat et une silhouette affinée. C'est un tout-en-un très efficace.</p>",
+            "title": "Une odeur discrète et naturelle",
+            "text": "<p>J'apprécie énormément l'odeur très discrète et naturelle de ce savon, loin des parfums artificiels. Il laisse ma peau propre et douce, sans aucune irritation. La couleur du savon est très naturelle, j'aime beaucoup son aspect brut.</p>",
             "author_name": "Laure O.",
-            "author_age": "",
+            "author_age": "34",
             "rating": 5
           }
         },
         "3d1710d55bc94583": {
           "type": "testimonial",
           "settings": {
-            "title": "Doux et agréable à porter toute la journée",
-            "text": "<p>Je porte ce legging pour travailler, et il est tellement doux et confortable que je pourrais le garder toute la journée. Le tissu ne gratte pas et ne serre pas. L'effet 3D est un plus qui me donne une allure plus dynamique.</p>",
+            "title": "Peau plus ferme et plus lisse",
+            "text": "<p>Je constate que ma peau est plus ferme et plus lisse depuis que j'ai intégré ce savon à ma routine. Les ridules sont moins marquées. La forme du savon est pratique et il est agréable à utiliser. C'est un excellent produit anti-âge.</p>",
             "author_name": "Nathalie B.",
-            "author_age": "",
+            "author_age": "48",
             "rating": 5
           }
         },
         "55b497540bb94b66": {
           "type": "testimonial",
           "settings": {
-            "title": "Je recommande à 100 % !",
-            "text": "<p>Franchement, je suis bluffée par ce legging. Il est non seulement très esthétique avec son effet 3D, mais aussi d'une qualité incroyable. Il épouse parfaitement les formes et le résultat est très flatteur. Je le recommande vivement à toutes les femmes.</p>",
+            "title": "Parfait pour ma routine zéro déchet",
+            "text": "<p>Ce savon est parfait pour ma démarche zéro déchet. Pas d'emballage superflu, et un produit qui dure longtemps. En plus, il est super efficace pour ma peau grasse, il régule la production de sébum. Sa couleur est très naturelle, j'adore.</p>",
             "author_name": "Élise M.",
-            "author_age": "",
+            "author_age": "23",
             "rating": 5
           }
         },
         "38ada1f3a4fe43f4": {
           "type": "testimonial",
           "settings": {
-            "title": "Un investissement qui en vaut la peine",
-            "text": "<p>Au début, j'hésitais un peu sur le prix, mais après avoir reçu et essayé le legging, je peux dire que c'est un excellent investissement. La qualité est supérieure et l'effet recherché est bien là. Je ne regrette absolument pas mon achat.</p>",
+            "title": "Un nettoyage en profondeur sans agresser",
+            "text": "<p>J'ai l'impression que ce savon nettoie ma peau en profondeur, mais sans jamais l'agresser. Elle est vraiment propre et purifiée. Le bloc de savon est d'une bonne taille, facile à manipuler. Je le rachèterai sans hésiter.</p>",
             "author_name": "Justine R.",
-            "author_age": "",
+            "author_age": "36",
             "rating": 5
           }
         },
         "9c7cef59b7d2446d": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bien, mais attention à la transparence",
-            "text": "<p>Le legging est très confortable et l'effet sculptant est visible. Cependant, j'ai l'impression qu'il peut être légèrement transparent si on l'étire beaucoup, surtout avec des sous-vêtements de couleur. À part ça, il est super.</p>",
+            "title": "J'ai dit adieu à mon fond de teint",
+            "text": "<p>Depuis que j'utilise ce savon, mon teint est tellement unifié et lumineux que je n'ai presque plus besoin de fond de teint. C'est incroyable ! Le savon est beau, avec sa couleur naturelle et sa forme simple. Je suis conquise.</p>",
             "author_name": "Sandrine T.",
-            "author_age": "",
-            "rating": 4
+            "author_age": "40",
+            "rating": 5
           }
         },
         "56dd5e8b79c646b9": {
           "type": "testimonial",
           "settings": {
-            "title": "Effet gainant parfait pour le post-partum",
-            "text": "<p>J'ai acheté ce legging après ma grossesse et il est parfait pour le post-partum. Il offre un excellent maintien au niveau du ventre et aide à se sentir plus gainée. L'effet sur les fesses est un bonus très appréciable. Je me sens beaucoup mieux.</p>",
+            "title": "Service client au top !",
+            "text": "<p>J'avais une question sur l'utilisation du savon et le service client a été très réactif et aimable. Le produit, avec sa belle couleur safran, est arrivé en parfait état. Non seulement le produit est excellent, mais le service est aussi irréprochable.</p>",
             "author_name": "Virginie P.",
-            "author_age": "",
+            "author_age": "30",
             "rating": 5
           }
         },
         "ed26c76ef9584a79": {
           "type": "testimonial",
           "settings": {
-            "title": "Fidèle à la description et aux images",
-            "text": "<p>J'avais un peu peur que le rendu ne soit pas le même qu'en photo, mais je suis agréablement surprise : le legging est exactement comme sur le site. L'effet 3D est bien présent et la couleur est superbe. Je suis très contente.</p>",
+            "title": "Un grain de peau affiné",
+            "text": "<p>Mon grain de peau s'est affiné et mes pores sont moins visibles grâce à ce savon au curcuma. C'est un vrai coup de cœur. La barre de savon est très esthétique, avec cette jolie teinte orange. Je l'ai adopté définitivement.</p>",
             "author_name": "Élodie L.",
-            "author_age": "",
+            "author_age": "28",
             "rating": 5
           }
         },
         "7b52e1077dd148b8": {
           "type": "testimonial",
           "settings": {
-            "title": "Matière respirante et non irritante",
-            "text": "<p>Ayant une peau sensible, je suis souvent prudente avec les textiles. Mais ce legging est très respirant et ne m'a causé aucune irritation. La matière est douce et l'effet visuel est très flatteur. Un vrai bonheur à porter.</p>",
+            "title": "Moins d'irritations et de rougeurs",
+            "text": "<p>Ma peau, souvent sujette aux irritations et rougeurs, est beaucoup plus calme depuis que j'utilise ce savon. Il est très doux. La couleur uniforme du savon est très agréable visuellement. Je le recommande à toutes les peaux sensibles.</p>",
             "author_name": "Stéphanie A.",
-            "author_age": "",
+            "author_age": "42",
             "rating": 5
           }
         },
         "ca4b818f8e4946fa": {
           "type": "testimonial",
           "settings": {
-            "title": "Un effet 'wahou' immédiat",
-            "text": "<p>Dès que je l'ai essayé, j'ai eu un effet 'wahou' devant le miroir ! Mes fesses sont sublimées et ma silhouette est affinée. C'est le genre de vêtement qui donne instantanément confiance en soi. Je le porte avec tout.</p>",
+            "title": "Une mousse riche et crémeuse",
+            "text": "<p>J'adore la mousse riche et crémeuse que produit ce savon. Elle est très agréable sur la peau et rend le nettoyage sensoriel. Le savon a une couleur très naturelle, loin des produits chimiques. C'est un vrai moment de détente.</p>",
             "author_name": "Vanessa X.",
-            "author_age": "",
+            "author_age": "33",
             "rating": 5
           }
         },
         "1dad6edc52754c58": {
           "type": "testimonial",
           "settings": {
-            "title": "Excellent rapport qualité/prix",
-            "text": "<p>Pour la qualité du tissu, le rendu visuel et le confort, je trouve que le rapport qualité/prix est excellent. C'est un legging durable qui tiendra dans le temps. Je l'ai déjà recommandé à mes amies.</p>",
+            "title": "Parfait pour les peaux mixtes",
+            "text": "<p>J'ai une peau mixte avec une zone T grasse et des joues sèches. Ce savon au curcuma régule parfaitement ma peau sans la dessécher. L'équilibre est parfait. La couleur du savon est très attrayante et sa forme est simple et efficace.</p>",
             "author_name": "Sabrina Y.",
-            "author_age": "",
+            "author_age": "26",
             "rating": 5
           }
         },
         "b02e7133284e4da1": {
           "type": "testimonial",
           "settings": {
-            "title": "Fait un très joli fessier",
-            "text": "<p>J'ai toujours été un peu complexée par mes fesses, mais ce legging a changé la donne. L'effet 3D est incroyable, il donne un galbe parfait et un aspect plus ferme. Je me sens enfin bien dans un legging. Merci LISSEYA !</p>",
+            "title": "Mon coup de cœur de l'année",
+            "text": "<p>Ce savon est mon coup de cœur beauté de l'année ! Il a transformé ma peau, la rendant plus nette et lumineuse. La barre est épaisse et a une bonne durée de vie. Je ne peux plus m'en passer, c'est un produit exceptionnel.</p>",
             "author_name": "Mélanie Z.",
-            "author_age": "",
+            "author_age": "30",
             "rating": 5
           }
         },
         "f284a85267b94ca1": {
           "type": "testimonial",
           "settings": {
-            "title": "Tenue parfaite pendant l'exercice",
-            "text": "<p>Que ce soit pour le yoga, la course à pied ou la musculation, ce legging reste parfaitement en place. Pas besoin de le remonter toutes les cinq minutes. L'effet sculptant est un bonus qui ne gâche rien. J'en suis très satisfaite.</p>",
+            "title": "Une peau douce au toucher",
+            "text": "<p>Après chaque utilisation, ma peau est incroyablement douce au toucher. Je n'ai jamais eu une peau aussi agréable. La couleur jaune doré du savon est très jolie et il a une bonne prise en main. Je le recommande sans hésiter.</p>",
             "author_name": "Laura U.",
-            "author_age": "",
+            "author_age": "29",
             "rating": 5
           }
         },
         "8f7dbfd8426245b5": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon produit, mais l'effet 3D est subtil",
-            "text": "<p>Le legging est très confortable et la qualité est bonne. L'effet 3D est présent, mais peut-être un peu plus subtil que ce que j'attendais d'après les photos. Cela dit, il galbe bien et je le porte avec plaisir.</p>",
+            "title": "Réduit les rougeurs et les inflammations",
+            "text": "<p>J'ai une peau sujette aux rougeurs et aux petites inflammations, et ce savon au curcuma a vraiment aidé à les réduire. Mon teint est plus calme et uniforme. La barre est d'une taille généreuse et semble très durable. Je suis très satisfaite.</p>",
             "author_name": "Clémence I.",
-            "author_age": "",
-            "rating": 4
+            "author_age": "43",
+            "rating": 5
           }
         },
         "8e3293b0a195433f": {
           "type": "testimonial",
           "settings": {
-            "title": "Un must-have dans la garde-robe",
-            "text": "<p>Ce legging est devenu un incontournable de ma garde-robe. Il est polyvalent, confortable et fait une silhouette de rêve. Je le porte aussi bien avec un sweat qu'avec une chemise. C'est un vrai passe-partout. Je le recommande à toutes.</p>",
+            "title": "Une odeur agréable et subtile",
+            "text": "<p>L'odeur de ce savon est très agréable et subtile, pas du tout entêtante. C'est parfait pour le matin. Il laisse une sensation de fraîcheur sur la peau. Sa couleur est naturelle et très jolie. Je suis conquise par ce produit.</p>",
             "author_name": "Axelle Q.",
-            "author_age": "",
+            "author_age": "25",
             "rating": 5
           }
         },
         "e45a5d49e1ec4e99": {
           "type": "testimonial",
           "settings": {
-            "title": "Service client au top !",
-            "text": "<p>J'ai eu une question sur la taille avant de commander et le service client de LISSEYA a été très réactif et de bon conseil. Le legging est arrivé rapidement et correspond parfaitement à mes attentes. Je suis très satisfaite de l'expérience globale.</p>",
+            "title": "Mon secret pour un teint jeune",
+            "text": "<p>Ce savon au curcuma est devenu mon secret pour garder un teint jeune et éclatant. Il lisse les traits et donne un coup de fouet à ma peau. La barre est bien ferme et ne se ramollit pas. Je le recommande à toutes les femmes.</p>",
             "author_name": "Delphine V.",
-            "author_age": "",
+            "author_age": "50",
             "rating": 5
           }
         },
         "b8e267b5074945ed": {
           "type": "testimonial",
           "settings": {
-            "title": "Tissu non transparent, enfin !",
-            "text": "<p>J'en avais marre des leggings transparents dès qu'on se penche. Celui-ci est parfaitement opaque, même en faisant des squats. C'est un énorme soulagement et un gage de confiance. L'effet galbant est un vrai plus !</p>",
+            "title": "Très satisfaite de mon achat",
+            "text": "<p>Je suis très satisfaite de mon achat. Le savon est arrivé rapidement, bien emballé. Il est conforme à la description, avec sa belle couleur chaude. Ma peau est plus nette et lumineuse. C'est un produit que je rachèterai sans hésitation.</p>",
             "author_name": "Aurélie N.",
-            "author_age": "",
+            "author_age": "31",
             "rating": 5
           }
         },
         "82271c8cb90a40dd": {
           "type": "testimonial",
           "settings": {
-            "title": "Galbe naturel et confortable",
-            "text": "<p>L'effet galbant est très naturel, il ne donne pas un aspect artificiel. On se sent à l'aise et le tissu accompagne bien les mouvements. C'est le compromis parfait entre esthétique et confort. J'en suis très contente.</p>",
+            "title": "Moins de points noirs !",
+            "text": "<p>J'avais beaucoup de points noirs sur le nez et le menton, et ce savon a vraiment aidé à les réduire. Ma peau est plus propre et les pores sont moins obstrués. La barre est agréable à manipuler et mousse bien. Un vrai changement !</p>",
             "author_name": "Jessica D.",
-            "author_age": "",
+            "author_age": "27",
             "rating": 5
           }
         },
         "84b737ba7dcd4728": {
           "type": "testimonial",
           "settings": {
-            "title": "Ma silhouette est transformée",
-            "text": "<p>Je n'aurais jamais cru qu'un legging puisse autant transformer ma silhouette. Mes fesses sont plus rebondies et mes cuisses semblent plus fermes. C'est un vrai coup de boost pour ma confiance en moi. Merci LISSEYA !</p>",
+            "title": "Une peau qui respire",
+            "text": "<p>Avec ce savon, j'ai l'impression que ma peau respire enfin. Elle est débarrassée de toutes les impuretés sans être agressée. La couleur orangée du savon est très naturelle, et il tient bien en main. Je l'adore !</p>",
             "author_name": "Floriane K.",
-            "author_age": "",
+            "author_age": "34",
             "rating": 5
           }
         },
         "365138e115af4680": {
           "type": "testimonial",
           "settings": {
-            "title": "Idéal pour toutes les saisons",
-            "text": "<p>Le tissu de ce legging est suffisamment épais pour l'hiver et respirant pour le printemps/été. Je peux le porter toute l'année. L'effet 3D est toujours aussi efficace. Un achat vraiment rentable.</p>",
+            "title": "Parfait pour ma routine beauté minimaliste",
+            "text": "<p>Je cherchais à simplifier ma routine beauté et ce savon au curcuma est parfait. Un seul produit pour un nettoyage efficace et des résultats visibles. Sa forme simple et sa couleur naturelle sont très appréciables. Moins c'est plus !</p>",
             "author_name": "Marion H.",
-            "author_age": "",
+            "author_age": "22",
             "rating": 5
           }
         },
         "c939e22da5e34279": {
           "type": "testimonial",
           "settings": {
-            "title": "Joli et fonctionnel",
-            "text": "<p>Ce legging est à la fois très joli avec son motif 3D et très fonctionnel pour le sport. Il ne glisse pas et offre un bon soutien. C'est rare de trouver les deux réunis. Je suis agréablement surprise.</p>",
+            "title": "Un teint zéro défaut",
+            "text": "<p>Je n'ai jamais eu un teint aussi zéro défaut qu'avec ce savon. Les petites marques sont estompées, ma peau est unifiée et lumineuse. La barre est solide et ne se dissout pas rapidement. C'est un investissement qui en vaut la peine.</p>",
             "author_name": "Noémie G.",
-            "author_age": "",
+            "author_age": "39",
             "rating": 5
           }
         },
         "a798edfbc0124a5e": {
           "type": "testimonial",
           "settings": {
-            "title": "Belle qualité, mais taille unique ?",
-            "text": "<p>La qualité du legging est excellente et l'effet sculptant est là. J'ai juste l'impression qu'il taille plutôt 'standard' et qu'il pourrait être moins adapté aux morphologies très fines ou très rondes. Sinon, rien à redire.</p>",
+            "title": "Ma peau a retrouvé son équilibre",
+            "text": "<p>Ma peau était déséquilibrée, tantôt grasse, tantôt sèche. Ce savon au curcuma l'a vraiment aidée à retrouver son équilibre. Elle est saine et confortable. J'apprécie la couleur naturelle du savon et sa bonne prise en main. Je suis très satisfaite.</p>",
             "author_name": "Ophélie C.",
-            "author_age": "",
-            "rating": 4
+            "author_age": "46",
+            "rating": 5
           }
         },
         "dca23ffd671b431a": {
           "type": "testimonial",
           "settings": {
-            "title": "Un effet push-up qui dure",
-            "text": "<p>Contrairement à d'autres leggings, l'effet push-up de celui-ci ne s'estompe pas après quelques lavages. Il reste intact et continue de sublimer mes fesses. C'est un produit de qualité qui tient ses promesses sur le long terme.</p>",
+            "title": "Un must-have dans ma salle de bain",
+            "text": "<p>Ce savon est un véritable must-have dans ma salle de bain. Je ne peux plus m'en passer. Ma peau est éclatante et douce. La barre est d'une belle couleur jaune orangé et sa forme est pratique. C'est un produit que je recommande à toutes.</p>",
             "author_name": "Gwenaëlle F.",
-            "author_age": "",
+            "author_age": "37",
             "rating": 5
           }
         },
         "30940057065d40d6": {
           "type": "testimonial",
           "settings": {
-            "title": "Parfait pour se sentir belle",
-            "text": "<p>Ce legging est parfait pour les jours où l'on veut se sentir belle et confiante sans effort. Il galbe juste là où il faut et le tissu est très agréable. Je le porte souvent et je me sens toujours au top.</p>",
-            "author_name": "Angélique L.",
-            "author_age": "",
+            "title": "Effet bonne mine garanti !",
+            "text": "<p>Je cherchais un produit pour me donner bonne mine naturellement, et ce savon au curcuma fait des miracles. Mon teint est frais et lumineux, comme après une journée au grand air. La couleur du savon est très agréable visuellement. Je suis enchantée.</p>",
+            "author_name": "Marie-Hélène D.",
+            "author_age": "55",
             "rating": 5
           }
         },
         "4c55424faa6e47b9": {
           "type": "testimonial",
           "settings": {
-            "title": "Un coup de cœur inattendu",
-            "text": "<p>Je ne m'attendais pas à un tel coup de cœur pour un legging ! L'effet 3D est très original et le confort est incomparable. Je suis surprise de l'aimer autant. Un grand bravo à LISSEYA !</p>",
-            "author_name": "Coralie R.",
-            "author_age": "",
+            "title": "Un produit doux pour ma peau atopique",
+            "text": "<p>Ma peau atopique est très exigeante, mais ce savon au curcuma est d'une douceur incroyable. Aucune irritation, juste une peau propre et apaisée. J'apprécie sa forme rectangulaire qui permet une bonne prise. Merci Glynne !</p>",
+            "author_name": "Florence G.",
+            "author_age": "30",
             "rating": 5
           }
         },
         "0fd3749563bb44a3": {
           "type": "testimonial",
           "settings": {
-            "title": "Fesses rebondies sans effort",
-            "text": "<p>J'ai toujours rêvé d'avoir des fesses plus rebondies et ce legging le fait sans effort. C'est magique ! Le tissu est résistant et ne se déforme pas. Je suis vraiment impressionnée par le résultat.</p>",
-            "author_name": "Émilie G.",
-            "author_age": "",
+            "title": "Une routine simple et efficace",
+            "text": "<p>J'adore la simplicité et l'efficacité de ce savon. Un seul geste pour un nettoyage parfait et une peau qui remercie. La couleur naturelle du curcuma est très belle et le savon dure longtemps. C'est un excellent rapport qualité-prix.</p>",
+            "author_name": "Émilie R.",
+            "author_age": "24",
             "rating": 5
           }
         },
         "effb3887f5f04257": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bon maintien à la taille",
-            "text": "<p>J'apprécie énormément le bon maintien à la taille de ce legging. Il ne roule pas et reste bien en place, ce qui est essentiel pour le sport. L'effet sculptant est un bonus non négligeable. Je suis très satisfaite.</p>",
-            "author_name": "Fanny D.",
-            "author_age": "",
+            "title": "Mes cicatrices d'acné sont moins visibles",
+            "text": "<p>J'avais des cicatrices d'acné qui me gênaient, et avec ce savon au curcuma, elles sont nettement moins visibles. Mon teint est plus uniforme. La barre de savon est généreuse et son aspect naturel est très plaisant. Je suis vraiment heureuse du résultat.</p>",
+            "author_name": "Margaux L.",
+            "author_age": "32",
             "rating": 5
           }
         },
         "904bff34bf0b4efc": {
           "type": "testimonial",
           "settings": {
-            "title": "N'irrite pas la peau",
-            "text": "<p>J'ai la peau très sensible et je suis ravie de constater que ce legging n'irrite absolument pas. La matière est douce et ne gratte pas. L'effet 3D est subtil mais très efficace pour galber. Un excellent produit.</p>",
-            "author_name": "Hélène S.",
-            "author_age": "",
+            "title": "Une peau qui ne brille plus",
+            "text": "<p>Ma peau a tendance à briller en fin de journée, mais depuis que j'utilise ce savon, elle est matifiée et ne brille plus autant. C'est une révolution ! La couleur vive du savon est très belle et il mousse très bien. Je le rachèterai.</p>",
+            "author_name": "Adeline B.",
+            "author_age": "38",
             "rating": 5
           }
         },
         "784128cdc86c49ab": {
           "type": "testimonial",
           "settings": {
-            "title": "Parfait pour les journées actives",
-            "text": "<p>Je porte ce legging pour mes journées bien remplies et il est parfait. Il est confortable, ne compresse pas et l'effet sculptant me donne un coup de boost. Je me sens à l'aise et stylée. Je le recommande.</p>",
-            "author_name": "Julia M.",
-            "author_age": "",
+            "title": "L'odeur est très apaisante",
+            "text": "<p>En plus de ses bienfaits pour la peau, l'odeur de ce savon est très apaisante et rend le moment du nettoyage très agréable. C'est un vrai moment de bien-être. La couleur naturelle du curcuma est très belle. Je l'adore !</p>",
+            "author_name": "Chloé P.",
+            "author_age": "29",
             "rating": 5
           }
         },
         "42b1e68305e94ced": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon produit, mais coutures un peu visibles",
-            "text": "<p>Le legging est de bonne qualité et l'effet galbant est là. J'ai juste trouvé que les coutures au niveau des fesses étaient un peu plus visibles que sur les photos, mais cela reste un détail. Globalement, je suis contente.</p>",
-            "author_name": "Karine P.",
-            "author_age": "",
-            "rating": 4
+            "title": "Un produit polyvalent pour le corps aussi",
+            "text": "<p>J'utilise ce savon non seulement pour mon visage, mais aussi pour certaines zones du corps sujettes aux imperfections. Il est tout aussi efficace ! La barre est assez grande pour une utilisation polyvalente. Je suis conquise par sa couleur naturelle.</p>",
+            "author_name": "Louise M.",
+            "author_age": "26",
+            "rating": 5
           }
         },
         "c4298a08d0c946c4": {
           "type": "testimonial",
           "settings": {
-            "title": "Effet amincissant garanti !",
-            "text": "<p>En plus de l'effet 3D sur les fesses, j'ai vraiment l'impression que ce legging affine ma silhouette et me donne un effet amincissant général. C'est un vrai atout pour se sentir bien. Je l'adore !</p>",
-            "author_name": "Lydie B.",
-            "author_age": "",
+            "title": "Un teint plus uniforme et éclatant",
+            "text": "<p>Mon teint est beaucoup plus uniforme et éclatant depuis que j'utilise ce savon. Les petites rougeurs ont diminué. La couleur du savon est très naturelle et il a une bonne prise en main. Il fait partie de ma routine quotidienne maintenant.</p>",
+            "author_name": "Sarah D.",
+            "author_age": "35",
             "rating": 5
           }
         },
         "86352e69d98d4edf": {
           "type": "testimonial",
           "settings": {
-            "title": "Ne bouloche pas",
-            "text": "<p>Après plusieurs semaines d'utilisation et de lavages, le legging ne bouloche absolument pas. C'est un signe de très bonne qualité. L'effet 3D est toujours aussi présent et flatteur. Je suis très satisfaite de mon achat.</p>",
-            "author_name": "Morgane V.",
-            "author_age": "",
-            "rating": 5
+            "title": "Bon produit, attention à la coloration sur les mains",
+            "text": "<p>Le savon est excellent pour le teint, je vois une réelle amélioration. Sa couleur est très vive et attrayante. Cependant, il faut bien se rincer les mains après utilisation car le curcuma peut laisser une légère coloration temporaire. Mais les résultats sur le visage valent le coup !</p>",
+            "author_name": "Julia K.",
+            "author_age": "23",
+            "rating": 4
           }
         },
         "7fba753662b9467d": {
           "type": "testimonial",
           "settings": {
-            "title": "Un indispensable pour le sport",
-            "text": "<p>Ce legging est devenu un indispensable pour toutes mes séances de sport. Il est confortable, respirant et offre un excellent maintien. L'effet sculptant est un bonus qui me motive encore plus. Je ne peux plus m'en passer !</p>",
-            "author_name": "Nadia T.",
-            "author_age": "",
+            "title": "Ma peau est plus résistante",
+            "text": "<p>J'ai l'impression que ma peau est plus résistante aux agressions extérieures depuis que j'utilise ce savon. Elle est moins réactive. La barre est d'une taille généreuse et sa couleur naturelle est très belle. C'est un excellent bouclier.</p>",
+            "author_name": "Estelle V.",
+            "author_age": "41",
             "rating": 5
           }
         },
         "c6976264915341ce": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bonne élasticité",
-            "text": "<p>La très bonne élasticité du legging permet une grande liberté de mouvement. Il s'adapte parfaitement à ma morphologie sans serrer. L'effet 3D est bien là et le tissu est de qualité. Je suis ravie.</p>",
-            "author_name": "Océane H.",
-            "author_age": "",
+            "title": "Un coup de frais pour le visage",
+            "text": "<p>Chaque matin, ce savon me donne un vrai coup de frais pour le visage. C'est très agréable et stimulant. Il nettoie en profondeur sans dessécher. La couleur est fidèle à l'ingrédient et la mousse est onctueuse. Je l'adore !</p>",
+            "author_name": "Laura G.",
+            "author_age": "28",
             "rating": 5
           }
         },
         "623e726744984cec": {
           "type": "testimonial",
           "settings": {
-            "title": "J'ai eu des compliments !",
-            "text": "<p>J'ai porté ce legging pour la première fois la semaine dernière et j'ai eu plusieurs compliments sur ma silhouette. L'effet 3D fait vraiment son travail ! Je me sens super bien dedans. Merci LISSEYA.</p>",
-            "author_name": "Patricia L.",
-            "author_age": "",
+            "title": "Rend la peau incroyablement douce",
+            "text": "<p>Je suis bluffée par la douceur que ce savon laisse sur ma peau. C'est incroyable au toucher. La couleur naturelle du curcuma est très belle et le savon a une bonne tenue. C'est un vrai moment de plaisir à chaque utilisation.</p>",
+            "author_name": "Cécile F.",
+            "author_age": "36",
             "rating": 5
           }
         },
         "6d8a6d55e99045f6": {
           "type": "testimonial",
           "settings": {
-            "title": "Confortable, mais taille un peu grand",
-            "text": "<p>Le legging est très confortable et la matière est agréable. J'ai trouvé qu'il taillait un peu grand pour moi, j'aurais dû prendre une taille en dessous. Mais l'effet 3D est tout de même visible et il est de bonne qualité.</p>",
-            "author_name": "Quitterie R.",
-            "author_age": "",
-            "rating": 4
+            "title": "Mon teint est unifié et lumineux",
+            "text": "<p>J'ai toujours eu un teint un peu terne, mais avec ce savon au curcuma, il est unifié et lumineux. J'ai l'impression d'avoir une nouvelle peau. La barre est d'une belle couleur orange et elle est très agréable à utiliser. Je suis conquise.</p>",
+            "author_name": "Julie H.",
+            "author_age": "25",
+            "rating": 5
           }
         },
         "829fa599773244e9": {
           "type": "testimonial",
           "settings": {
-            "title": "Parfait pour le yoga et le Pilates",
-            "text": "<p>Je pratique le yoga et le Pilates, et ce legging est idéal. Il permet une grande amplitude de mouvement sans se déformer. Le maintien est excellent et l'effet sculptant est un joli bonus. Je l'ai déjà recommandé à mes amies du cours.</p>",
-            "author_name": "Romane S.",
-            "author_age": "",
+            "title": "Les imperfections sont moins visibles",
+            "text": "<p>Les petites imperfections et les rougeurs sont nettement moins visibles depuis que j'utilise ce savon. Ma peau est plus nette et plus saine. La couleur du savon est très naturelle et il mousse très bien. C'est un produit très efficace.</p>",
+            "author_name": "Lise P.",
+            "author_age": "44",
             "rating": 5
           }
         },
         "c0d8342c055643a2": {
           "type": "testimonial",
           "settings": {
-            "title": "Un effet lifting immédiat",
-            "text": "<p>Je cherchais un legging qui donne un effet lifting immédiat aux fesses et celui-ci fait exactement ça. C'est bluffant ! Je me sens plus tonique et ma silhouette est plus harmonieuse. Un vrai coup de cœur.</p>",
-            "author_name": "Sabine T.",
-            "author_age": "",
+            "title": "Un savon qui dure longtemps",
+            "text": "<p>J'apprécie vraiment que ce savon dure longtemps. Il est très économique à l'usage. En plus, il est très efficace pour ma peau mixte, il la nettoie en douceur et la laisse fraîche. La couleur est fidèle à l'ingrédient naturel. Top !</p>",
+            "author_name": "Morgane B.",
+            "author_age": "31",
             "rating": 5
           }
         },
         "d9019a9a493142ca": {
           "type": "testimonial",
           "settings": {
-            "title": "Matière douce et non irritante",
-            "text": "<p>La matière est vraiment très douce au toucher et ne gratte pas, même après une longue journée. C'est un plaisir de le porter. L'effet 3D est discret mais efficace. Je suis très satisfaite de mon achat.</p>",
-            "author_name": "Théa U.",
-            "author_age": "",
+            "title": "Peau purifiée et éclatante",
+            "text": "<p>Ma peau est purifiée et éclatante grâce à ce savon au curcuma. Je sens qu'elle respire. La barre est agréable à tenir et à utiliser. C'est un vrai coup de cœur que je recommande à toutes mes amies. La couleur jaune est très jolie.</p>",
+            "author_name": "Justine T.",
+            "author_age": "27",
             "rating": 5
           }
         },
         "7ddcbe8fc94340c4": {
           "type": "testimonial",
           "settings": {
-            "title": "Je me sens plus belle !",
-            "text": "<p>Ce legging me donne vraiment l'impression d'être plus belle. L'effet sculptant est incroyable et met en valeur mes formes. C'est un vêtement qui redonne confiance en soi. Je ne regrette pas du tout mon achat.</p>",
-            "author_name": "Ursula V.",
-            "author_age": "",
+            "title": "Un excellent produit pour ma peau sensible",
+            "text": "<p>J'ai une peau très sensible qui réagit à beaucoup de produits, mais ce savon au curcuma est parfait. Il est doux et efficace. Aucune rougeur, juste une peau apaisée. Sa couleur naturelle est très belle. Je l'ai adopté !</p>",
+            "author_name": "Alice D.",
+            "author_age": "33",
             "rating": 5
           }
         },
         "ae3d9d561a374341": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bonne qualité pour le prix",
-            "text": "<p>Je suis agréablement surprise par la très bonne qualité de ce legging pour son prix. Le tissu est épais, opaque et l'effet 3D est vraiment bien fait. C'est un excellent rapport qualité-prix. Je recommande.</p>",
-            "author_name": "Valérie W.",
-            "author_age": "",
+            "title": "Teint unifié et pores resserrés",
+            "text": "<p>Mon teint est plus unifié et mes pores sont visiblement resserrés depuis que j'utilise ce savon. C'est un vrai plus pour ma peau. La barre de savon est d'une belle couleur orangée et elle mousse bien. Je suis très satisfaite.</p>",
+            "author_name": "Victoria G.",
+            "author_age": "29",
             "rating": 5
           }
         },
         "2e102cea5c2946e3": {
           "type": "testimonial",
           "settings": {
-            "title": "Superbe pour la danse",
-            "text": "<p>Je fais de la danse et ce legging est parfait. Il offre une grande liberté de mouvement, ne glisse pas et le maintien est excellent. L'effet sur les fesses est un plus pour se sentir élégante en mouvement. Je l'adore !</p>",
-            "author_name": "Wendy X.",
-            "author_age": "",
+            "title": "Un savon qui sent bon le naturel",
+            "text": "<p>J'apprécie que ce savon sente bon le naturel, sans parfum artificiel. C'est très agréable. Il nettoie ma peau en douceur et la laisse fraîche. Sa couleur est très jolie et sa forme est pratique. Je suis conquise par ce produit.</p>",
+            "author_name": "Charlotte H.",
+            "author_age": "24",
             "rating": 5
           }
         },
         "e6713a481a284bff": {
           "type": "testimonial",
           "settings": {
-            "title": "Très résistant aux entraînements",
-            "text": "<p>J'ai testé ce legging lors de plusieurs entraînements intenses et il a prouvé sa résistance. Il ne s'est pas déformé et les coutures n'ont pas bougé. C'est un produit très fiable. L'effet 3D est toujours là.</p>",
-            "author_name": "Xénia Y.",
-            "author_age": "",
+            "title": "Ma peau est plus lumineuse",
+            "text": "<p>Depuis que j'utilise ce savon, ma peau est visiblement plus lumineuse et éclatante. C'est un vrai coup de boost pour mon teint. La barre est épaisse et a une bonne durée de vie. Je le recommande à toutes les peaux ternes.</p>",
+            "author_name": "Sophie M.",
+            "author_age": "37",
             "rating": 5
           }
         },
         "0cda4161a95c4db9": {
           "type": "testimonial",
           "settings": {
-            "title": "Un look moderne et stylé",
-            "text": "<p>J'adore le look moderne et stylé que donne ce legging. L'effet 3D est très tendance et change des leggings classiques. Je me sens à la fois confortable et à la mode. Je vais en acheter d'autres couleurs.</p>",
-            "author_name": "Yasmine Z.",
-            "author_age": "",
+            "title": "Un excellent nettoyant quotidien",
+            "text": "<p>Ce savon est devenu mon excellent nettoyant quotidien. Il est doux, efficace et laisse ma peau propre et fraîche. La couleur naturelle est très belle et le savon tient bien en main. Je ne m'en passe plus.</p>",
+            "author_name": "Marine R.",
+            "author_age": "30",
             "rating": 5
           }
         },
         "524e619a89ce463f": {
           "type": "testimonial",
           "settings": {
-            "title": "Soutien parfait pour le ventre",
-            "text": "<p>La taille haute de ce legging offre un soutien parfait pour le ventre, sans le compresser. C'est très agréable et cela affine la silhouette. L'effet sur les fesses est bien visible. Je suis très satisfaite.</p>",
-            "author_name": "Zoé A.",
-            "author_age": "",
+            "title": "J'ai retrouvé un teint unifié",
+            "text": "<p>J'avais quelques petites rougeurs et un teint un peu irrégulier, mais ce savon au curcuma m'a vraiment aidée à retrouver un teint unifié. La couleur du savon est très naturelle et il mousse très bien. Je suis ravie de ce produit.</p>",
+            "author_name": "Élisa B.",
+            "author_age": "26",
             "rating": 5
           }
         },
         "0550c89eb2f3494f": {
           "type": "testimonial",
           "settings": {
-            "title": "Ne marque pas les sous-vêtements",
-            "text": "<p>Un gros point positif : ce legging ne marque absolument pas les sous-vêtements, même les plus fins. Le tissu est suffisamment épais et le motif 3D aide à dissimuler. C'est un détail qui fait toute la différence.</p>",
-            "author_name": "Adeline B.",
-            "author_age": "",
+            "title": "Une peau douce et hydratée",
+            "text": "<p>Ce savon laisse ma peau incroyablement douce et hydratée, sans aucune sensation de tiraillement. C'est un vrai confort. La barre est d'une belle couleur orange et elle est très agréable à utiliser. Je le recommande vivement.</p>",
+            "author_name": "Audrey C.",
+            "author_age": "34",
             "rating": 5
           }
         },
         "729320dda19346f9": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon effet, mais chaleur en été",
-            "text": "<p>L'effet galbant est vraiment bon et le legging est confortable. Mon seul petit bémol est qu'il peut être un peu chaud en plein été à cause de l'épaisseur du tissu. Sinon, la qualité est top pour les autres saisons.</p>",
-            "author_name": "Cassandra C.",
-            "author_age": "",
-            "rating": 4
+            "title": "Parfait pour ma peau grasse",
+            "text": "<p>J'ai une peau grasse et ce savon au curcuma est parfait pour réguler l'excès de sébum sans dessécher. Ma peau est matifiée et propre. La couleur naturelle du savon est très belle et il est très efficace. Je l'ai adopté définitivement.</p>",
+            "author_name": "Noémie E.",
+            "author_age": "28",
+            "rating": 5
           }
         },
         "38cba90901944a7f": {
           "type": "testimonial",
           "settings": {
-            "title": "Un vrai atout confiance",
-            "text": "<p>Ce legging est un vrai atout confiance pour moi. Il me fait des fesses incroyables et je me sens beaucoup plus à l'aise dans mes vêtements. C'est un investissement qui en vaut la peine pour le moral ! Merci LISSEYA.</p>",
-            "author_name": "Diane D.",
-            "author_age": "",
+            "title": "Un vrai coup de jeune pour ma peau",
+            "text": "<p>J'ai l'impression que ce savon donne un vrai coup de jeune à ma peau. Elle est plus ferme et plus éclatante. La barre est solide et ne se dissout pas rapidement. C'est un produit anti-âge très efficace. Je suis conquise.</p>",
+            "author_name": "Clémence H.",
+            "author_age": "39",
             "rating": 5
           }
         },
         "28db21c0661f480d": {
           "type": "testimonial",
           "settings": {
-            "title": "Facile à entretenir",
-            "text": "<p>J'apprécie que ce legging soit si facile à entretenir. Il passe en machine sans problème et sèche rapidement. L'effet 3D et le galbe sont toujours parfaits après de nombreux lavages. Très pratique au quotidien.</p>",
-            "author_name": "Éva E.",
-            "author_age": "",
+            "title": "Une odeur naturelle très agréable",
+            "text": "<p>L'odeur naturelle de ce savon est très agréable et discrète, un vrai plaisir à chaque utilisation. Il nettoie ma peau en douceur et la laisse fraîche. Sa couleur naturelle est très belle et sa forme est pratique. Je l'adore !</p>",
+            "author_name": "Amandine L.",
+            "author_age": "25",
             "rating": 5
           }
         },
         "78baddacaea94269": {
           "type": "testimonial",
           "settings": {
-            "title": "Fidèle à la taille indiquée",
-            "text": "<p>J'ai commandé ma taille habituelle et le legging taille parfaitement. Pas de mauvaise surprise, il est bien ajusté sans serrer. L'effet 3D est vraiment réussi. Très satisfaite de mon achat en ligne.</p>",
-            "author_name": "Florence F.",
-            "author_age": "",
+            "title": "Mon teint est plus homogène",
+            "text": "<p>Mon teint est beaucoup plus homogène et les petites taches ont diminué depuis que j'utilise ce savon. C'est un vrai miracle. La barre est d'une belle couleur jaune orangé et elle mousse très bien. Je le recommande à toutes.</p>",
+            "author_name": "Manon F.",
+            "author_age": "32",
             "rating": 5
           }
         },
         "ed76eda440f64592": {
           "type": "testimonial",
           "settings": {
-            "title": "Le meilleur pour les fessiers",
-            "text": "<p>Si vous avez des complexes sur vos fessiers, ce legging est la solution ! Il met en valeur les fesses comme aucun autre. Le tissu est confortable et le design est très flatteur. Je le recommande les yeux fermés.</p>",
-            "author_name": "Gaëlle G.",
-            "author_age": "",
+            "title": "Un produit naturel et efficace",
+            "text": "<p>Je cherchais un produit naturel et efficace pour ma peau, et ce savon au curcuma est parfait. Il tient toutes ses promesses : peau nette, lumineuse et douce. Sa couleur est très jolie et il est agréable à utiliser. Je l'ai adopté !</p>",
+            "author_name": "Léa G.",
+            "author_age": "23",
             "rating": 5
           }
         },
         "a2f0e60f4cfe47a0": {
           "type": "testimonial",
           "settings": {
-            "title": "Ne glisse pas pendant le sport",
-            "text": "<p>Je suis très active et j'ai besoin d'un legging qui ne glisse pas. Celui-ci est parfait ! Il reste bien en place pendant mes séances de cardio et de musculation. L'effet 3D est un plus qui me plaît beaucoup.</p>",
-            "author_name": "Héloïse H.",
-            "author_age": "",
+            "title": "Ma peau est plus saine et purifiée",
+            "text": "<p>J'ai l'impression que ma peau est plus saine et purifiée depuis que j'utilise ce savon. Les petites imperfections ont disparu. La barre est solide et ne se dissout pas rapidement. C'est un excellent produit pour une peau saine.</p>",
+            "author_name": "Caroline H.",
+            "author_age": "40",
             "rating": 5
           }
         },
         "d8d90712d803438d": {
           "type": "testimonial",
           "settings": {
-            "title": "Incroyable sur les photos",
-            "text": "<p>J'ai fait une séance photo avec ce legging et le rendu est incroyable ! L'effet 3D ressort super bien et les fesses sont magnifiées. C'est un legging très photogénique. Je suis conquise.</p>",
-            "author_name": "Ingrid I.",
-            "author_age": "",
+            "title": "Un teint frais et éclatant",
+            "text": "<p>Ce savon me donne un teint frais et éclatant chaque matin. C'est un vrai coup de boost pour ma peau. La couleur du savon est très jolie et il mousse agréablement. Je suis conquise par ce produit naturel.</p>",
+            "author_name": "Camille N.",
+            "author_age": "35",
             "rating": 5
           }
         },
         "3ad9da54b67e4a8c": {
           "type": "testimonial",
           "settings": {
-            "title": "Bon produit, mais la couleur un peu différente",
-            "text": "<p>Le legging est de très bonne qualité et l'effet sculptant est là. J'ai trouvé que la couleur que j'ai commandée était légèrement différente des photos, un peu moins intense. Mais cela ne gâche pas le plaisir de le porter.</p>",
-            "author_name": "Jeanne J.",
-            "author_age": "",
-            "rating": 4
+            "title": "Idéal pour les peaux à problèmes",
+            "text": "<p>J'ai une peau à problèmes et ce savon au curcuma est idéal. Il aide à réduire les boutons et les rougeurs. Ma peau est plus calme et nette. La barre est d'une belle couleur naturelle et elle est très efficace. Je le recommande vivement.</p>",
+            "author_name": "Agathe P.",
+            "author_age": "27",
+            "rating": 5
           }
         },
         "63185025f4754b21": {
           "type": "testimonial",
           "settings": {
-            "title": "Confortable pour les voyages",
-            "text": "<p>J'ai porté ce legging pour un long voyage en avion et il était incroyablement confortable. Le tissu est doux et ne compresse pas. L'effet 3D est un plus pour se sentir bien même en voyage. Je le recommande.</p>",
-            "author_name": "Kelly K.",
-            "author_age": "",
+            "title": "Une odeur subtile et agréable",
+            "text": "<p>L'odeur de ce savon est très subtile et agréable, pas du tout entêtante. C'est parfait pour le matin. Il laisse une sensation de fraîcheur sur la peau. Sa couleur est naturelle et très jolie. Je suis conquise par ce produit.</p>",
+            "author_name": "Pauline S.",
+            "author_age": "30",
             "rating": 5
           }
         },
         "8362f55d7b8644f1": {
           "type": "testimonial",
           "settings": {
-            "title": "Un boost de confiance instantané",
-            "text": "<p>Chaque fois que j'enfile ce legging, je ressens un boost de confiance instantané. L'effet sur les fesses est vraiment flatteur et je me sens plus belle. C'est un vêtement qui fait du bien au moral. Merci LISSEYA !</p>",
-            "author_name": "Lena L.",
-            "author_age": "",
+            "title": "Mon grain de peau est affiné",
+            "text": "<p>Mon grain de peau s'est affiné et mes pores sont moins visibles grâce à ce savon au curcuma. C'est un vrai coup de cœur. La barre de savon est très esthétique, avec cette jolie teinte orange. Je l'ai adopté définitivement.</p>",
+            "author_name": "Éva T.",
+            "author_age": "22",
             "rating": 5
           }
         },
         "323673702a484330": {
           "type": "testimonial",
           "settings": {
-            "title": "Parfait pour les journées cocooning",
-            "text": "<p>Ce legging est parfait pour mes journées cocooning à la maison. Il est si confortable et doux. Mais l'effet 3D est toujours là pour me faire sentir bien même en mode détente. J'adore !</p>",
-            "author_name": "Maëlle M.",
-            "author_age": "",
+            "title": "Une peau douce et lumineuse",
+            "text": "<p>Ce savon laisse ma peau incroyablement douce et lumineuse. C'est un vrai plaisir à utiliser. La couleur naturelle du savon est très belle et il a une bonne tenue. Je le recommande à toutes les peaux en quête d'éclat.</p>",
+            "author_name": "Inès V.",
+            "author_age": "38",
             "rating": 5
           }
         },
         "cda0276079884e87": {
           "type": "testimonial",
           "settings": {
-            "title": "Adhère bien au corps",
-            "text": "<p>Le legging adhère parfaitement au corps sans serrer. Il épouse les formes et offre un maintien idéal. L'effet 3D est très bien conçu et met en valeur les fesses. Je suis très satisfaite de cet achat.</p>",
-            "author_name": "Nina N.",
-            "author_age": "",
+            "title": "Un teint unifié et sans défaut",
+            "text": "<p>Mon teint est beaucoup plus unifié et sans défaut depuis que j'utilise ce savon. Les petites marques ont disparu. La barre est solide et ne se dissout pas rapidement. C'est un excellent produit pour un teint parfait.</p>",
+            "author_name": "Sarah W.",
+            "author_age": "29",
             "rating": 5
           }
         },
         "ffaf7084d0864ff9": {
           "type": "testimonial",
           "settings": {
-            "title": "Ne se déforme pas",
-            "text": "<p>Après plusieurs utilisations et lavages, le legging ne s'est absolument pas déformé. Il garde sa forme initiale et son élasticité. C'est un produit de qualité qui dure. L'effet 3D est toujours impeccable.</p>",
-            "author_name": "Olivia O.",
-            "author_age": "",
+            "title": "Une peau qui respire la santé",
+            "text": "<p>Avec ce savon, j'ai l'impression que ma peau respire la santé. Elle est débarrassée de toutes les impuretés sans être agressée. La couleur orangée du savon est très naturelle, et il tient bien en main. Je l'adore !</p>",
+            "author_name": "Lola X.",
+            "author_age": "24",
             "rating": 5
           }
         },
         "feadf3a670b54e35": {
           "type": "testimonial",
           "settings": {
-            "title": "Très bon maintien lombaire",
-            "text": "<p>En plus de l'effet sur les fesses, j'ai remarqué un très bon maintien lombaire grâce à la taille haute. C'est un plus pour mon dos. Le legging est confortable et l'effet 3D est vraiment bluffant. Je le recommande.</p>",
-            "author_name": "Perrine P.",
-            "author_age": "",
+            "title": "Mon coup de cœur beauté",
+            "text": "<p>Ce savon est mon coup de cœur beauté du moment ! Il a transformé ma peau, la rendant plus nette et lumineuse. La barre est épaisse et a une bonne durée de vie. Je ne peux plus m'en passer, c'est un produit exceptionnel.</p>",
+            "author_name": "Zoé Y.",
+            "author_age": "33",
             "rating": 5
           }
         },
         "0210284e9e1c4637": {
           "type": "testimonial",
           "settings": {
-            "title": "Ma femme est ravie !",
-            "text": "<p>J'ai offert ce legging à ma femme et elle est absolument ravie ! Elle le trouve très confortable et l'effet sur les fesses est incroyable. Elle n'arrête pas de le porter. Merci LISSEYA pour ce super cadeau.</p>",
-            "author_name": "Quentin R.",
-            "author_age": "",
+            "title": "Une peau confortable et apaisée",
+            "text": "<p>Ma peau est confortable et apaisée depuis que j'utilise ce savon. Fini les tiraillements et les rougeurs. La couleur naturelle du curcuma est très belle et le savon dure longtemps. C'est un excellent rapport qualité-prix.</p>",
+            "author_name": "Chloé Z.",
+            "author_age": "26",
             "rating": 5
           }
         },
         "63b6aff268d141d0": {
           "type": "testimonial",
           "settings": {
-            "title": "Idéal pour les squats",
-            "text": "<p>Ce legging est idéal pour les squats car il est parfaitement opaque et ne glisse pas. L'effet 3D met les fesses en valeur, ce qui est motivant à la salle de sport. Je le recommande à toutes les sportives.</p>",
-            "author_name": "Romane S.",
-            "author_age": "",
+            "title": "Un teint frais et reposé",
+            "text": "<p>Depuis que j'utilise ce savon, mon teint est plus frais et je parais moins fatiguée. C'est un vrai coup de boost pour ma peau. La prise en main de la barre est confortable, et elle mousse agréablement. Je suis conquise !</p>",
+            "author_name": "Élise A.",
+            "author_age": "45",
             "rating": 5
           }
         },
         "76387c3b76dc4ec0": {
           "type": "testimonial",
           "settings": {
-            "title": "Un effet ventre plat discret",
-            "text": "<p>L'effet ventre plat que procure ce legging est discret mais très efficace. On se sent gainée sans être compressée. L'effet 3D est parfait pour les fesses. Je suis très satisfaite de cet achat.</p>",
-            "author_name": "Sarah T.",
-            "author_age": "",
+            "title": "Moins de points noirs et pores resserrés",
+            "text": "<p>J'avais beaucoup de points noirs et ce savon a vraiment aidé à les réduire. Mes pores sont aussi plus resserrés. Ma peau est plus propre et les pores sont moins obstrués. La barre est agréable à manipuler et mousse bien. Un vrai changement !</p>",
+            "author_name": "Justine B.",
+            "author_age": "31",
             "rating": 5
           }
         }
@@ -1694,8 +1694,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Incroyable effet galbant !",
-            "description": "J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.",
+            "heading": "Une peau éclatante grâce au curcuma !",
+            "description": "J'ai été agréablement surprise par ce savon au curcuma. La couleur jaune orangé est très fidèle à l'ingrédient principal et l'odeur est délicate. Ma peau est visiblement plus lumineuse et les petites imperfections se sont estompées après seulement quelques semaines d'utilisation.",
             "name": "Marie P.",
             "verified": true,
             "stars_rating": 5.0
@@ -1705,8 +1705,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Confort et esthétique au rendez-vous",
-            "description": "Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.",
+            "heading": "Livraison rapide et produit conforme !",
+            "description": "La livraison a été super rapide, j'ai reçu mon savon curcuma en à peine deux jours. Le packaging était soigné et le savon est exactement comme sur les photos, avec cette belle couleur naturelle. Je suis très contente de mon achat et de l'efficacité du produit.",
             "name": "Sophie L.",
             "verified": true,
             "stars_rating": 5.0
@@ -1716,8 +1716,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Bon produit, mais taille un peu petit",
-            "description": "Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.",
+            "heading": "Bon produit, mais l'odeur pourrait être plus présente",
+            "description": "Le savon au curcuma est efficace, ma peau est plus douce et mon teint plus unifié. J'apprécie sa forme rectangulaire qui tient bien en main. Le seul petit bémol est que l'odeur du curcuma est très subtile, j'aurais aimé qu'elle soit un peu plus prononcée. Cependant, cela reste un très bon produit.",
             "name": "Chloé M.",
             "verified": true,
             "stars_rating": 4.0
@@ -1727,8 +1727,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Mes fesses n'ont jamais été aussi belles !",
-            "description": "Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.",
+            "heading": "Idéal pour ma peau sensible et acnéique",
+            "description": "J'ai une peau très sensible et sujette à l'acné, et ce savon au curcuma est une révélation. Il nettoie en douceur sans dessécher et j'ai remarqué une nette amélioration de mes boutons. La mousse est onctueuse et le savon dure longtemps.",
             "name": "Léa R.",
             "verified": true,
             "stars_rating": 5.0
@@ -1738,8 +1738,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Qualité irréprochable et livraison rapide",
-            "description": "J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.",
+            "heading": "Un teint frais et lumineux chaque matin",
+            "description": "J'utilise ce savon chaque matin et mon teint est visiblement plus frais et lumineux. J'adore la sensation de propreté qu'il laisse, sans tiraillement. La barre de savon est généreuse et semble durable. C'est devenu mon indispensable.",
             "name": "Manon D.",
             "verified": true,
             "stars_rating": 5.0
@@ -1749,8 +1749,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Un effet 'seconde peau' très agréable",
-            "description": "Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !",
+            "heading": "Super rapport qualité/prix !",
+            "description": "Pour le prix, ce savon au curcuma est une excellente affaire. La qualité est au rendez-vous, le savon est bien dur et ne fond pas trop vite. Les résultats sur ma peau sont bluffants, je n'ai plus besoin de mille produits. Je recommande vivement !",
             "name": "Amélie B.",
             "verified": true,
             "stars_rating": 5.0
@@ -1760,8 +1760,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Parfait pour le fitness et le quotidien",
-            "description": "J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !",
+            "heading": "Le packaging est très mignon",
+            "description": "J'ai été attirée par le packaging simple et élégant, et je n'ai pas été déçue. Le savon est bien présenté, et sa couleur jaune est très attrayante. C'est un plaisir de l'utiliser chaque jour, et ma peau l'adore. Une très belle découverte !",
             "name": "Charlotte V.",
             "verified": true,
             "stars_rating": 5.0
@@ -1771,8 +1771,8 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Le meilleur legging que j'aie jamais eu !",
-            "description": "Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.",
+            "heading": "Un cadeau apprécié par ma mère",
+            "description": "J'ai offert ce savon au curcuma à ma mère pour son anniversaire et elle est ravie. Elle m'a dit que sa peau était plus douce et qu'elle adorait la sensation après utilisation. C'était une excellente idée de cadeau ! Elle l'utilise quotidiennement.",
             "name": "Emma T.",
             "verified": true,
             "stars_rating": 5.0
@@ -1782,19 +1782,19 @@
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Très bon produit avec un petit bémol",
-            "description": "Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.",
+            "heading": "Adieu les taches pigmentaires !",
+            "description": "Avec l'âge, j'ai développé quelques taches pigmentaires et ce savon au curcuma m'a vraiment aidée. Elles sont moins visibles et mon teint est plus homogène. La barre est agréable à tenir et à utiliser. Je suis bluffée par son efficacité.",
             "name": "Isabelle K.",
             "verified": true,
-            "stars_rating": 4.0
+            "stars_rating": 5.0
           }
         },
         "410f07225aa54f94": {
           "type": "image",
           "settings": {
             "image": "",
-            "heading": "Effet fesses rebondies garanti !",
-            "description": "Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.",
+            "heading": "Ma peau n'a jamais été aussi saine",
+            "description": "J'utilise ce savon depuis un mois et ma peau n'a jamais été aussi saine. Moins de rougeurs, moins de boutons, et un éclat naturel. La couleur du savon est très jolie et il a une bonne prise en main. Vraiment un produit top !",
             "name": "Pauline N.",
             "verified": true,
             "stars_rating": 5.0
@@ -1803,8 +1803,8 @@
         "be22bffc4f6247e0": {
           "type": "text",
           "settings": {
-            "heading": "Incroyable effet galbant !",
-            "description": "J'ai été bluffée par l'effet de ce legging 3D. Dès que je l'ai enfilé, mes fesses étaient visiblement plus rondes et liftées, exactement comme sur les photos du site. Le tissu est doux et confortable, parfait pour le sport ou une journée décontractée.",
+            "heading": "Une peau éclatante grâce au curcuma !",
+            "description": "J'ai été agréablement surprise par ce savon au curcuma. La couleur jaune orangé est très fidèle à l'ingrédient principal et l'odeur est délicate. Ma peau est visiblement plus lumineuse et les petites imperfections se sont estompées après seulement quelques semaines d'utilisation.",
             "name": "Marie P.",
             "verified": true,
             "stars_rating": 5.0
@@ -1813,8 +1813,8 @@
         "ded213dee372419b": {
           "type": "text",
           "settings": {
-            "heading": "Confort et esthétique au rendez-vous",
-            "description": "Ce legging est une merveille ! Non seulement il est super confortable, mais l'effet push-up sur les fessiers est vraiment là. Le motif texturé est discret et ajoute une touche d'originalité. J'apprécie la qualité du tissu qui ne marque pas.",
+            "heading": "Livraison rapide et produit conforme !",
+            "description": "La livraison a été super rapide, j'ai reçu mon savon curcuma en à peine deux jours. Le packaging était soigné et le savon est exactement comme sur les photos, avec cette belle couleur naturelle. Je suis très contente de mon achat et de l'efficacité du produit.",
             "name": "Sophie L.",
             "verified": true,
             "stars_rating": 5.0
@@ -1823,8 +1823,8 @@
         "cb1d53794ea04e35": {
           "type": "text",
           "settings": {
-            "heading": "Bon produit, mais taille un peu petit",
-            "description": "Le legging est de très bonne qualité et l'effet sculptant est indéniable. J'ai pris ma taille habituelle, mais il est un peu serré à la taille. Je conseillerai de prendre une taille au-dessus pour un confort optimal, mais l'effet 3D est vraiment réussi.",
+            "heading": "Bon produit, mais l'odeur pourrait être plus présente",
+            "description": "Le savon au curcuma est efficace, ma peau est plus douce et mon teint plus unifié. J'apprécie sa forme rectangulaire qui tient bien en main. Le seul petit bémol est que l'odeur du curcuma est très subtile, j'aurais aimé qu'elle soit un peu plus prononcée. Cependant, cela reste un très bon produit.",
             "name": "Chloé M.",
             "verified": true,
             "stars_rating": 4.0
@@ -1833,8 +1833,8 @@
         "a06a924422194e4b": {
           "type": "text",
           "settings": {
-            "heading": "Mes fesses n'ont jamais été aussi belles !",
-            "description": "Je suis absolument conquise par ce legging 3D. Le design est très flatteur et met parfaitement en valeur les courbes. L'effet de compression est juste ce qu'il faut, sans être oppressant. Je le porte pour mes séances de sport et je me sens super bien dedans.",
+            "heading": "Idéal pour ma peau sensible et acnéique",
+            "description": "J'ai une peau très sensible et sujette à l'acné, et ce savon au curcuma est une révélation. Il nettoie en douceur sans dessécher et j'ai remarqué une nette amélioration de mes boutons. La mousse est onctueuse et le savon dure longtemps.",
             "name": "Léa R.",
             "verified": true,
             "stars_rating": 5.0
@@ -1843,8 +1843,8 @@
         "149e94d9d951427b": {
           "type": "text",
           "settings": {
-            "heading": "Qualité irréprochable et livraison rapide",
-            "description": "J'ai reçu mon legging très rapidement, et le packaging était soigné. Le produit correspond parfaitement à la description et aux images. La matière est épaisse et opaque, ce qui est un vrai plus. Je recommande LISSEYA pour leur sérieux et la qualité de leurs articles.",
+            "heading": "Un teint frais et lumineux chaque matin",
+            "description": "J'utilise ce savon chaque matin et mon teint est visiblement plus frais et lumineux. J'adore la sensation de propreté qu'il laisse, sans tiraillement. La barre de savon est généreuse et semble durable. C'est devenu mon indispensable.",
             "name": "Manon D.",
             "verified": true,
             "stars_rating": 5.0
@@ -1853,8 +1853,8 @@
         "af74cfafd2c74b0d": {
           "type": "text",
           "settings": {
-            "heading": "Un effet 'seconde peau' très agréable",
-            "description": "Ce legging est comme une seconde peau, tellement il est confortable. L'effet texturé est subtil mais très efficace pour donner un joli galbe. Je l'ai lavé plusieurs fois et il n'a pas bougé, la qualité est vraiment au rendez-vous. Je l'adore !",
+            "heading": "Super rapport qualité/prix !",
+            "description": "Pour le prix, ce savon au curcuma est une excellente affaire. La qualité est au rendez-vous, le savon est bien dur et ne fond pas trop vite. Les résultats sur ma peau sont bluffants, je n'ai plus besoin de mille produits. Je recommande vivement !",
             "name": "Amélie B.",
             "verified": true,
             "stars_rating": 5.0
@@ -1863,8 +1863,8 @@
         "0b123c5a7e184688": {
           "type": "text",
           "settings": {
-            "heading": "Parfait pour le fitness et le quotidien",
-            "description": "J'utilise ce legging pour mes cours de fitness et il est parfait. Il ne glisse pas, même pendant les mouvements intenses, et l'effet push-up est très motivant. Je le porte aussi en dehors du sport car il est très stylé. Un excellent investissement !",
+            "heading": "Le packaging est très mignon",
+            "description": "J'ai été attirée par le packaging simple et élégant, et je n'ai pas été déçue. Le savon est bien présenté, et sa couleur jaune est très attrayante. C'est un plaisir de l'utiliser chaque jour, et ma peau l'adore. Une très belle découverte !",
             "name": "Charlotte V.",
             "verified": true,
             "stars_rating": 5.0
@@ -1873,8 +1873,8 @@
         "57144bd15aeb45d7": {
           "type": "text",
           "settings": {
-            "heading": "Le meilleur legging que j'aie jamais eu !",
-            "description": "Je suis une adepte des leggings et celui-ci est de loin le meilleur que j'ai pu acheter. L'effet 3D est vraiment bluffant, il redéfinit la silhouette sans effort. La matière est respirante et ne gratte pas. Je vais en commander d'autres couleurs sans hésiter.",
+            "heading": "Un cadeau apprécié par ma mère",
+            "description": "J'ai offert ce savon au curcuma à ma mère pour son anniversaire et elle est ravie. Elle m'a dit que sa peau était plus douce et qu'elle adorait la sensation après utilisation. C'était une excellente idée de cadeau ! Elle l'utilise quotidiennement.",
             "name": "Emma T.",
             "verified": true,
             "stars_rating": 5.0
@@ -1883,18 +1883,18 @@
         "299eaef7cfab4ec6": {
           "type": "text",
           "settings": {
-            "heading": "Très bon produit avec un petit bémol",
-            "description": "Le legging est vraiment beau et l'effet sculptant est visible. J'ai juste trouvé que les coutures étaient un peu sensibles au début, mais après quelques lavages, c'est passé. L'ensemble reste très positif, je le porte souvent.",
+            "heading": "Adieu les taches pigmentaires !",
+            "description": "Avec l'âge, j'ai développé quelques taches pigmentaires et ce savon au curcuma m'a vraiment aidée. Elles sont moins visibles et mon teint est plus homogène. La barre est agréable à tenir et à utiliser. Je suis bluffée par son efficacité.",
             "name": "Isabelle K.",
             "verified": true,
-            "stars_rating": 4.0
+            "stars_rating": 5.0
           }
         },
         "59c20c2bbc8d4fe7": {
           "type": "text",
           "settings": {
-            "heading": "Effet fesses rebondies garanti !",
-            "description": "Si vous cherchez un legging qui donne un effet 'fesses rebondies', ne cherchez plus ! Celui-ci fait des merveilles. L'élasticité est parfaite et il s'adapte à toutes les morphologies. Je me sens beaucoup plus confiante quand je le porte.",
+            "heading": "Ma peau n'a jamais été aussi saine",
+            "description": "J'utilise ce savon depuis un mois et ma peau n'a jamais été aussi saine. Moins de rougeurs, moins de boutons, et un éclat naturel. La couleur du savon est très jolie et il a une bonne prise en main. Vraiment un produit top !",
             "name": "Pauline N.",
             "verified": true,
             "stars_rating": 5.0
@@ -1903,8 +1903,8 @@
         "4ca303d6c0b5471b": {
           "type": "text",
           "settings": {
-            "heading": "Superbe matière, très agréable",
-            "description": "La matière de ce legging est incroyablement douce au toucher et très agréable à porter. On sent la qualité du tissu. L'effet de texture 3D est subtil mais très efficace pour sculpter la silhouette. Je suis ravie de mon achat.",
+            "heading": "Un allié contre le masque de grossesse",
+            "description": "Après ma grossesse, j'avais un masque qui me complexait. Ce savon au curcuma a fait des miracles ! Les taches se sont estompées et mon teint est plus uniforme. La barre est épaisse et dure longtemps, c'est très économique.",
             "name": "Camille F.",
             "verified": true,
             "stars_rating": 5.0
@@ -1913,8 +1913,8 @@
         "8e488a0a879a427d": {
           "type": "text",
           "settings": {
-            "heading": "Un cadeau qui a fait son effet !",
-            "description": "J'ai offert ce legging à ma sœur pour son anniversaire et elle est aux anges ! Elle m'a dit qu'il était super confortable et que l'effet sur les fesses était incroyable. Merci LISSEYA pour cette belle découverte.",
+            "heading": "Facile à utiliser et agréable",
+            "description": "Le savon est très facile à utiliser, il mousse bien et se rince sans laisser de film. L'odeur est très légère et agréable. J'apprécie la texture douce qu'il laisse sur ma peau. C'est un vrai plaisir quotidien.",
             "name": "Lucie H.",
             "verified": true,
             "stars_rating": 5.0
@@ -1923,8 +1923,8 @@
         "8fa00361b508463d": {
           "type": "text",
           "settings": {
-            "heading": "Adieu la cellulite (visuellement) !",
-            "description": "Je suis stupéfaite de voir à quel point ce legging masque l'apparence de la cellulite. Le motif 3D fait un travail incroyable. Je me sens beaucoup plus à l'aise et en confiance. C'est un vrai coup de cœur !",
+            "heading": "Fini les tiraillements après la douche",
+            "description": "Avant, ma peau tirait énormément après la douche. Avec ce savon au curcuma, je n'ai plus du tout cette sensation désagréable. Ma peau est confortable et hydratée. La couleur du savon est magnifique, on dirait un petit lingot d'or.",
             "name": "Clara S.",
             "verified": true,
             "stars_rating": 5.0
@@ -1933,8 +1933,8 @@
         "4b0704df0b8244c4": {
           "type": "text",
           "settings": {
-            "heading": "Résultats visibles dès le premier enfilage",
-            "description": "Dès que j'ai mis le legging, j'ai vu la différence. L'effet liftant est immédiat et les fesses semblent plus fermes. La taille haute est aussi très appréciable pour un bon maintien. Je suis totalement satisfaite de mon achat.",
+            "heading": "Un produit naturel qui tient ses promesses",
+            "description": "J'étais à la recherche d'un produit naturel pour ma routine et ce savon au curcuma est parfait. Il tient toutes ses promesses : peau nette, lumineuse et douce. J'aime le fait qu'il soit compact et qu'il n'y ait pas de gaspillage.",
             "name": "Inès G.",
             "verified": true,
             "stars_rating": 5.0
@@ -1943,8 +1943,8 @@
         "c6b0b8ec9f2344d1": {
           "type": "text",
           "settings": {
-            "heading": "Idéal pour l'entraînement intensif",
-            "description": "J'ai testé ce legging lors d'une séance de HIIT et il a tenu toutes ses promesses. Il reste en place, évacue bien la transpiration et l'effet galbant est toujours là. Je le recommande à toutes les sportives !",
+            "heading": "Beaucoup mieux que les nettoyants liquides",
+            "description": "J'ai toujours utilisé des nettoyants visage liquides, mais ce savon au curcuma les surpasse. Ma peau est plus propre et plus saine. La barre est solide et ne se désintègre pas. C'est un excellent investissement pour ma peau.",
             "name": "Anaïs J.",
             "verified": true,
             "stars_rating": 5.0
@@ -1953,28 +1953,28 @@
         "9cfdea5a9fc54622": {
           "type": "text",
           "settings": {
-            "heading": "Bon maintien, un peu long pour moi",
-            "description": "Le legging offre un excellent maintien et l'effet sculptant est réel. Mon seul petit bémol est qu'il est un peu long pour ma petite taille. Je dois le retrousser légèrement. Sinon, la qualité est top.",
+            "heading": "Longévité impressionnante !",
+            "description": "Ce savon dure vraiment longtemps ! Je l'utilise tous les jours depuis plus d'un mois et il n'a pas beaucoup diminué. Sa couleur vive reste intacte. C'est un produit très économique en plus d'être efficace pour ma peau.",
             "name": "Mathilde C.",
             "verified": true,
-            "stars_rating": 4.0
+            "stars_rating": 5.0
           }
         },
         "818447fa9f2e488f": {
           "type": "text",
           "settings": {
-            "heading": "Ne bouge pas au lavage",
-            "description": "J'ai été agréablement surprise par la résistance de ce legging. Après plusieurs lavages en machine, il n'a ni bougé, ni déteint, et l'élasticité est toujours la même. C'est un gage de qualité et de durabilité. J'en suis très contente.",
+            "heading": "Efficace mais un peu salissant",
+            "description": "Le savon est très efficace pour unifier le teint et réduire les imperfections, je vois de vrais résultats. Sa couleur jaune intense est très belle. Cependant, il a tendance à laisser des traces jaunes sur le porte-savon si on ne le rince pas bien. Mais les bénéfices l'emportent largement !",
             "name": "Audrey W.",
             "verified": true,
-            "stars_rating": 5.0
+            "stars_rating": 4.0
           }
         },
         "88bbb822dec94f39": {
           "type": "text",
           "settings": {
-            "heading": "Sublime les formes sans être vulgaire",
-            "description": "Ce legging est juste parfait. Il met en valeur les formes de manière élégante et subtile, sans jamais être vulgaire. Le motif 3D est très chic. Je l'ai déjà porté pour plusieurs occasions et j'ai eu beaucoup de compliments.",
+            "heading": "Mon teint est plus frais et reposé",
+            "description": "Depuis que j'utilise ce savon, mon teint est plus frais et je parais moins fatiguée. C'est un vrai coup de boost pour ma peau. La prise en main de la barre est confortable, et elle mousse agréablement. Je suis conquise !",
             "name": "Céline E.",
             "verified": true,
             "stars_rating": 5.0
@@ -1983,8 +1983,8 @@
         "80dda7261dcd4fad": {
           "type": "text",
           "settings": {
-            "heading": "Effet ventre plat appréciable",
-            "description": "En plus de l'effet liftant sur les fesses, j'ai remarqué que la taille haute du legging offrait un très bon maintien pour le ventre. L'effet est un ventre plus plat et une silhouette affinée. C'est un tout-en-un très efficace.",
+            "heading": "Une odeur discrète et naturelle",
+            "description": "J'apprécie énormément l'odeur très discrète et naturelle de ce savon, loin des parfums artificiels. Il laisse ma peau propre et douce, sans aucune irritation. La couleur du savon est très naturelle, j'aime beaucoup son aspect brut.",
             "name": "Laure O.",
             "verified": true,
             "stars_rating": 5.0
@@ -1993,8 +1993,8 @@
         "bcbb090bb2b0476c": {
           "type": "text",
           "settings": {
-            "heading": "Doux et agréable à porter toute la journée",
-            "description": "Je porte ce legging pour travailler, et il est tellement doux et confortable que je pourrais le garder toute la journée. Le tissu ne gratte pas et ne serre pas. L'effet 3D est un plus qui me donne une allure plus dynamique.",
+            "heading": "Peau plus ferme et plus lisse",
+            "description": "Je constate que ma peau est plus ferme et plus lisse depuis que j'ai intégré ce savon à ma routine. Les ridules sont moins marquées. La forme du savon est pratique et il est agréable à utiliser. C'est un excellent produit anti-âge.",
             "name": "Nathalie B.",
             "verified": true,
             "stars_rating": 5.0

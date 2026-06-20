@@ -308,20 +308,27 @@ def get_static_ui_translations(lang: str, delivery_delay: str = "") -> dict:
     return result
 
 
+# Languages with full hardcoded static-label coverage in theme_modifier.py.
+# For all other languages the AI generates the ui{} labels directly.
+_HARDCODED_LANGS = {"fr", "en", "de", "da", "sv", "no", "fi", "es", "pt", "it", "nl", "pl", "ru"}
+
+
 def build_global_texts_prompt(context: dict) -> tuple[str, str]:
     """Prompt textes globaux — schéma identique à mock_generator.py / theme_modifier.py.
 
     Schema :
-      header: {announcement_timer, announcement_marquee}
-      footer:  {trust_badges[4], brand_text, newsletter_heading, newsletter_text,
-                link_list_headings[]}
-      cart:    {}  (géré par traductions fixes côté serveur)
-      delivery:{}  (géré par traductions fixes côté serveur)
-      settings:{}  (géré par traductions fixes côté serveur)
+      header:   {announcement_timer, announcement_marquee}
+      footer:   {trust_badges[4], brand_text, newsletter_heading, newsletter_text,
+                 link_list_headings[]}
+      ui:       {} for 13 fully-localised langs; full dict for all others (AI translates)
+      cart:     {}  (géré par traductions fixes côté serveur)
+      delivery: {}  (géré par traductions fixes côté serveur)
+      settings: {}  (géré par traductions fixes côté serveur)
 
     POLITIQUE LANGUE :
       FR → header vide, trust_badges=[], newsletter vide (le theme Story gere nativement)
-      Toutes autres langues → tous les champs traduits dans la langue cible
+      13 langues hardcodées → ui vide (theme_modifier applique ses propres dicts)
+      Toutes autres langues → header + footer + ui traduits dans la langue cible
     """
 
     system = """Tu es un expert en copywriting e-commerce Shopify.
@@ -363,6 +370,8 @@ RÈGLE GRAS OBLIGATOIRE : Dans brand_text et trust_badges.description (champs HT
 IMPORTANT : Des images du produit sont jointes. Adapte les textes globaux au produit RÉEL.
 """ if context.get("has_images") else ""
 
+    is_hardcoded = lang2 in _HARDCODED_LANGS
+
     # Pour le français, header et newsletter restent vides (le thème Story les gère nativement)
     if is_fr:
         header_instruction = """  "header": {{
@@ -375,7 +384,6 @@ IMPORTANT : Des images du produit sont jointes. Adapte les textes globaux au pro
         link_list_instruction = '  "link_list_headings": [],'
         lang_constraint = "- Pour le français : laisse VIDES announcement_timer, announcement_marquee, trust_badges, newsletter_heading, newsletter_text, link_list_headings. Génère uniquement brand_text."
     else:
-        # All non-French languages: structure with clear language instruction
         header_instruction = f"""  "header": {{
     "announcement_timer": "[ALL-CAPS short promotional offer — translate to target language]",
     "announcement_marquee": "[ALL-CAPS scrolling trust text, pipe-separated — translate to target language]"
@@ -390,6 +398,54 @@ IMPORTANT : Des images du produit sont jointes. Adapte les textes globaux au pro
     "newsletter_text": "[Newsletter incentive text with <strong>-10%</strong> discount offer — translate to target language]","""
         link_list_instruction = '  "link_list_headings": ["[IMPORTANT INFORMATION — translate to target language]", "[LEGAL INFORMATION — translate to target language]"],'
         lang_constraint = f"- OBLIGATION ABSOLUE : TOUS les textes doivent être dans la langue cible ({lang}). Remplace CHAQUE placeholder [... — translate] par ton texte généré dans la langue cible. N'écris aucun mot en français, anglais ou allemand."
+
+    # For languages without hardcoded static labels, ask the AI to translate them.
+    # For the 13 fully-localised languages, keep ui empty (theme_modifier uses its own dicts).
+    if is_hardcoded:
+        ui_instruction = '  "ui": {},'
+        ui_constraint = '- Laisse "ui" vide : les libellés statiques sont gérés côté serveur pour cette langue.'
+    else:
+        ui_instruction = f"""  "ui": {{
+    "buy_button": "ADD TO CART",
+    "cart_button": "ADD TO CART",
+    "product_card_button": "Add to cart",
+    "product_tagline": "Superior Quality. Free Shipping",
+    "delivery_promo": "🚚 Free Shipping Today Only",
+    "marquee_heading": "They talk about us:",
+    "ugc_heading": "They used our product and are satisfied",
+    "accordion_description": "Description",
+    "accordion_how_it_works": "How does it work?",
+    "delivery_heading": "Delivery information",
+    "delivery_today": "Order",
+    "delivery_ready": "Order Ready",
+    "delivery_delivered": "Delivery",
+    "cart_subtotal": "Subtotal",
+    "cart_total": "Total",
+    "cart_savings": "You save",
+    "cart_protection": "Protect your order against damage, loss or theft.",
+    "cart_upsell_title": "You will love this item",
+    "cart_upsell_button": "Add",
+    "cart_footer": "⭐4.8/5 Trustpilot | 🔐 Secure Payment",
+    "timer_text": "Enjoy an extra 10% discount for $time",
+    "timer_timeout": "Offer expired",
+    "header_timer": "OUR OFFER: BUY 1, GET THE 2ND AT -50% FOR",
+    "header_marquee": "MORE THAN 9860 PEOPLE RECOMMEND US",
+    "reviews_heading": "Customer Reviews",
+    "reviews_two_heading": "They speak better about us than we do",
+    "tracking_heading": "Track my order",
+    "tracking_description": "Enter your order number to find out its current location.",
+    "tracking_button": "Track",
+    "tracking_label": "Order tracking number",
+    "contact_order_number": "Order Number",
+    "contact_send": "Send"
+  }},"""
+        ui_constraint = f"""- TRANSLATE ALL "ui" values into perfect {lang}. Each value shown above is the English reference — replace it with the correct {lang} translation. Rules:
+  * buy_button and cart_button must be ALL-CAPS
+  * header_timer and header_marquee must be ALL-CAPS
+  * Keep "$time" exactly as "$time" (it is a placeholder, do NOT translate it)
+  * Keep "🚚" and "⭐" emojis exactly as-is
+  * Keep "4.8/5" and "9860" as numbers, do not change them
+  * "🔐 Secure Payment" part of cart_footer: translate "Secure Payment" only"""
 
     user = f"""Boutique : {store}
 Email : {context['store_email']}
@@ -407,6 +463,7 @@ Génère les textes globaux du thème Shopify. Réponds en JSON avec ce schéma 
     {newsletter_instruction}
     {link_list_instruction}
   }},
+  {ui_instruction}
   "cart": {{}},
   "delivery": {{}},
   "settings": {{}}
@@ -414,6 +471,7 @@ Génère les textes globaux du thème Shopify. Réponds en JSON avec ce schéma 
 
 CONTRAINTES :
 {lang_constraint}
+{ui_constraint}
 - brand_text est du HTML avec <p> et plusieurs <strong> sur le nom de marque et les promesses clés
 - trust_badges.description utilisent uniquement <strong> (pas de <p>) — chaque badge doit avoir un <strong>
 - Les champs cart, delivery, settings doivent rester VIDES (objets vides {{}}) — ils sont gérés par des traductions fixes côté serveur

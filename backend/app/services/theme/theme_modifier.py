@@ -311,6 +311,10 @@ def apply_generated_texts(
     hp = all_results.get("homepage", {})
     pp = all_results.get("product_page", {})
 
+    # AI-generated UI labels for languages outside the 13 hardcoded ones.
+    # For the 13 fully-localised languages, global_texts.ui is {} and ai_ui stays empty.
+    ai_ui = all_results.get("global_texts", {}).get("ui", {})
+
     # ── 0. Colors: JSON write on settings_data.json (MUST run before text surgery on same file)
     if "colors" in all_results:
         if _apply_colors(ed, pf, all_results["colors"]):
@@ -318,7 +322,7 @@ def apply_generated_texts(
 
     # ── 1. Reviews: JSON injection (must run BEFORE text surgery on index/product)
     if "reviews" in all_results:
-        for rel in _inject_testimonials(ed, pf, all_results["reviews"], language=language):
+        for rel in _inject_testimonials(ed, pf, all_results["reviews"], language=language, ai_ui=ai_ui):
             modified.add(rel)
 
     # ── 1b. Remove invalid blocks AFTER all JSON writes (so pf cache is current)
@@ -336,12 +340,12 @@ def apply_generated_texts(
             modified.add("templates/product.json")
 
     # ── 3b. Fix accordion headings via JSON write (must run BEFORE text surgery)
-    if _fix_product_accordion_headings(ed, pf, language, target_gender):
+    if _fix_product_accordion_headings(ed, pf, language, target_gender, ai_ui=ai_ui):
         modified.add("templates/product.json")
 
     # ── 3c. Product page text surgery (needs hp for shared sections)
     if pp:
-        if _apply_product_page(ed, pf, pp, hp, language, target_gender, delivery_delay, return_policy_days):
+        if _apply_product_page(ed, pf, pp, hp, language, target_gender, delivery_delay, return_policy_days, ai_ui=ai_ui):
             modified.add("templates/product.json")
 
     # ── 4. FAQ (both pages)
@@ -357,19 +361,19 @@ def apply_generated_texts(
 
     # ── 6. Global texts (header + footer + settings)
     if "global_texts" in all_results:
-        if _apply_header(ed, pf, all_results["global_texts"], language):
+        if _apply_header(ed, pf, all_results["global_texts"], language, ai_ui=ai_ui):
             modified.add("sections/header-group.json")
-        if _apply_footer(ed, pf, all_results["global_texts"], language, store_name):
+        if _apply_footer(ed, pf, all_results["global_texts"], language, store_name, ai_ui=ai_ui):
             modified.add("sections/footer-group.json")
-        if _apply_settings_data(ed, pf, all_results["global_texts"], language):
+        if _apply_settings_data(ed, pf, all_results["global_texts"], language, ai_ui=ai_ui):
             modified.add("config/settings_data.json")
 
     # ── 7. Tracking page (textes fixes)
-    if _apply_tracking_page(ed, pf, language):
+    if _apply_tracking_page(ed, pf, language, ai_ui=ai_ui):
         modified.add("templates/page.tracking.json")
 
     # ── 7b. Contact page (textes fixes)
-    if _apply_contact_page(ed, pf, language):
+    if _apply_contact_page(ed, pf, language, ai_ui=ai_ui):
         modified.add("templates/page.contact.json")
 
     # ── 8. Switch locale files so theme UI is in the chosen language
@@ -457,7 +461,7 @@ _REVIEWS_HEADING = {
 }
 
 
-def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str) -> bool:
+def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str, ai_ui: dict = {}) -> bool:
     """Inject 10 image + 20 text review blocks into a 'reviews' section in index.json.
 
     The section is placed just above the reviews-two (Trustpilot) section.
@@ -481,6 +485,7 @@ def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str) -> b
         new_sec = _make_review_section(
             "reviews", "text", reviews, _INDEX_REVIEWS_TEXT_COUNT, language,
             img_count=_INDEX_REVIEWS_IMAGE_COUNT, txt_count=_INDEX_REVIEWS_TEXT_COUNT,
+            ai_ui=ai_ui,
         )
         data.setdefault("sections", {})[new_id] = new_sec
         _insert_before_reviews_two(data, new_id)
@@ -490,7 +495,7 @@ def _inject_index_reviews(ed: Path, pf: dict, reviews: list, language: str) -> b
     return True
 
 
-def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> set[str]:
+def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr", ai_ui: dict = {}) -> set[str]:
     """Inject review blocks into all review sections across templates.
 
     - reviews-two (Avis Trustpilot) in index.json: testimonial blocks
@@ -513,19 +518,19 @@ def _inject_testimonials(ed: Path, pf: dict, rv: dict, language: str = "fr") -> 
     if _inject_into_template(
         ed, pf, "templates/index.json",
         "reviews-two", "testimonial",
-        reviews, target_count, language,
+        reviews, target_count, language, ai_ui=ai_ui,
     ):
         modified.add("templates/index.json")
 
     # B — Avis: reviews / 10 image + 20 text blocks in index.json (above reviews-two)
-    if _inject_index_reviews(ed, pf, reviews, language):
+    if _inject_index_reviews(ed, pf, reviews, language, ai_ui=ai_ui):
         modified.add("templates/index.json")
 
     # C — Avis: reviews / 20 image + 80 text blocks in product.json
     if _inject_into_template(
         ed, pf, "templates/product.json",
         "reviews", "text",
-        reviews, target_count, language,
+        reviews, target_count, language, ai_ui=ai_ui,
     ):
         modified.add("templates/product.json")
 
@@ -536,6 +541,7 @@ def _inject_into_template(
     ed: Path, pf: dict,
     rel: str, section_type: str, block_type: str,
     reviews: list, target_count: int, language: str,
+    ai_ui: dict = {},
 ) -> bool:
     """Populate an existing section or create it with 15 pre-filled review blocks."""
     entry = pf.get(rel)
@@ -559,7 +565,7 @@ def _inject_into_template(
     else:
         # Section missing — create it with all 15 review blocks pre-filled
         new_id = f"reviews_{uuid.uuid4().hex[:8]}"
-        new_sec = _make_review_section(section_type, block_type, reviews, target_count, language)
+        new_sec = _make_review_section(section_type, block_type, reviews, target_count, language, ai_ui=ai_ui)
         data.setdefault("sections", {})[new_id] = new_sec
         _insert_before_collapsible(data, new_id)
 
@@ -572,6 +578,7 @@ def _make_review_section(
     section_type: str, block_type: str,
     reviews: list, target_count: int, language: str,
     img_count: int | None = None, txt_count: int | None = None,
+    ai_ui: dict = {},
 ) -> dict:
     """Build a complete section dict with review blocks pre-filled.
 
@@ -608,7 +615,7 @@ def _make_review_section(
 
     if section_type == "reviews-two":
         settings = {
-            "heading": _REVIEWS_TWO_HEADING.get(language, _REVIEWS_TWO_HEADING["en"]),
+            "heading": _REVIEWS_TWO_HEADING.get(language) or ai_ui.get("reviews_two_heading") or _REVIEWS_TWO_HEADING["en"],
             "heading_style": "1",
             "trustpilot_info": True,
             "rating": "4.8",
@@ -633,7 +640,7 @@ def _make_review_section(
         }
     else:  # reviews
         settings = {
-            "heading": _REVIEWS_HEADING.get(language, _REVIEWS_HEADING["en"]),
+            "heading": _REVIEWS_HEADING.get(language) or ai_ui.get("reviews_heading") or _REVIEWS_HEADING["en"],
             "heading_style": "2",
             "enable_rating": True,
             "stars_style": "stars",
@@ -1065,7 +1072,7 @@ def _fix_product_image_with_text(ed: Path, pf: dict, hp: dict) -> bool:
 
 # ── Product page: JSON write for accordion headings (encoding-safe) ───────────
 
-def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", target_gender: str = "femme") -> bool:
+def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", target_gender: str = "femme", ai_ui: dict = {}) -> bool:
     """Set fixed accordion headings in description-faq block via text surgery.
 
     Uses text surgery (not JSON write) to preserve the file format bit-for-bit.
@@ -1100,7 +1107,13 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
         "pl": ("Opis", "Jak to działa?", f"+9860 {_plural} już to przyjęło!"),
         "ru": ("Описание", "Как это работает?", f"+9860 {_plural} уже попробовали!"),
     }
-    h1, h2, h3 = _fixed.get(_lang2, _fixed["en"])
+    _fixed_tuple = _fixed.get(_lang2)
+    if _fixed_tuple:
+        h1, h2, h3 = _fixed_tuple
+    else:
+        h1 = ai_ui.get("accordion_description") or _fixed["en"][0]
+        h2 = ai_ui.get("accordion_how_it_works") or _fixed["en"][1]
+        h3 = _fixed["en"][2]  # dynamic plural form, no ai_ui key for it
 
     main = _section_by_type(data, "main-product")
     if not main:
@@ -1137,7 +1150,7 @@ def _fix_product_accordion_headings(ed: Path, pf: dict, language: str = "fr", ta
 
 # ── Product page ──────────────────────────────────────────────────────────────
 
-def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = "fr", target_gender: str = "femme", delivery_delay: str = "", return_policy_days: str = "30") -> bool:
+def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = "fr", target_gender: str = "femme", delivery_delay: str = "", return_policy_days: str = "30", ai_ui: dict = {}) -> bool:
     """Apply product_page data + shared homepage data to templates/product.json."""
     rel = "templates/product.json"
     data = _data(pf, rel)
@@ -1195,7 +1208,13 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "pl": ("Opis", "Jak to działa?", f"+9860 {_plural} już to wypróbowało!"),
         "ru": ("Описание", "Как это работает?", f"+9860 {_plural} уже попробовали!"),
     }
-    h1, h2, h3 = _fixed_headings.get(_lang, _fixed_headings["en"])
+    _fh_tuple = _fixed_headings.get(_lang)
+    if _fh_tuple:
+        h1, h2, h3 = _fh_tuple
+    else:
+        h1 = ai_ui.get("accordion_description") or _fixed_headings["en"][0]
+        h2 = ai_ui.get("accordion_how_it_works") or _fixed_headings["en"][1]
+        h3 = _fixed_headings["en"][2]  # dynamic plural form, no ai_ui key for it
 
     # C/D/E — Bloc description-faq: product_description, how_it_works, adoption
     for _, blk in _blocks_by_type(msec, "description-faq"):
@@ -1252,7 +1271,7 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
             "pl": "<p>Nasze czasy dostawy wynoszą <strong>{d}</strong>. Przesyłka śledzona w zestawie.</p><p>Zadowolony lub zwrot pieniędzy w ciągu <strong>{r} dni</strong>.</p>",
             "ru": "<p>Сроки доставки составляют <strong>{d}</strong>. Включено отслеживание.</p><p>Удовлетворены или вернём деньги в течение <strong>{r} дней</strong>.</p>",
         }
-        _h4 = _delivery_h4.get(_lang, _delivery_h4["en"])
+        _h4 = _delivery_h4.get(_lang) or ai_ui.get("delivery_heading") or _delivery_h4["en"]
         _t4_raw = _delivery_t4_tpl.get(_lang, _delivery_t4_tpl["en"]).format(
             d=delivery_delay or "3-5 jours", r=return_policy_days or "30"
         )
@@ -1278,9 +1297,9 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "pt": "Entrega", "it": "Consegna", "nl": "Levering", "pl": "Dostawa", "ru": "Доставка",
     }
     for _, blk in _blocks_by_type(msec, "delivery_estimation"):
-        _rep(reps, "today_info", _s(blk, "today_info"), _today_l.get(_lang, _today_l["en"]))
-        _rep(reps, "ready_info", _s(blk, "ready_info"), _ready_l.get(_lang, _ready_l["en"]))
-        _rep(reps, "delivered_info", _s(blk, "delivered_info"), _delivered_l.get(_lang, _delivered_l["en"]))
+        _rep(reps, "today_info", _s(blk, "today_info"), _today_l.get(_lang) or ai_ui.get("delivery_today") or _today_l["en"])
+        _rep(reps, "ready_info", _s(blk, "ready_info"), _ready_l.get(_lang) or ai_ui.get("delivery_ready") or _ready_l["en"])
+        _rep(reps, "delivered_info", _s(blk, "delivered_info"), _delivered_l.get(_lang) or ai_ui.get("delivery_delivered") or _delivered_l["en"])
         break
 
     # F — Image-with-text sections (3 sections, each gets a different advantage):
@@ -1373,10 +1392,10 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
     }
     for _, sec in _sections_by_type(data, "marquee-logo"):
         _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
-             _marquee_h.get(_lang, _marquee_h["en"]))
+             _marquee_h.get(_lang) or ai_ui.get("marquee_heading") or _marquee_h["en"])
     for _, sec in _sections_by_type(data, "ugc"):
         _rep(reps, "heading", str(sec.get("settings", {}).get("heading", "")),
-             _ugc_h.get(_lang, _ugc_h["en"]))
+             _ugc_h.get(_lang) or ai_ui.get("ugc_heading") or _ugc_h["en"])
 
     # K — main-product: product tagline, delivery promo, buy button (hardcoded multilingual)
     _tagline = {
@@ -1419,11 +1438,11 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
     for i, (_, blk) in enumerate(_blocks_by_type(msec, "text")):
         old_text = _s(blk, "text")
         if i == 0:
-            _rep(reps, "text", old_text, _tagline.get(_lang, _tagline["en"]))
+            _rep(reps, "text", old_text, _tagline.get(_lang) or ai_ui.get("product_tagline") or _tagline["en"])
         elif i == 1:
-            _rep(reps, "text", old_text, _promo.get(_lang, _promo["en"]))
+            _rep(reps, "text", old_text, _promo.get(_lang) or ai_ui.get("delivery_promo") or _promo["en"])
     for _, blk in _blocks_by_type(msec, "buy_buttons"):
-        _rep(reps, "button_text", _s(blk, "button_text"), _btn_text.get(_lang, _btn_text["en"]))
+        _rep(reps, "button_text", _s(blk, "button_text"), _btn_text.get(_lang) or ai_ui.get("buy_button") or _btn_text["en"])
         break
 
     return apply_replacements(ed / rel, reps) > 0
@@ -1491,7 +1510,7 @@ def _apply_story_page(ed: Path, pf: dict, story: dict) -> bool:
 
 # ── Tracking page ─────────────────────────────────────────────────────────────
 
-def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr") -> bool:
+def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr", ai_ui: dict = {}) -> bool:
     """Apply fixed tracking page texts to templates/page.tracking.json."""
     rel = "templates/page.tracking.json"
     data = _data(pf, rel)
@@ -1514,7 +1533,14 @@ def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "pl": ("Śledź moje zamówienie", "Wpisz numer zamówienia, aby poznać jego aktualną lokalizację.", "Śledź", "Numer śledzenia zamówienia"),
         "ru": ("Отследить заказ", "Введите номер заказа, чтобы узнать его текущее местонахождение.", "Отследить", "Номер отслеживания заказа"),
     }
-    heading, description, button, track = _texts.get(_lang2, _texts["en"])
+    _tp = _texts.get(_lang2)
+    if _tp:
+        heading, description, button, track = _tp
+    else:
+        heading = ai_ui.get("tracking_heading") or _texts["en"][0]
+        description = ai_ui.get("tracking_description") or _texts["en"][1]
+        button = ai_ui.get("tracking_button") or _texts["en"][2]
+        track = ai_ui.get("tracking_label") or _texts["en"][3]
 
     reps: list[tuple[str, str, str]] = []
 
@@ -1536,7 +1562,7 @@ def _apply_tracking_page(ed: Path, pf: dict, language: str = "fr") -> bool:
 
 # ── Contact page ───────────────────────────────────────────────────────────────
 
-def _apply_contact_page(ed: Path, pf: dict, language: str = "fr") -> bool:
+def _apply_contact_page(ed: Path, pf: dict, language: str = "fr", ai_ui: dict = {}) -> bool:
     """Apply fixed contact page texts to templates/page.contact.json."""
     rel = "templates/page.contact.json"
     data = _data(pf, rel)
@@ -1559,7 +1585,12 @@ def _apply_contact_page(ed: Path, pf: dict, language: str = "fr") -> bool:
         "pl": ("Numer Zamówienia", "Wyślij"),
         "ru": ("Номер Заказа", "Отправить"),
     }
-    order_number, button_text = _texts.get(_lang2, _texts["en"])
+    _cp = _texts.get(_lang2)
+    if _cp:
+        order_number, button_text = _cp
+    else:
+        order_number = ai_ui.get("contact_order_number") or _texts["en"][0]
+        button_text = ai_ui.get("contact_send") or _texts["en"][1]
 
     reps: list[tuple[str, str, str]] = []
 
@@ -1579,7 +1610,7 @@ def _apply_contact_page(ed: Path, pf: dict, language: str = "fr") -> bool:
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
+def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_ui: dict = {}) -> bool:
     rel = "sections/header-group.json"
     data = _data(pf, rel)
     if not data:
@@ -1604,7 +1635,7 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
         "pl": "NASZA OFERTA: KUP 1, DRUGI ZA -50% PRZEZ",
         "ru": "НАШЕ ПРЕДЛОЖЕНИЕ: КУПИ 1, ПОЛУЧИ 2-Й ЗА -50% В ТЕЧЕНИЕ",
     }
-    _timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
+    _timer_text = _timer_texts.get(_lang2) or ai_ui.get("header_timer") or _timer_texts["en"]
 
     for _, sec in data.get("sections", {}).items():
         if sec.get("type") != "announcement-bar":
@@ -1630,14 +1661,14 @@ def _apply_header(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
                     "ru": "БОЛЕЕ 9860 ЧЕЛОВЕК РЕКОМЕНДУЮТ НАС",
                 }
                 _rep(reps, "text", _s(blk, "text"),
-                     _inline(_marquee_texts.get(_lang2, _marquee_texts["en"])))
+                     _inline(_marquee_texts.get(_lang2) or ai_ui.get("header_marquee") or _marquee_texts["en"]))
 
     return apply_replacements(ed / rel, reps) > 0
 
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 
-def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name: str = "") -> bool:
+def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name: str = "", ai_ui: dict = {}) -> bool:
     """Apply footer texts.
 
     Always updates: footer image block text_footer (À propos / brand_text).
@@ -1744,7 +1775,7 @@ def _apply_footer(ed: Path, pf: dict, gt: dict, language: str = "fr", store_name
 
 # ── Settings data (cart drawer + global UI texts) ─────────────────────────────
 
-def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> bool:
+def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_ui: dict = {}) -> bool:
     """Apply cart/UI text translations to config/settings_data.json.
 
     Handles top-level current.* fields and the cart-drawer section settings.
@@ -1939,8 +1970,14 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         "ru": "ДОБАВЬТЕ В КОРЗИНУ",
     }
 
-    timer_text = _timer_texts.get(_lang2, _timer_texts["en"])
-    today, ready, delivered = _delivery_labels.get(_lang2, _delivery_labels["en"])
+    timer_text = _timer_texts.get(_lang2) or ai_ui.get("timer_text") or _timer_texts["en"]
+    _dl = _delivery_labels.get(_lang2)
+    if _dl:
+        today, ready, delivered = _dl
+    else:
+        today = ai_ui.get("delivery_today") or _delivery_labels["en"][0]
+        ready = ai_ui.get("delivery_ready") or _delivery_labels["en"][1]
+        delivered = ai_ui.get("delivery_delivered") or _delivery_labels["en"][2]
 
     reps: list[tuple[str, str, str]] = []
     settings_txt = gt.get("settings", {})
@@ -1949,10 +1986,10 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
     # Top-level settings (fixed translations, AI override if present)
     _rep(reps, "product_card_button_text",
          str(cur.get("product_card_button_text", "")),
-         settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2, _product_card_btn["en"]))
+         settings_txt.get("product_card_button_text") or _product_card_btn.get(_lang2) or ai_ui.get("product_card_button") or _product_card_btn["en"])
     _rep(reps, "timer_timeout_text",
          str(cur.get("timer_timeout_text", "")),
-         settings_txt.get("timer_timeout_text") or _timeout.get(_lang2, _timeout["en"]))
+         settings_txt.get("timer_timeout_text") or _timeout.get(_lang2) or ai_ui.get("timer_timeout") or _timeout["en"])
 
     # Cart-drawer section — always use hardcoded translations for reliability.
     # AI-generated cart values are unreliable (often wrong language).
@@ -1962,21 +1999,26 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr") -> 
         s = sec.get("settings", {})
 
         _rep(reps, "cart_button_text",       str(s.get("cart_button_text", "")),
-             _cart_button.get(_lang2, _cart_button["en"]))
+             _cart_button.get(_lang2) or ai_ui.get("cart_button") or _cart_button["en"])
         _rep(reps, "cart_upsell_title",      str(s.get("cart_upsell_title", "")),
-             _upsell_titles.get(_lang2, _upsell_titles["en"]))
+             _upsell_titles.get(_lang2) or ai_ui.get("cart_upsell_title") or _upsell_titles["en"])
         _rep(reps, "cart_upsell_button_text", str(s.get("cart_upsell_button_text", "")),
-             _upsell_btn.get(_lang2, _upsell_btn["en"]))
+             _upsell_btn.get(_lang2) or ai_ui.get("cart_upsell_button") or _upsell_btn["en"])
         _rep(reps, "cart_protection_text",    str(s.get("cart_protection_text", "")),
-             _protection.get(_lang2, _protection["en"]))
+             _protection.get(_lang2) or ai_ui.get("cart_protection") or _protection["en"])
         _rep(reps, "cart_savings_text",       str(s.get("cart_savings_text", "")),
-             _savings.get(_lang2, _savings["en"]))
+             _savings.get(_lang2) or ai_ui.get("cart_savings") or _savings["en"])
         _rep(reps, "cart_subtotal_text",      str(s.get("cart_subtotal_text", "")),
-             _subtotal.get(_lang2, _subtotal["en"]))
+             _subtotal.get(_lang2) or ai_ui.get("cart_subtotal") or _subtotal["en"])
         _rep(reps, "cart_total_text",         str(s.get("cart_total_text", "")),
-             _total.get(_lang2, _total["en"]))
+             _total.get(_lang2) or ai_ui.get("cart_total") or _total["en"])
+        _cart_footer_val = (
+            _cart_footer.get(_lang2)
+            or (f"<strong>{ai_ui['cart_footer']}</strong>" if ai_ui.get("cart_footer") else None)
+            or _cart_footer["en"]
+        )
         _rep(reps, "cart_footer_text",        str(s.get("cart_footer_text", "")),
-             _cart_footer.get(_lang2, _cart_footer["en"]))
+             _cart_footer_val)
 
         # Blocks: timer text (fixed) + delivery estimation (fixed)
         for _, blk in _blocks_in_order(sec):

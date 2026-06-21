@@ -71,7 +71,8 @@ async function svgToPngBlob(svgContent: string): Promise<Blob> {
   const inner = size - pad * 2;
   const fixed = svgContent
     .replace(/width="[^"]*"/g, `width="${inner}"`)
-    .replace(/height="[^"]*"/g, `height="${inner}"`);
+    .replace(/height="[^"]*"/g, `height="${inner}"`)
+    .replace(/currentColor/g, "#000000");
   const canvas = document.createElement("canvas");
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext("2d")!;
@@ -325,6 +326,7 @@ export default function ImagesPage() {
   const downloadSvg = (svgContent: string, iconName: string) => {
     if (!svgContent) { toast.error("SVG non disponible."); return; }
     const fixed = svgContent
+      .replace(/currentColor/g, "#000000")
       .replace(/width="[^"]*"/g, 'width="64"')
       .replace(/height="[^"]*"/g, 'height="64"');
     const blob = new Blob([fixed], { type: "image/svg+xml" });
@@ -905,9 +907,9 @@ function IconCard({
     }`}>
       {mode === "icon" ? (
         <div className="flex flex-col items-center gap-2.5 text-center flex-1">
-          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center p-2 shadow-sm border border-border/30">
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center p-3 shadow-sm border border-gray-200">
             <div
-              className="w-full h-full"
+              className="w-full h-full text-black [&_svg]:stroke-black"
               dangerouslySetInnerHTML={{ __html: icon.svg }}
             />
           </div>
@@ -919,10 +921,12 @@ function IconCard({
       ) : (
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
-            <div
-              className="w-5 h-5 shrink-0"
-              dangerouslySetInnerHTML={{ __html: icon.svg }}
-            />
+            <div className="w-6 h-6 bg-white rounded-md border border-gray-200 flex items-center justify-center p-0.5 shrink-0">
+              <div
+                className="w-full h-full text-black [&_svg]:stroke-black"
+                dangerouslySetInnerHTML={{ __html: icon.svg }}
+              />
+            </div>
             <p className="font-semibold text-sm leading-snug">{icon.label}</p>
           </div>
           <p className="text-sm text-foreground/75 leading-snug">{icon.benefit}</p>

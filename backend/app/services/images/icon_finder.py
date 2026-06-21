@@ -10,8 +10,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Icon sets to try, in order of preference (colorful flat icons)
-_ICON_SETS = ["flat-color-icons", "noto-v1", "emojione"]
+# Icon sets to try, in order of preference (clean stroke/outline icons — black on white)
+_ICON_SETS = ["tabler", "lucide", "phosphor"]
 
 _SYSTEM = (
     "Tu es un expert en design iconographique et en marketing e-commerce. "
@@ -100,7 +100,7 @@ async def _fetch_flat_icon(client: httpx.AsyncClient, item: dict) -> dict:
             if result:
                 return result
 
-    # Last resort: generic search across all sets
+    # Last resort: generic search across all stroke-based sets
     try:
         r = await client.get(
             "https://api.iconify.design/search",
@@ -164,15 +164,13 @@ async def _fetch_svg(client: httpx.AsyncClient, icon_id: str) -> str:
 
 
 def _fallback_icon(item: dict) -> dict:
-    """Return a minimal colored circle as fallback."""
-    colors = ["#4F46E5", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
-    import hashlib
-    color = colors[int(hashlib.md5(item.get("label", "x").encode()).hexdigest(), 16) % len(colors)]
+    """Return a clean black circle outline as fallback."""
     svg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="100%" height="100%">'
-        f'<circle cx="24" cy="24" r="20" fill="{color}"/>'
-        f'<circle cx="24" cy="24" r="10" fill="white" opacity="0.4"/>'
-        f'</svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%"'
+        ' fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+        '<circle cx="12" cy="12" r="9"/>'
+        '<path d="M12 8v4M12 16h.01"/>'
+        '</svg>'
     )
     return {
         "label": item.get("label", ""),

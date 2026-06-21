@@ -1,4 +1,4 @@
-"""Image generation via Pollinations.ai — FLUX (free, no API key required)."""
+"""Image generation via Pollinations.ai — FLUX Realism (free, no API key required)."""
 import asyncio
 import base64
 import logging
@@ -12,13 +12,26 @@ logger = logging.getLogger(__name__)
 _LANDSCAPE_W, _LANDSCAPE_H = 1344, 768   # 16:9
 _PORTRAIT_W,  _PORTRAIT_H  = 768, 1024   # 3:4
 
+# Photorealism suffix added to every prompt
+_REALISM_SUFFIX = (
+    ", ultra realistic product photography, professional studio lighting, "
+    "shot on Canon EOS 5D Mark IV, 85mm lens f/1.8, shallow depth of field, "
+    "8k resolution, commercial quality, sharp focus, natural skin tones, "
+    "lifestyle photography, Vogue magazine quality"
+)
+
 
 def _build_url(prompt: str, width: int, height: int) -> str:
-    encoded = urllib.parse.quote(prompt)
+    full_prompt = prompt + _REALISM_SUFFIX
+    encoded = urllib.parse.quote(full_prompt)
     seed = random.randint(1, 999999)
     return (
         f"https://image.pollinations.ai/prompt/{encoded}"
-        f"?width={width}&height={height}&model=flux&nologo=true&seed={seed}"
+        f"?width={width}&height={height}"
+        f"&model=flux-realism"
+        f"&nologo=true"
+        f"&enhance=true"
+        f"&seed={seed}"
     )
 
 
@@ -30,7 +43,6 @@ async def _fetch_one(
     orientation: str,
     sem: asyncio.Semaphore,
 ) -> dict | None:
-    """Fetch one generated image from Pollinations and return it as a base64 data URI."""
     async with sem:
         url = _build_url(prompt, width, height)
         try:
@@ -50,7 +62,7 @@ async def generate_dalle_images(
     landscape_count: int = 2,
     portrait_count: int = 8,
 ) -> list[dict]:
-    """Generate landscape + portrait images via Pollinations.ai (free, no API key).
+    """Generate landscape + portrait images via Pollinations.ai FLUX Realism (free).
 
     Downloads each image in the backend so the frontend receives ready-to-display
     base64 data URIs instead of slow on-demand Pollinations URLs.
@@ -60,10 +72,9 @@ async def generate_dalle_images(
         + [(_PORTRAIT_W, _PORTRAIT_H, "portrait")] * portrait_count
     )
 
-    # Max 3 concurrent to avoid Pollinations rate limits
     sem = asyncio.Semaphore(3)
 
-    async with httpx.AsyncClient(timeout=90) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         results = await asyncio.gather(
             *[_fetch_one(client, prompt, w, h, o, sem) for w, h, o in tasks],
             return_exceptions=True,

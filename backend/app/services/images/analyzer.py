@@ -45,7 +45,7 @@ Retourne UNIQUEMENT ce JSON valide (pas de markdown, pas d'explication) :
     "close up {product_visual} product person hand — requête anglaise détail produit + main",
     "{benefit} transformation woman/man result — requête anglaise résultat transformation"
   ],
-  "dalle_prompt": "Prompt DALL-E 3 : photo lifestyle réaliste de [description précise] montrant une personne utilisant {name_short}, éclairage naturel, haute résolution, contexte {context}"
+  "dalle_prompt": "Ultra-realistic professional lifestyle photo: a [woman/man describing target_audience] using {name_short} in [context]. [Describe visible benefit: glowing skin / toned body / healthy hair / etc.]. Natural studio lighting, Canon EOS 5D, bokeh background, commercial product photography quality. Real person, real results. No illustration, no cartoon, no CGI."
 }}"""
 
 

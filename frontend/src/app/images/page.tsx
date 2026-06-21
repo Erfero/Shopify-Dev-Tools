@@ -8,6 +8,34 @@ import {
   Award, RefreshCw, CloudUpload, AlertCircle, ChevronDown,
 } from "lucide-react";
 
+// Phosphor Icons — 9000+ professional icons
+import {
+  Drop, DropHalf, Sun, SunDim, SunHorizon,
+  Shield, ShieldCheck, ShieldStar,
+  Leaf, Flower, FlowerLotus, Plant,
+  Heart, HeartStraight, HandHeart,
+  Star, Medal, Crown, Diamond, Trophy,
+  Clock, Timer, Hourglass,
+  Gift,
+  Moon, MoonStars,
+  Fire, Lightning, Barbell,
+  Feather, Wind,
+  Snowflake, Waves,
+  CheckCircle, SealCheck,
+  TrendUp,
+  Sparkle,
+  Eye,
+  Smiley,
+  Flask, Atom, TestTube,
+  Heartbeat, FirstAid,
+  Recycle,
+  Lock,
+  Scales,
+  Target, MagnifyingGlass,
+  SquaresFour,
+  Pill,
+} from "@phosphor-icons/react";
+
 import Link from "next/link";
 import {
   analyzeProductImage,
@@ -22,6 +50,39 @@ import {
   type ImagesConfig,
 } from "@/lib/api-images";
 import { toast } from "sonner";
+
+// ── Phosphor icon map (name → component) ────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PhosphorComponent = React.ComponentType<any>;
+
+const PHOSPHOR_MAP: Record<string, PhosphorComponent> = {
+  Drop, DropHalf, Sun, SunDim, SunHorizon,
+  Shield, ShieldCheck, ShieldStar,
+  Leaf, Flower, FlowerLotus, Plant,
+  Heart, HeartStraight, HandHeart,
+  Star, Medal, Crown, Diamond, Trophy,
+  Clock, Timer, Hourglass,
+  Gift,
+  Moon, MoonStars,
+  Fire, Lightning, Barbell,
+  Feather, Wind,
+  Snowflake, Waves,
+  CheckCircle, SealCheck,
+  TrendUp,
+  Sparkle,
+  Eye,
+  Smiley,
+  Flask, Atom, TestTube,
+  Heartbeat, FirstAid,
+  Recycle,
+  Lock,
+  Scales,
+  Target, MagnifyingGlass,
+  Layers: SquaresFour,
+  Rose: FlowerLotus,
+  Pill,
+};
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -65,13 +126,15 @@ function dataUrlToFile(dataUrl: string, filename: string): File {
   for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
   return new File([arr], filename, { type: mime });
 }
+
 async function svgToPngBlob(svgContent: string): Promise<Blob> {
   const size = 512;
   const pad = 64;
   const inner = size - pad * 2;
+  // (?<!-) avoids matching stroke-width, fill-opacity, etc.
   const fixed = svgContent
-    .replace(/width="[^"]*"/g, `width="${inner}"`)
-    .replace(/height="[^"]*"/g, `height="${inner}"`)
+    .replace(/(?<!-)width="[^"]*"/g, `width="${inner}"`)
+    .replace(/(?<!-)height="[^"]*"/g, `height="${inner}"`)
     .replace(/currentColor/g, "#000000");
   const canvas = document.createElement("canvas");
   canvas.width = size; canvas.height = size;
@@ -105,11 +168,9 @@ const sv = {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function ImagesPage() {
-  // Customizer data (auto-loaded from localStorage)
   const [customizerData, setCustomizerData] = useState<CustomizerData | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("search");
 
-  // Results per tab
   const [searchResults, setSearchResults] = useState<ImageResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [generateResults, setGenerateResults] = useState<ImageResult[]>([]);
@@ -117,10 +178,8 @@ export default function ImagesPage() {
   const [iconResults, setIconResults] = useState<IconResult[]>([]);
   const [iconsLoading, setIconsLoading] = useState(false);
 
-  // Config
   const [config, setConfig] = useState<ImagesConfig | null>(null);
 
-  // Shopify stores
   const [savedStores, setSavedStores] = useState<SavedStore[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState("");
   const [showStorePanel, setShowStorePanel] = useState(false);
@@ -129,11 +188,9 @@ export default function ImagesPage() {
   const [newStoreDomain, setNewStoreDomain] = useState("");
   const [newStoreToken, setNewStoreToken] = useState("");
 
-  // Per-image upload state
   const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   const storePanelRef = useRef<HTMLDivElement>(null);
-
   const refreshCustomizerData = useRef(() => {});
 
   useEffect(() => {
@@ -142,8 +199,6 @@ export default function ImagesPage() {
     if (stores.length > 0) setSelectedStoreId(stores[0].id);
     getImagesConfig().then(setConfig).catch(() => {});
 
-    // Reads the latest data from the Customizer out of localStorage.
-    // Called on mount AND whenever the window gets focus (covers same-tab and cross-tab navigation).
     const readFromCustomizer = () => {
       try {
         const sessionRaw = localStorage.getItem("theme_session");
@@ -168,7 +223,6 @@ export default function ImagesPage() {
     refreshCustomizerData.current = readFromCustomizer;
     readFromCustomizer();
 
-    // Re-read every time the user comes back to this tab or window
     const onVisibility = () => { if (document.visibilityState === "visible") readFromCustomizer(); };
     window.addEventListener("focus", readFromCustomizer);
     document.addEventListener("visibilitychange", onVisibility);
@@ -179,7 +233,6 @@ export default function ImagesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close store panel when clicking outside
   useEffect(() => {
     if (!showStorePanel) return;
     const handler = (e: MouseEvent) => {
@@ -190,8 +243,6 @@ export default function ImagesPage() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showStorePanel]);
-
-  // ── Derived ──────────────────────────────────────────────────────────────────
 
   const hasData = Boolean(customizerData?.productName);
   const selectedStore = savedStores.find(s => s.id === selectedStoreId) ?? null;
@@ -230,7 +281,7 @@ export default function ImagesPage() {
         file, customizerData.productName, customizerData.productDescription, customizerData.marketingAngles,
       );
       const prompt = analysis.dalle_prompt ||
-        `Professional lifestyle product photo of ${customizerData.productName}, high quality, realistic`;
+        `Professional lifestyle product photo of ${customizerData.productName}, person using it, natural lighting, realistic`;
       const imgs = await generateImages(prompt, 3, 12);
       setGenerateResults(imgs);
       if (imgs.length === 0) toast.warning("Génération échouée. Réessaie dans quelques secondes.");
@@ -275,14 +326,12 @@ export default function ImagesPage() {
     }
   };
 
-  const handleUploadIcon = async (icon: IconResult) => {
+  const handleUploadIcon = async (pngBlob: Blob, label: string, iconName: string) => {
     if (!selectedStore) { toast.error("Configure une boutique Shopify d'abord."); setShowStorePanel(true); return; }
-    const uid = `icon-${icon.icon}`;
+    const uid = `icon-${iconName}`;
     setUploadingId(uid);
     try {
-      if (!icon.svg) throw new Error("SVG manquant pour cet icône.");
-      const blob = await svgToPngBlob(icon.svg);
-      await uploadIconBinaryToShopify(blob, `${icon.icon}.png`, icon.label, selectedStore.domain, selectedStore.token);
+      await uploadIconBinaryToShopify(pngBlob, `${iconName}.png`, label, selectedStore.domain, selectedStore.token);
       toast.success("Icône uploadée sur Shopify !");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Upload échoué");
@@ -309,31 +358,6 @@ export default function ImagesPage() {
     } catch {
       window.open(img.url, "_blank", "noopener,noreferrer");
     }
-  };
-
-  const downloadAsPng = async (svgContent: string, iconName: string) => {
-    if (!svgContent) { toast.error("SVG non disponible."); return; }
-    try {
-      const blob = await svgToPngBlob(svgContent);
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl; a.download = `${iconName}.png`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch { toast.error("Erreur rendu PNG."); }
-  };
-
-  const downloadSvg = (svgContent: string, iconName: string) => {
-    if (!svgContent) { toast.error("SVG non disponible."); return; }
-    const fixed = svgContent
-      .replace(/currentColor/g, "#000000")
-      .replace(/width="[^"]*"/g, 'width="64"')
-      .replace(/height="[^"]*"/g, 'height="64"');
-    const blob = new Blob([fixed], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `${iconName}.svg`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   // ── Store management ──────────────────────────────────────────────────────────
@@ -393,7 +417,6 @@ export default function ImagesPage() {
               <ChevronDown className={`h-3 w-3 transition-transform ${showStorePanel ? "rotate-180" : ""}`} />
             </button>
 
-            {/* Store dropdown */}
             <AnimatePresence>
               {showStorePanel && (
                 <motion.div
@@ -526,10 +549,7 @@ export default function ImagesPage() {
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                 </button>
-                <Link
-                  href="/theme"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <Link href="/theme" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                   Modifier →
                 </Link>
               </div>
@@ -541,7 +561,6 @@ export default function ImagesPage() {
             <p className="font-semibold text-sm">Aucune donnée du Customizer</p>
             <p className="text-xs text-muted-foreground mt-1.5 mb-5 max-w-sm mx-auto">
               Lance d&apos;abord la génération dans l&apos;outil <strong>Shopify Customizer</strong> pour utiliser Image Finder.
-              Les informations produit, bénéfices et images seront récupérées automatiquement.
             </p>
             <Link
               href="/theme"
@@ -552,10 +571,9 @@ export default function ImagesPage() {
           </div>
         )}
 
-        {/* Tabs + content (only shown when Customizer data available) */}
+        {/* Tabs + content */}
         {hasData && (
           <>
-            {/* Tab bar */}
             <div className="flex gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
               {(["search", "generate", "icons"] as ActiveTab[]).map(tab => {
                 const Icon = tab === "search" ? Search : tab === "generate" ? Sparkles : Shapes;
@@ -585,7 +603,6 @@ export default function ImagesPage() {
               })}
             </div>
 
-            {/* Tab content */}
             <AnimatePresence mode="wait">
 
               {/* ── Trouver des photos ── */}
@@ -625,7 +642,7 @@ export default function ImagesPage() {
                 <motion.div key="generate" {...sv} className="space-y-5">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-xs text-muted-foreground">
-                      L&apos;IA génère <strong>3 images landscape</strong> + <strong>12 portrait</strong> via FLUX AI (Pollinations.ai, gratuit).
+                      L&apos;IA génère <strong>3 images landscape</strong> + <strong>12 portrait</strong> via <strong>FLUX Realism</strong> (Pollinations.ai — gratuit, photoréaliste).
                     </p>
                     <button
                       onClick={handleGenerate}
@@ -647,7 +664,7 @@ export default function ImagesPage() {
                       onUpload={handleUploadSingle}
                     />
                   ) : (
-                    <EmptyState icon={Sparkles} message="Clique sur « Générer avec FLUX » pour créer des images IA" />
+                    <EmptyState icon={Sparkles} message="Clique sur « Générer avec FLUX » pour créer des images photoréalistes" />
                   )}
                 </motion.div>
               )}
@@ -657,7 +674,7 @@ export default function ImagesPage() {
                 <motion.div key="icons" {...sv} className="space-y-5">
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <p className="text-xs text-muted-foreground">
-                      Génère <strong>6 icônes</strong> basées sur les bénéfices du Customizer — 3 icônes visuelles + 3 avantages texte.
+                      Génère <strong>6 icônes</strong> Phosphor basées sur les bénéfices du Customizer — qualité Freepik, téléchargeables en SVG et PNG.
                     </p>
                     <button
                       onClick={handleGenerateIcons}
@@ -671,26 +688,19 @@ export default function ImagesPage() {
 
                   {iconsLoading ? (
                     <div className="space-y-6">
-                      <div>
-                        <div className="h-3 w-48 rounded bg-foreground/[0.05] mb-3 animate-pulse" />
-                        <div className="grid grid-cols-3 gap-4">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="h-44 rounded-2xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
-                          ))}
+                      {[0, 1].map(g => (
+                        <div key={g}>
+                          <div className="h-3 w-48 rounded bg-foreground/[0.05] mb-3 animate-pulse" />
+                          <div className="grid grid-cols-3 gap-4">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                              <div key={i} className="h-44 rounded-2xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${(g * 3 + i) * 0.1}s` }} />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <div className="h-3 w-48 rounded bg-foreground/[0.05] mb-3 animate-pulse" />
-                        <div className="grid grid-cols-3 gap-4">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="h-44 rounded-2xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${(i + 3) * 0.1}s` }} />
-                          ))}
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   ) : iconResults.length > 0 ? (
                     <div className="space-y-6">
-                      {/* Group 1: icon-prominent (for the theme's icons section) */}
                       <div>
                         <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
                           <Shapes className="h-3.5 w-3.5" />
@@ -703,15 +713,12 @@ export default function ImagesPage() {
                               icon={icon}
                               mode="icon"
                               uploadingId={uploadingId}
-                              onDownloadSvg={() => downloadSvg(icon.svg, icon.icon)}
-                              onDownloadPng={() => downloadAsPng(icon.svg, icon.icon)}
-                              onUpload={() => handleUploadIcon(icon)}
+                              onUpload={handleUploadIcon}
                             />
                           ))}
                         </div>
                       </div>
 
-                      {/* Group 2: benefit-prominent (for the theme's advantages section) */}
                       <div>
                         <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
                           <Award className="h-3.5 w-3.5" />
@@ -724,9 +731,7 @@ export default function ImagesPage() {
                               icon={icon}
                               mode="benefit"
                               uploadingId={uploadingId}
-                              onDownloadSvg={() => downloadSvg(icon.svg, icon.icon)}
-                              onDownloadPng={() => downloadAsPng(icon.svg, icon.icon)}
-                              onUpload={() => handleUploadIcon(icon)}
+                              onUpload={handleUploadIcon}
                             />
                           ))}
                         </div>
@@ -852,9 +857,7 @@ function ImageCard({
         className={`w-full object-cover ${img.orientation === "landscape" ? "aspect-video" : "aspect-[3/4]"}`}
         loading="lazy"
       />
-      {/* Hover overlay */}
       <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/25 transition-colors duration-150" />
-      {/* Action buttons — visible on hover */}
       <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
         <button
           onClick={() => onDownload(img)}
@@ -875,7 +878,6 @@ function ImageCard({
           }
         </button>
       </div>
-      {/* Source badge */}
       <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">
         {img.photographer === "FLUX AI" ? "FLUX" : img.source}
       </span>
@@ -883,23 +885,74 @@ function ImageCard({
   );
 }
 
+// ── IconCard — uses Phosphor icon component, handles own downloads ─────────────
+
 function IconCard({
   icon,
   mode,
   uploadingId,
-  onDownloadSvg,
-  onDownloadPng,
   onUpload,
 }: {
   icon: IconResult;
   mode: "icon" | "benefit";
   uploadingId: string | null;
-  onDownloadSvg: () => void;
-  onDownloadPng: () => void;
-  onUpload: () => Promise<void>;
+  onUpload: (blob: Blob, label: string, iconName: string) => Promise<void>;
 }) {
   const isUploading = uploadingId === `icon-${icon.icon}`;
   const anyUploading = uploadingId !== null;
+  const iconRef = useRef<HTMLDivElement>(null);
+
+  const PhosphorComponent = PHOSPHOR_MAP[icon.icon] ?? Star;
+
+  const getSvgString = (): string | null => {
+    const svgEl = iconRef.current?.querySelector("svg");
+    if (!svgEl) return null;
+    return svgEl.outerHTML;
+  };
+
+  const handleDownloadPng = async () => {
+    const svgStr = getSvgString();
+    if (!svgStr) { toast.error("Erreur extraction SVG."); return; }
+    try {
+      const blob = await svgToPngBlob(svgStr);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${icon.icon}.png`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { toast.error("Erreur rendu PNG."); }
+  };
+
+  const handleDownloadSvg = () => {
+    const svgStr = getSvgString();
+    if (!svgStr) { toast.error("Erreur extraction SVG."); return; }
+    const fixed = svgStr
+      .replace(/currentColor/g, "#000000")
+      .replace(/(?<!-)width="[^"]*"/g, 'width="64"')
+      .replace(/(?<!-)height="[^"]*"/g, 'height="64"');
+    const blob = new Blob([fixed], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `${icon.icon}.svg`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = () => {
+    const svgStr = getSvgString();
+    if (!svgStr) { toast.error("Erreur extraction SVG."); return; }
+    const fixed = svgStr.replace(/currentColor/g, "#000000");
+    navigator.clipboard.writeText(fixed);
+    toast.success("SVG copié !");
+  };
+
+  const handleUpload = async () => {
+    const svgStr = getSvgString();
+    if (!svgStr) { toast.error("Erreur extraction SVG."); return; }
+    try {
+      const blob = await svgToPngBlob(svgStr);
+      await onUpload(blob, icon.label, icon.icon);
+    } catch { toast.error("Erreur conversion PNG."); }
+  };
 
   return (
     <div className={`flex flex-col gap-3 rounded-2xl border border-border/60 p-4 ${
@@ -907,12 +960,10 @@ function IconCard({
     }`}>
       {mode === "icon" ? (
         <div className="flex flex-col items-center gap-2.5 text-center flex-1">
-          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center p-3 shadow-sm border border-gray-200">
-            <div
-              className="w-full h-full text-black"
-              style={{ color: "#000000" }}
-              dangerouslySetInnerHTML={{ __html: icon.svg }}
-            />
+          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-gray-100">
+            <div ref={iconRef} className="text-gray-900">
+              <PhosphorComponent size={40} weight="regular" />
+            </div>
           </div>
           <div>
             <p className="font-semibold text-sm leading-snug">{icon.label}</p>
@@ -922,12 +973,10 @@ function IconCard({
       ) : (
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white rounded-md border border-gray-200 flex items-center justify-center p-0.5 shrink-0">
-              <div
-                className="w-full h-full text-black"
-                style={{ color: "#000000" }}
-                dangerouslySetInnerHTML={{ __html: icon.svg }}
-              />
+            <div className="w-7 h-7 bg-white rounded-lg border border-gray-100 flex items-center justify-center shrink-0">
+              <div ref={iconRef} className="text-gray-900">
+                <PhosphorComponent size={18} weight="regular" />
+              </div>
             </div>
             <p className="font-semibold text-sm leading-snug">{icon.label}</p>
           </div>
@@ -935,31 +984,30 @@ function IconCard({
         </div>
       )}
 
-      {/* Action buttons */}
       <div className="flex gap-1 pt-1">
         <button
-          onClick={() => { navigator.clipboard.writeText(icon.svg); toast.success("SVG copié !"); }}
+          onClick={handleCopy}
           title="Copier le code SVG"
           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
         >
           <Copy className="h-3 w-3" />
         </button>
         <button
-          onClick={onDownloadSvg}
+          onClick={handleDownloadSvg}
           title="Télécharger .svg"
           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
         >
           SVG
         </button>
         <button
-          onClick={onDownloadPng}
+          onClick={handleDownloadPng}
           title="Télécharger .png (512×512)"
           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
         >
           PNG
         </button>
         <button
-          onClick={onUpload}
+          onClick={handleUpload}
           disabled={anyUploading}
           title="Uploader sur Shopify"
           className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted disabled:opacity-40 transition-colors"

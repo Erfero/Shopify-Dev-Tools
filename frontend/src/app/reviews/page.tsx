@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Zap, ArrowRight, History, Sparkles, RefreshCw } from "lucide-react";
+import { ChevronRight, ChevronLeft, Zap, ArrowRight, History, Sparkles, RefreshCw, CheckCircle2 } from "lucide-react";
+import { LANGUAGES } from "@/lib/languages";
 
 import { StepIndicator } from "@/components/reviews/StepIndicator";
 import { ProductForm } from "@/components/reviews/ProductForm";
@@ -19,6 +20,21 @@ import { addPendingEntry, getEntries, CSVEntry } from "@/lib/csvHistory";
 import { getToken, getUser } from "@/lib/auth";
 import { API } from "@/lib/config";
 import { ReviewsAnalyticsPanel } from "@/components/reviews/ReviewsAnalyticsPanel";
+
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [header, data] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], filename, { type: mime });
+}
+
+const GENDER_MAP: Record<string, string> = {
+  femme: "femmes",
+  homme: "hommes",
+  mixte: "mixte",
+};
 
 interface FormState {
   productName: string;
@@ -67,6 +83,8 @@ export default function ReviewsPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [mode, setMode] = useState<"single" | "multi">("single");
+  const [customizerLoaded, setCustomizerLoaded] = useState(false);
+  const refreshFromCustomizerRef = useRef<() => void>(() => {});
   const [multiProducts, setMultiProducts] = useState<MultiProductConfig[]>([{
     id: crypto.randomUUID(),
     productName: "", brandName: "", productDescription: "",
@@ -82,6 +100,66 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     getEntries().then(setCsvEntries);
+  }, []);
+
+  // ── Auto-fill from Shopify Customizer localStorage ─────────────────────────
+  useEffect(() => {
+    const readFromCustomizer = () => {
+      try {
+        const sessionRaw = localStorage.getItem("theme_session");
+        if (!sessionRaw) return;
+        const session = JSON.parse(sessionRaw);
+        const lc = session?.lastConfig;
+        if (!lc) return;
+
+        const imagesRaw = localStorage.getItem("theme_product_images");
+        const imageBase64: string[] = imagesRaw ? JSON.parse(imagesRaw) : [];
+        const productFiles = imageBase64
+          .slice(0, 3)
+          .map((b64, i) => dataUrlToFile(b64, `product-${i + 1}.jpg`));
+
+        const productName = (Array.isArray(lc.product_names) ? lc.product_names[0] ?? "" : lc.product_names ?? "").trim();
+        const brandName = (lc.store_name ?? "").trim();
+        const productDescription = (lc.product_description ?? "").trim();
+        const targetGender = GENDER_MAP[lc.target_gender ?? "femme"] ?? "femmes";
+        const langEntry = LANGUAGES.find((l) => l.code === (lc.language ?? "fr"));
+        const language = langEntry?.name ?? "Français";
+
+        setForm((prev) => ({
+          ...prev,
+          productName,
+          brandName,
+          productDescription,
+          targetGender,
+          language,
+          productImages: productFiles,
+        }));
+
+        setMultiProducts((prev) =>
+          prev.map((p, idx) =>
+            idx === 0
+              ? { ...p, productName, brandName, productDescription, targetGender, language, productImages: productFiles }
+              : p
+          )
+        );
+
+        if (productName || brandName || productDescription) {
+          setCustomizerLoaded(true);
+        }
+      } catch {}
+    };
+
+    refreshFromCustomizerRef.current = readFromCustomizer;
+    readFromCustomizer();
+
+    const onVisibility = () => { if (document.visibilityState === "visible") readFromCustomizer(); };
+    window.addEventListener("focus", readFromCustomizer);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", readFromCustomizer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const abortRef = useRef<(() => void) | null>(null);
@@ -480,6 +558,32 @@ export default function ReviewsPage() {
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="s1" {...sv}>
+                {customizerLoaded && (
+                  <div
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 12,
+                      padding: "10px 14px", marginBottom: 20, gap: 8, flexWrap: "wrap",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#15803D" }}>
+                      <CheckCircle2 size={14} />
+                      <span>Données pré-remplies depuis <strong>Shopify Customizer</strong></span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => refreshFromCustomizerRef.current()}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "4px 10px", borderRadius: 8, border: "1px solid #BBF7D0",
+                        background: "white", color: "#15803D", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      <RefreshCw size={12} /> Actualiser
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 p-1 mb-6 rounded-xl" style={{ background: "#F3F4F6", width: "fit-content" }}>
                   {(["single", "multi"] as const).map((m) => (
                     <button key={m} type="button" onClick={() => setMode(m)} style={{ padding: "6px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s", background: mode === m ? "white" : "transparent", color: mode === m ? "var(--primary)" : "var(--text-muted)", boxShadow: mode === m ? "var(--shadow-sm)" : "none" }}>

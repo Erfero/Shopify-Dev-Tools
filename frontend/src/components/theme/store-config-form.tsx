@@ -75,6 +75,19 @@ export function StoreConfigForm({ themeName, onSubmit, isGenerating, initialValu
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Sync product image previews (base64) to localStorage so Image Finder can reuse them
+  const _imgSyncFirstRender = useRef(true);
+  useEffect(() => {
+    if (_imgSyncFirstRender.current) { _imgSyncFirstRender.current = false; return; }
+    try {
+      if (imagePreviews.length > 0) {
+        localStorage.setItem("theme_product_images", JSON.stringify(imagePreviews));
+      } else {
+        localStorage.removeItem("theme_product_images");
+      }
+    } catch {}
+  }, [imagePreviews]);
+
   const filteredLanguages = useMemo(() => {
     if (!langSearch.trim()) return LANGUAGES;
     const q = langSearch.toLowerCase();

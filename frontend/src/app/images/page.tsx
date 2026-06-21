@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ImageIcon, Upload, Search, CheckSquare, CloudUpload,
-  ChevronLeft, X, Check, Loader2, ArrowLeft, ExternalLink,
+  ImageIcon, Search, X, Check, Loader2, ArrowLeft,
   Sparkles, Store, Plus, Shapes, Copy, Download,
   Droplets, Sun, Moon, Star, Eye, Smile, Heart, Activity,
   ShieldCheck, Zap, Leaf, Award, Gem, Clock, Timer, TrendingUp,
   RefreshCw, Target, Feather, Sprout, Atom, Wind, Snowflake,
   Flame, ThumbsUp, Layers, Package, Gift, Crown, Dna, Microscope,
   Hand, Rainbow, Shield, BadgeCheck, ScanLine, Flower2, CircleCheckBig,
-  CircleCheck,
+  CircleCheck, CloudUpload, AlertCircle, ChevronDown,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
@@ -27,22 +26,23 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; strokeW
   "circle-check-big": CircleCheckBig, "flower-2": Flower2, rainbow: Rainbow, shield: Shield,
   "circle-check": CircleCheck,
 };
+
 import Link from "next/link";
 import {
   analyzeProductImage,
-  searchImages,
+  searchImages as searchStockImages,
   generateImages,
   findProductIcons,
   uploadImagesToShopify,
+  uploadIconBinaryToShopify,
   getImagesConfig,
-  type AnalysisResult,
   type ImageResult,
   type IconResult,
   type ImagesConfig,
 } from "@/lib/api-images";
 import { toast } from "sonner";
 
-type Step = "product" | "analyzing" | "gallery" | "shopify" | "done" | "icons";
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface SavedStore {
   id: string;
@@ -51,248 +51,266 @@ interface SavedStore {
   token: string;
 }
 
+interface CustomizerData {
+  productName: string;
+  brandName: string;
+  productDescription: string;
+  marketingAngles: string;
+  productImageBase64: string[];
+  benefits: { title: string; text: string }[];
+  advantages: { title: string; text: string }[];
+}
+
+type ActiveTab = "search" | "generate" | "icons";
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
 const LS_KEY = "shopify_saved_stores";
 
 function loadStores(): SavedStore[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? "[]"); } catch { return []; }
 }
-
 function persistStores(stores: SavedStore[]): void {
   localStorage.setItem(LS_KEY, JSON.stringify(stores));
 }
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, "");
+}
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [header, b64] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+  const bytes = atob(b64);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new File([arr], filename, { type: mime });
+}
+async function svgToPngBlob(svgContent: string): Promise<Blob> {
+  const size = 512;
+  const pad = 64;
+  const inner = size - pad * 2;
+  const fixed = svgContent
+    .replace(/width="[^"]*"/g, `width="${inner}"`)
+    .replace(/height="[^"]*"/g, `height="${inner}"`)
+    .replace(/currentColor/g, "#000000");
+  const canvas = document.createElement("canvas");
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size, size);
+  return new Promise<Blob>((resolve, reject) => {
+    const img = new Image();
+    let objUrl = "";
+    img.onload = () => {
+      ctx.drawImage(img, pad, pad, inner, inner);
+      URL.revokeObjectURL(objUrl);
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error("Canvas toBlob failed"));
+      }, "image/png");
+    };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error("SVG render failed")); };
+    const svgBlob = new Blob([fixed], { type: "image/svg+xml" });
+    objUrl = URL.createObjectURL(svgBlob);
+    img.src = objUrl;
+  });
+}
 
 const sv = {
-  initial: { opacity: 0, x: 24 },
-  animate: { opacity: 1, x: 0, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-  exit:    { opacity: 0, x: -16, transition: { duration: 0.18, ease: "easeIn" } },
+  initial: { opacity: 0, x: 16 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
+  exit: { opacity: 0, x: -12, transition: { duration: 0.15, ease: "easeIn" } },
 };
 
+// ── Main page ──────────────────────────────────────────────────────────────────
+
 export default function ImagesPage() {
-  const [step, setStep] = useState<Step>("product");
+  // Customizer data (auto-loaded from localStorage)
+  const [customizerData, setCustomizerData] = useState<CustomizerData | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("search");
 
-  // Product info
-  const [productName, setProductName] = useState("");
-  const [productDescription, setProductDescription] = useState("");
-  const [marketingAngles, setMarketingAngles] = useState("");
-  const [productImages, setProductImages] = useState<File[]>([]);
-  const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
+  // Results per tab
+  const [searchResults, setSearchResults] = useState<ImageResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [generateResults, setGenerateResults] = useState<ImageResult[]>([]);
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [iconResults, setIconResults] = useState<IconResult[]>([]);
+  const [iconsLoading, setIconsLoading] = useState(false);
 
-  // Analysis
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-
-  // Mode
-  const [mode, setMode] = useState<"search" | "generate" | "icons">("search");
+  // Config
   const [config, setConfig] = useState<ImagesConfig | null>(null);
 
-  // Icons
-  const [icons, setIcons] = useState<IconResult[]>([]);
-  const [customizerBenefits, setCustomizerBenefits] = useState<{title: string; text: string}[]>([]);
-  const [customizerAdvantages, setCustomizerAdvantages] = useState<{title: string; text: string}[]>([]);
-
-  // Gallery
-  const [images, setImages] = useState<ImageResult[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loadingSearch, setLoadingSearch] = useState(false);
-
-  // Saved stores
+  // Shopify stores
   const [savedStores, setSavedStores] = useState<SavedStore[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState("");
+  const [showStorePanel, setShowStorePanel] = useState(false);
   const [showAddStore, setShowAddStore] = useState(false);
   const [newStoreName, setNewStoreName] = useState("");
   const [newStoreDomain, setNewStoreDomain] = useState("");
   const [newStoreToken, setNewStoreToken] = useState("");
 
-  // Upload
-  const [uploading, setUploading] = useState(false);
-  const [uploadResults, setUploadResults] = useState<{ uploaded: number; total: number; urls: string[]; errors: string[] } | null>(null);
+  // Per-image upload state
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+
+  const storePanelRef = useRef<HTMLDivElement>(null);
+
+  const refreshCustomizerData = useRef(() => {});
 
   useEffect(() => {
     const stores = loadStores();
     setSavedStores(stores);
     if (stores.length > 0) setSelectedStoreId(stores[0].id);
     getImagesConfig().then(setConfig).catch(() => {});
-    // Load benefits + advantages generated by the Shopify Customizer
-    try {
-      const saved = localStorage.getItem("theme_session");
-      if (saved) {
-        const { previewData } = JSON.parse(saved);
-        const hp = previewData?.homepage;
-        if (Array.isArray(hp?.benefits) && hp.benefits.length > 0) {
-          setCustomizerBenefits(hp.benefits);
-        }
-        if (Array.isArray(hp?.advantages) && hp.advantages.length > 0) {
-          setCustomizerAdvantages(hp.advantages.slice(0, 3));
-        }
-      }
-    } catch {}
+
+    // Reads the latest data from the Customizer out of localStorage.
+    // Called on mount AND whenever the window gets focus (covers same-tab and cross-tab navigation).
+    const readFromCustomizer = () => {
+      try {
+        const sessionRaw = localStorage.getItem("theme_session");
+        const imagesRaw = localStorage.getItem("theme_product_images");
+        const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+        const lastConfig = session?.lastConfig ?? {};
+        const hp = session?.previewData?.homepage ?? {};
+        const imageBase64: string[] = imagesRaw ? JSON.parse(imagesRaw) : [];
+
+        setCustomizerData({
+          productName: (Array.isArray(lastConfig.product_names) ? lastConfig.product_names[0] : "").trim(),
+          brandName: (lastConfig.store_name ?? "").trim(),
+          productDescription: (lastConfig.product_description ?? "").trim(),
+          marketingAngles: (lastConfig.marketing_angles ?? "").trim(),
+          productImageBase64: imageBase64,
+          benefits: Array.isArray(hp.benefits) ? hp.benefits.slice(0, 3) : [],
+          advantages: Array.isArray(hp.advantages) ? hp.advantages.slice(0, 3) : [],
+        });
+      } catch {}
+    };
+
+    refreshCustomizerData.current = readFromCustomizer;
+    readFromCustomizer();
+
+    // Re-read every time the user comes back to this tab or window
+    window.addEventListener("focus", readFromCustomizer);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") readFromCustomizer();
+    });
+    return () => {
+      window.removeEventListener("focus", readFromCustomizer);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const onImageDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
-    if (files.length > 0) {
-      setProductImages(prev => [...prev, ...files]);
-      setProductImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-    }
-  }, []);
-
-  const onImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
-    if (files.length > 0) {
-      setProductImages(prev => [...prev, ...files]);
-      setProductImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
-      e.target.value = "";
-    }
-  };
-
-  const removeImage = (i: number) => {
-    URL.revokeObjectURL(productImagePreviews[i]);
-    setProductImages(prev => prev.filter((_, idx) => idx !== i));
-    setProductImagePreviews(prev => prev.filter((_, idx) => idx !== i));
-  };
-
-  const handleAnalyze = async () => {
-    if (!productName.trim()) {
-      toast.error("Nom du produit requis.");
-      return;
-    }
-    setStep("analyzing");
-    try {
-      const result = await analyzeProductImage(productImages[0] ?? null, productName, productDescription, marketingAngles);
-      setAnalysis(result);
-
-      if (mode === "search") {
-        setLoadingSearch(true);
-        const imgs = await searchImages(result.search_queries, 2, 8);
-        setImages(imgs);
-        setLoadingSearch(false);
-        if (imgs.length === 0) toast.warning("Aucune image trouvée. Vérifie tes clés API Pexels/Unsplash.");
-        setStep("gallery");
-      } else if (mode === "generate") {
-        const prompt = result.dalle_prompt ||
-          `Professional lifestyle product photo of ${productName}, high quality, realistic, white background`;
-        const imgs = await generateImages(prompt, 2, 8);
-        setImages(imgs);
-        if (imgs.length === 0) toast.warning("Génération échouée. Réessaie dans quelques secondes.");
-        setStep("gallery");
-      } else {
-        const icns = await findProductIcons(productName, productDescription, marketingAngles, 5);
-        setIcons(icns);
-        setStep("icons");
+  // Close store panel when clicking outside
+  useEffect(() => {
+    if (!showStorePanel) return;
+    const handler = (e: MouseEvent) => {
+      if (storePanelRef.current && !storePanelRef.current.contains(e.target as Node)) {
+        setShowStorePanel(false);
       }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erreur inconnue";
-      toast.error(msg);
-      setStep("product");
-    }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showStorePanel]);
+
+  // ── Derived ──────────────────────────────────────────────────────────────────
+
+  const hasData = Boolean(customizerData?.productName);
+  const selectedStore = savedStores.find(s => s.id === selectedStoreId) ?? null;
+
+  const getFirstProductFile = (): File | null => {
+    if (!customizerData?.productImageBase64.length) return null;
+    return dataUrlToFile(customizerData.productImageBase64[0], "product-0.jpg");
   };
 
-  const handleUseCustomizerBenefits = async () => {
-    setStep("analyzing");
+  // ── Action handlers ───────────────────────────────────────────────────────────
+
+  const handleSearch = async () => {
+    if (!customizerData?.productName) { toast.error("Aucune donnée du Customizer."); return; }
+    setSearchLoading(true);
     try {
-      const strip = (s: string) => s.replace(/<[^>]+>/g, "");
-      // 3 benefits from icons section + 3 from advantages = 6 total
-      const allSources = [
-        ...customizerBenefits.map(b => `${b.title}: ${strip(b.text)}`),
-        ...customizerAdvantages.map(a => `${a.title}: ${strip(a.text)}`),
-      ];
-      const marketingText = allSources.join(". ");
-      const icns = await findProductIcons(
-        productName || "Produit",
-        productDescription,
-        marketingText,
-        6,
+      const file = getFirstProductFile();
+      const analysis = await analyzeProductImage(
+        file, customizerData.productName, customizerData.productDescription, customizerData.marketingAngles,
       );
-      setIcons(icns);
-      setStep("icons");
+      const imgs = await searchStockImages(analysis.search_queries, 3, 12);
+      setSearchResults(imgs);
+      if (imgs.length === 0) toast.warning("Aucune image trouvée. Vérifie tes clés Pexels/Unsplash.");
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erreur inconnue";
-      toast.error(msg);
-      setStep("product");
+      toast.error(e instanceof Error ? e.message : "Recherche échouée");
+    } finally {
+      setSearchLoading(false);
     }
   };
 
-  const toggleSelect = (id: string) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const handleGenerate = async () => {
+    if (!customizerData?.productName) { toast.error("Aucune donnée du Customizer."); return; }
+    setGenerateLoading(true);
+    try {
+      const file = getFirstProductFile();
+      const analysis = await analyzeProductImage(
+        file, customizerData.productName, customizerData.productDescription, customizerData.marketingAngles,
+      );
+      const prompt = analysis.dalle_prompt ||
+        `Professional lifestyle product photo of ${customizerData.productName}, high quality, realistic`;
+      const imgs = await generateImages(prompt, 3, 12);
+      setGenerateResults(imgs);
+      if (imgs.length === 0) toast.warning("Génération échouée. Réessaie dans quelques secondes.");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Génération échouée");
+    } finally {
+      setGenerateLoading(false);
+    }
   };
 
-  const goToShopify = () => {
-    if (selected.size === 0) return;
-    if (savedStores.length === 0) setShowAddStore(true);
-    setStep("shopify");
+  const handleGenerateIcons = async () => {
+    if (!customizerData?.productName) { toast.error("Aucune donnée du Customizer."); return; }
+    setIconsLoading(true);
+    try {
+      const allBenefits = [
+        ...customizerData.benefits.map(b => `${b.title}: ${stripHtml(b.text)}`),
+        ...customizerData.advantages.map(a => `${a.title}: ${stripHtml(a.text)}`),
+      ].join(". ");
+      const marketingText = allBenefits || customizerData.marketingAngles;
+      const icns = await findProductIcons(
+        customizerData.productName, customizerData.productDescription, marketingText, 6,
+      );
+      setIconResults(icns);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Génération d'icônes échouée");
+    } finally {
+      setIconsLoading(false);
+    }
   };
 
-  const downloadAsPng = async (svgContent: string, iconName: string) => {
-    if (!svgContent) { toast.error("SVG non disponible pour cet icône."); return; }
-    const size = 512;
-    const pad = 64;
-    const inner = size - pad * 2; // 384
-    // Replace currentColor with solid black and fix dimensions to inner size
-    const fixed = svgContent
-      .replace(/width="[^"]*"/g, `width="${inner}"`)
-      .replace(/height="[^"]*"/g, `height="${inner}"`)
-      .replace(/currentColor/g, "#000000");
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
-    await new Promise<void>((resolve) => {
-      const img = new Image();
-      let objUrl = "";
-      img.onload = () => {
-        ctx.drawImage(img, pad, pad, inner, inner);
-        URL.revokeObjectURL(objUrl);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `${iconName}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(a.href);
-          }
-          resolve();
-        }, "image/png");
-      };
-      img.onerror = () => { URL.revokeObjectURL(objUrl); toast.error("Erreur rendu PNG."); resolve(); };
-      // Use Blob URL — more reliable than base64 data URI for SVG in canvas
-      const svgBlob = new Blob([fixed], { type: "image/svg+xml" });
-      objUrl = URL.createObjectURL(svgBlob);
-      img.src = objUrl;
-    });
+  const handleUploadSingle = async (img: ImageResult) => {
+    if (!selectedStore) { toast.error("Configure une boutique Shopify d'abord."); setShowStorePanel(true); return; }
+    setUploadingId(img.id);
+    try {
+      const result = await uploadImagesToShopify([img], selectedStore.domain, selectedStore.token);
+      if (result.uploaded > 0) toast.success("Image uploadée sur Shopify !");
+      else toast.error("Upload échoué.");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Upload échoué");
+    } finally {
+      setUploadingId(null);
+    }
   };
 
-  const downloadSvg = (svgContent: string, iconName: string) => {
-    if (!svgContent) { toast.error("SVG non disponible pour cet icône."); return; }
-    // Replace currentColor with black and set explicit size for standalone SVG
-    const fixed = svgContent
-      .replace(/currentColor/g, "#000000")
-      .replace(/width="[^"]*"/g, 'width="64"')
-      .replace(/height="[^"]*"/g, 'height="64"');
-    const blob = new Blob([fixed], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${iconName}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleUploadIcon = async (icon: IconResult) => {
+    if (!selectedStore) { toast.error("Configure une boutique Shopify d'abord."); setShowStorePanel(true); return; }
+    const uid = `icon-${icon.icon}`;
+    setUploadingId(uid);
+    try {
+      if (!icon.svg) throw new Error("SVG manquant pour cet icône.");
+      const blob = await svgToPngBlob(icon.svg);
+      await uploadIconBinaryToShopify(blob, `${icon.icon}.png`, icon.label, selectedStore.domain, selectedStore.token);
+      toast.success("Icône uploadée sur Shopify !");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Upload échoué");
+    } finally {
+      setUploadingId(null);
+    }
   };
+
+  // ── Download helpers ──────────────────────────────────────────────────────────
 
   const downloadImage = async (img: ImageResult) => {
     try {
@@ -303,8 +321,7 @@ export default function ImagesPage() {
       const safe = (img.alt || img.source).replace(/[^a-z0-9]/gi, "_").slice(0, 40);
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = `${safe}.${ext}`;
+      a.href = blobUrl; a.download = `${safe}.${ext}`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
       toast.success("Image téléchargée !");
@@ -313,26 +330,36 @@ export default function ImagesPage() {
     }
   };
 
-  const downloadSelected = async () => {
-    const toDownload = images.filter(img => selected.has(img.id));
-    if (toDownload.length === 0) return;
-    for (const img of toDownload) {
-      await downloadImage(img);
-      await new Promise(r => setTimeout(r, 350));
-    }
+  const downloadAsPng = async (svgContent: string, iconName: string) => {
+    if (!svgContent) { toast.error("SVG non disponible."); return; }
+    try {
+      const blob = await svgToPngBlob(svgContent);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl; a.download = `${iconName}.png`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch { toast.error("Erreur rendu PNG."); }
   };
 
-  const downloadAllIconsPng = async () => {
-    for (const icon of icons) {
-      await downloadAsPng(icon.svg, icon.icon);
-      await new Promise(r => setTimeout(r, 200));
-    }
+  const downloadSvg = (svgContent: string, iconName: string) => {
+    if (!svgContent) { toast.error("SVG non disponible."); return; }
+    const fixed = svgContent
+      .replace(/currentColor/g, "#000000")
+      .replace(/width="[^"]*"/g, 'width="64"')
+      .replace(/height="[^"]*"/g, 'height="64"');
+    const blob = new Blob([fixed], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `${iconName}.svg`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
+
+  // ── Store management ──────────────────────────────────────────────────────────
 
   const addStore = () => {
     if (!newStoreName.trim() || !newStoreDomain.trim() || !newStoreToken.trim()) {
-      toast.error("Tous les champs sont requis.");
-      return;
+      toast.error("Tous les champs sont requis."); return;
     }
     const store: SavedStore = {
       id: Date.now().toString(),
@@ -341,736 +368,617 @@ export default function ImagesPage() {
       token: newStoreToken.trim(),
     };
     const updated = [...savedStores, store];
-    persistStores(updated);
-    setSavedStores(updated);
-    setSelectedStoreId(store.id);
-    setShowAddStore(false);
+    persistStores(updated); setSavedStores(updated);
+    setSelectedStoreId(store.id); setShowAddStore(false);
     setNewStoreName(""); setNewStoreDomain(""); setNewStoreToken("");
     toast.success("Boutique sauvegardée !");
   };
 
   const deleteStore = (id: string) => {
     const updated = savedStores.filter(s => s.id !== id);
-    persistStores(updated);
-    setSavedStores(updated);
+    persistStores(updated); setSavedStores(updated);
     if (selectedStoreId === id) setSelectedStoreId(updated[0]?.id || "");
   };
 
-  const handleUpload = async () => {
-    if (selected.size === 0) { toast.error("Sélectionne au moins une image."); return; }
-    const store = savedStores.find(s => s.id === selectedStoreId);
-    if (!store) { toast.error("Sélectionne une boutique."); return; }
-    setUploading(true);
-    try {
-      const toUpload = images.filter(img => selected.has(img.id));
-      const { uploaded, total, results } = await uploadImagesToShopify(toUpload, store.domain, store.token);
-      const urls = results.filter(r => r.success).map(r => r.url);
-      const errors = results.filter(r => !r.success).map((r, i) => `Image ${i + 1} : ${r.error ?? "erreur inconnue"}`);
-      setUploadResults({ uploaded, total, urls, errors });
-      setStep("done");
-      if (uploaded > 0) toast.success(`${uploaded}/${total} image(s) uploadée(s) sur Shopify !`);
-      else toast.error(`Upload échoué pour toutes les images. Voir les détails.`);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Upload échoué";
-      toast.error(msg);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const resetAll = () => {
-    setStep("product");
-    setSelected(new Set());
-    setImages([]);
-    setIcons([]);
-    setAnalysis(null);
-    setUploadResults(null);
-    productImagePreviews.forEach(URL.revokeObjectURL);
-    setProductImages([]);
-    setProductImagePreviews([]);
-    setProductName("");
-    setProductDescription("");
-    setMarketingAngles("");
-  };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-10">
+
+      {/* ── Header ── */}
+      <div className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-20">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
           <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            Retour
+            <ArrowLeft className="h-4 w-4" /> Retour
           </Link>
           <span className="text-border/60">|</span>
           <div className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-foreground/60" />
             <span className="font-semibold text-sm">Image Finder</span>
           </div>
-          <div className="ml-auto flex gap-2">
-            {(["product","analyzing","gallery","shopify","done"] as Step[]).map((s, i) => (
-              <div key={s} className={`h-1.5 w-8 rounded-full transition-colors ${
-                ["product","analyzing","gallery","shopify","done"].indexOf(step) >= i
-                  ? "bg-foreground/70" : "bg-foreground/10"
-              }`} />
-            ))}
+
+          {/* Store selector pill */}
+          <div className="ml-auto relative" ref={storePanelRef}>
+            <button
+              onClick={() => { setShowStorePanel(v => !v); setShowAddStore(false); }}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all border ${
+                selectedStore
+                  ? "border-green-500/40 bg-green-500/8 text-green-700 dark:text-green-400 hover:bg-green-500/15"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+              }`}
+            >
+              <Store className="h-3 w-3" />
+              {selectedStore ? selectedStore.name : "Boutique Shopify"}
+              <ChevronDown className={`h-3 w-3 transition-transform ${showStorePanel ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Store dropdown */}
+            <AnimatePresence>
+              {showStorePanel && (
+                <motion.div
+                  key="store-dropdown"
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-border/80 bg-background shadow-xl p-4 space-y-3 z-30"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">Boutique Shopify</p>
+                    <button onClick={() => setShowStorePanel(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {savedStores.length > 0 && (
+                    <div className="space-y-1.5">
+                      {savedStores.map(store => (
+                        <button
+                          key={store.id}
+                          onClick={() => { setSelectedStoreId(store.id); setShowStorePanel(false); }}
+                          className={`group w-full flex items-center gap-2.5 text-left rounded-xl border-2 px-3 py-2.5 transition-all ${
+                            selectedStoreId === store.id
+                              ? "border-foreground bg-foreground/[0.03]"
+                              : "border-border/60 hover:border-foreground/30"
+                          }`}
+                        >
+                          <Store className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{store.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{store.domain}</p>
+                          </div>
+                          {selectedStoreId === store.id && <Check className="h-4 w-4 text-foreground shrink-0" />}
+                          <button
+                            onClick={e => { e.stopPropagation(); deleteStore(store.id); }}
+                            className="ml-auto opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-500 transition-all"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showAddStore ? (
+                    <div className="space-y-2 pt-1">
+                      <input
+                        value={newStoreName} onChange={e => setNewStoreName(e.target.value)}
+                        placeholder="Nom de la boutique"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                      />
+                      <input
+                        value={newStoreDomain} onChange={e => setNewStoreDomain(e.target.value)}
+                        placeholder="ma-boutique.myshopify.com"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                      />
+                      <input
+                        type="password" value={newStoreToken} onChange={e => setNewStoreToken(e.target.value)}
+                        placeholder="shpat_xxxxxxxxxxxxxxxxxxxx"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={addStore} className="flex-1 rounded-xl bg-foreground py-2 text-sm font-semibold text-background hover:opacity-80 transition-opacity">
+                          Sauvegarder
+                        </button>
+                        <button onClick={() => setShowAddStore(false)} className="rounded-xl border border-border px-4 py-2 text-sm hover:bg-muted transition-colors">
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAddStore(true)}
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Ajouter une boutique
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <AnimatePresence mode="wait">
+      {/* ── Content ── */}
+      <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
 
-          {/* ── STEP 1: Product info ──────────────────────────────────────── */}
-          {step === "product" && (
-            <motion.div key="product" {...sv} className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-semibold">Recherche d&apos;images produit</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Uploade ton image produit — l&apos;IA analyse visuellement le produit et cherche des photos lifestyle correspondantes sur Pexels et Unsplash.
-                </p>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                {/* Image drop zone — multiple images */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Images du produit <span className="text-muted-foreground text-xs font-normal">(optionnel — améliore la précision)</span>
-                  </label>
-                  <div
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={onImageDrop}
-                    onClick={() => fileRef.current?.click()}
-                    className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 bg-foreground/[0.01] p-4 cursor-pointer hover:border-foreground/30 hover:bg-foreground/[0.03] transition-all min-h-[200px]"
-                  >
-                    {productImagePreviews.length > 0 ? (
-                      <div className="w-full space-y-3" onClick={e => e.stopPropagation()}>
-                        <div className="grid grid-cols-3 gap-2">
-                          {productImagePreviews.map((preview, i) => (
-                            <div key={i} className="relative group">
-                              <img src={preview} alt={`produit ${i + 1}`} className="w-full h-20 rounded-lg object-cover" />
-                              <button
-                                onClick={e => { e.stopPropagation(); removeImage(i); }}
-                                className="absolute top-0.5 right-0.5 rounded-full bg-background/90 border border-border p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}
-                            className="flex items-center justify-center h-20 rounded-lg border-2 border-dashed border-border/40 bg-foreground/[0.02] hover:bg-foreground/[0.05] transition-colors"
-                          >
-                            <Plus className="h-5 w-5 text-muted-foreground" />
-                          </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">
-                          {productImagePreviews.length} image{productImagePreviews.length > 1 ? "s" : ""} · clique <Plus className="inline h-3 w-3" /> pour en ajouter
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-foreground/30 mb-3" />
-                        <p className="text-sm text-muted-foreground text-center">
-                          Glisse tes images ici<br />
-                          <span className="text-xs">ou clique pour choisir (plusieurs possibles)</span>
-                        </p>
-                      </>
+        {/* Customizer data summary */}
+        {hasData ? (
+          <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] px-4 py-3.5">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center shrink-0">
+                  <Check className="h-4 w-4 text-green-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">
+                    {customizerData!.productName}
+                    {customizerData!.brandName && (
+                      <span className="font-normal text-muted-foreground"> — {customizerData!.brandName}</span>
                     )}
-                    <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onImageSelect} />
-                  </div>
-                </div>
-
-                {/* Product info */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">
-                      Nom du produit <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={productName}
-                      onChange={e => setProductName(e.target.value)}
-                      placeholder="ex: Sérum vitamine C 30ml"
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Description / bénéfices</label>
-                    <textarea
-                      value={productDescription}
-                      onChange={e => setProductDescription(e.target.value)}
-                      placeholder="ex: Sérum anti-âge à base de vitamine C pure, réduit les taches, illumine le teint en 14 jours..."
-                      rows={3}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20 resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Angles marketing</label>
-                    <textarea
-                      value={marketingAngles}
-                      onChange={e => setMarketingAngles(e.target.value)}
-                      placeholder="ex: Résultats visibles en 7 jours, peau lumineuse avant/après, femmes 30-50 ans, routine beauté quotidienne, formule naturelle..."
-                      rows={3}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20 resize-none"
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">Résultats attendus, public cible, arguments de vente — enrichit la recherche d&apos;images.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                {/* Mode toggle */}
-                <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
-                  <button
-                    onClick={() => setMode("search")}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                      mode === "search" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    Trouver des photos
-                  </button>
-                  <button
-                    onClick={() => config?.together ? setMode("generate") : undefined}
-                    disabled={!config?.together}
-                    title="Générer des images avec FLUX AI (gratuit via Pollinations.ai)"
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      mode === "generate"
-                        ? "bg-foreground text-background"
-                        : config?.together
-                          ? "hover:bg-foreground/[0.06]"
-                          : "opacity-35 cursor-not-allowed"
-                    }`}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {config?.together ? "Générer avec FLUX" : "FLUX (clé manquante)"}
-                  </button>
-                  <button
-                    onClick={() => setMode("icons")}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                      mode === "icons" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Shapes className="h-3.5 w-3.5" />
-                    Icônes produit
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleAnalyze}
-                  disabled={!productName.trim()}
-                  className="flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
-                >
-                  {mode === "search" && <Search className="h-4 w-4" />}
-                  {mode === "generate" && <Sparkles className="h-4 w-4" />}
-                  {mode === "icons" && <Shapes className="h-4 w-4" />}
-                  {mode === "search" ? "Rechercher des photos" : mode === "generate" ? "Générer avec FLUX" : "Trouver des icônes"}
-                </button>
-              </div>
-
-              {/* Customizer benefits banner — shown only in icons mode */}
-              {mode === "icons" && customizerBenefits.length > 0 && (
-                <div className="flex items-center justify-between gap-4 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Check className="h-4 w-4 text-green-500 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground/90">
-                        6 icônes depuis le Customizer
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        Icônes : {customizerBenefits.map(b => b.title).join(", ")}
-                        {customizerAdvantages.length > 0 && ` · Avantages : ${customizerAdvantages.map(a => a.title).join(", ")}`}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleUseCustomizerBenefits}
-                    className="shrink-0 flex items-center gap-1.5 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-500/20 transition-colors"
-                  >
-                    <Shapes className="h-3.5 w-3.5" />
-                    Générer 6 icônes
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ── STEP 2: Analyzing ─────────────────────────────────────────── */}
-          {step === "analyzing" && (
-            <motion.div key="analyzing" {...sv} className="flex flex-col items-center justify-center py-24 gap-6">
-              <div className="relative">
-                <div className="h-16 w-16 rounded-2xl bg-foreground/[0.05] border border-border/60 flex items-center justify-center">
-                  <Loader2 className="h-7 w-7 text-foreground/50 animate-spin" />
-                </div>
-              </div>
-              <div className="text-center">
-                <h2 className="font-semibold text-lg">Analyse en cours…</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  L&apos;IA analyse ton image produit et recherche des photos correspondantes
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {(mode === "search"
-                  ? ["Analyse visuelle IA", "Recherche Pexels", "Recherche Unsplash"]
-                  : mode === "generate"
-                  ? ["Analyse du produit", "Génération FLUX AI"]
-                  : ["Analyse des bénéfices", "Sélection des icônes", "Chargement SVG"]
-                ).map((label, i) => (
-                  <span key={i} className="rounded-full border border-border/60 bg-foreground/[0.03] px-3 py-1 text-xs text-muted-foreground animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* ── STEP 3: Gallery ───────────────────────────────────────────── */}
-          {step === "gallery" && (
-            <motion.div key="gallery" {...sv} className="space-y-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold">Sélectionne tes images</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {images.filter(i => i.orientation === "landscape").length} landscape · {images.filter(i => i.orientation === "portrait").length} portrait · {selected.size} sélectionnée(s)
                   </p>
-                </div>
-                <div className="flex gap-2 shrink-0 flex-wrap">
-                  <button
-                    onClick={() => setStep("product")}
-                    className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" /> Modifier
-                  </button>
-                  <button
-                    onClick={downloadSelected}
-                    disabled={selected.size === 0}
-                    className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-30"
-                  >
-                    <Download className="h-4 w-4" />
-                    Télécharger ({selected.size})
-                  </button>
-                  <button
-                    onClick={goToShopify}
-                    disabled={selected.size === 0}
-                    className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
-                  >
-                    <Store className="h-4 w-4" />
-                    Shopify ({selected.size})
-                  </button>
-                </div>
-              </div>
-
-              {/* Analysis tags */}
-              {analysis && (
-                <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-4 space-y-3">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Analyse IA du produit</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: "Catégorie", value: analysis.product_category },
-                        { label: "Cible", value: analysis.target_audience },
-                        { label: "Usage", value: analysis.usage_context },
-                      ].map(({ label, value }) => (
-                        <span key={label} className="rounded-full border border-border/50 bg-background px-2.5 py-0.5 text-xs">
-                          <span className="text-muted-foreground">{label} : </span>
-                          {value}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Requêtes de recherche utilisées ({analysis.search_queries.length})</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {analysis.search_queries.map((q, i) => (
-                        <span key={i} className="rounded-full bg-foreground/5 border border-border/40 px-2.5 py-0.5 text-xs text-muted-foreground">
-                          {q}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {loadingSearch ? (
-                <div className="space-y-6">
-                  <div>
-                    <div className="h-3.5 w-28 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
-                    <div className="grid grid-cols-2 gap-3">
-                      {Array.from({ length: 2 }).map((_, i) => (
-                        <div key={i} className="aspect-video rounded-xl bg-foreground/[0.04] animate-pulse" />
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="h-3.5 w-28 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
-                    <div className="grid grid-cols-4 gap-3">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="aspect-[3/4] rounded-xl bg-foreground/[0.04] animate-pulse" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : images.length === 0 ? (
-                <div className="flex flex-col items-center py-20 gap-3 text-muted-foreground">
-                  <Search className="h-10 w-10 opacity-30" />
-                  <p className="text-sm">Aucune image trouvée. Vérifie tes clés API Pexels / Unsplash.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Landscape 16:9 */}
-                  {images.filter(img => img.orientation === "landscape").length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">
-                        Landscape 16:9 · {images.filter(img => img.orientation === "landscape").length} image(s)
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {images.filter(img => img.orientation === "landscape").map(img => (
-                          <button
-                            key={img.id}
-                            onClick={() => toggleSelect(img.id)}
-                            className={`group relative rounded-xl overflow-hidden border-2 transition-all focus:outline-none ${
-                              selected.has(img.id) ? "border-foreground shadow-md" : "border-transparent hover:border-foreground/30"
-                            }`}
-                          >
-                            <img src={img.thumb} alt={img.alt} className="w-full aspect-video object-cover" loading="lazy" />
-                            <div className={`absolute inset-0 bg-foreground/40 transition-opacity ${selected.has(img.id) ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
-                            {selected.has(img.id) && (
-                              <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
-                                <Check className="h-3 w-3 text-background" />
-                              </div>
-                            )}
-                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
-                            <button
-                              type="button"
-                              onClick={e => { e.stopPropagation(); downloadImage(img); }}
-                              className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full bg-black/60 p-1 transition-opacity hover:bg-black/80"
-                              title="Télécharger"
-                            >
-                              <Download className="h-3 w-3 text-white" />
-                            </button>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Portrait 3:4 */}
-                  {images.filter(img => img.orientation === "portrait").length > 0 && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">
-                        Portrait 3:4 · {images.filter(img => img.orientation === "portrait").length} image(s)
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {images.filter(img => img.orientation === "portrait").map(img => (
-                          <button
-                            key={img.id}
-                            onClick={() => toggleSelect(img.id)}
-                            className={`group relative rounded-xl overflow-hidden border-2 transition-all focus:outline-none ${
-                              selected.has(img.id) ? "border-foreground shadow-md" : "border-transparent hover:border-foreground/30"
-                            }`}
-                          >
-                            <img src={img.thumb} alt={img.alt} className="w-full aspect-[3/4] object-cover" loading="lazy" />
-                            <div className={`absolute inset-0 bg-foreground/40 transition-opacity ${selected.has(img.id) ? "opacity-100" : "opacity-0 group-hover:opacity-20"}`} />
-                            {selected.has(img.id) && (
-                              <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
-                                <Check className="h-3 w-3 text-background" />
-                              </div>
-                            )}
-                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">{img.photographer === "FLUX AI" ? "FLUX" : img.source}</span>
-                            <button
-                              type="button"
-                              onClick={e => { e.stopPropagation(); downloadImage(img); }}
-                              className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full bg-black/60 p-1 transition-opacity hover:bg-black/80"
-                              title="Télécharger"
-                            >
-                              <Download className="h-3 w-3 text-white" />
-                            </button>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                  {customizerData!.productDescription && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {customizerData!.productDescription.slice(0, 90)}{customizerData!.productDescription.length > 90 ? "…" : ""}
+                    </p>
                   )}
                 </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ── STEP ICONS ───────────────────────────────────────────────── */}
-          {step === "icons" && (
-            <motion.div key="icons" {...sv} className="space-y-6">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <h2 className="text-xl font-semibold">Icônes produit</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {icons.length} icônes générées pour les avantages de ton produit
-                  </p>
-                </div>
-                <div className="flex gap-2 shrink-0 flex-wrap">
-                  {icons.length > 0 && (
-                    <button
-                      onClick={downloadAllIconsPng}
-                      className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted transition-colors"
-                    >
-                      <Download className="h-4 w-4" /> Tout télécharger (PNG)
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setStep("product")}
-                    className="flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-sm hover:bg-muted transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" /> Modifier
-                  </button>
-                </div>
               </div>
-
-              {icons.length === 0 ? (
-                <div className="flex flex-col items-center py-20 gap-3 text-muted-foreground">
-                  <Shapes className="h-10 w-10 opacity-30" />
-                  <p className="text-sm">Aucune icône générée.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {icons.map((icon) => (
-                    <div
-                      key={icon.icon}
-                      className="flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-foreground/[0.01] p-5 text-center"
-                    >
-                      {(() => {
-                        const LucideIcon = ICON_MAP[icon.icon] ?? Star;
-                        return (
-                          <div className="w-14 h-14 rounded-2xl bg-foreground/[0.05] flex items-center justify-center">
-                            <LucideIcon className="w-8 h-8 text-foreground" strokeWidth={1.5} />
-                          </div>
-                        );
-                      })()}
-                      <div>
-                        <p className="font-semibold text-sm">{icon.label}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{icon.benefit}</p>
+              <div className="flex items-center gap-3 shrink-0">
+                {customizerData!.productImageBase64.length > 0 && (
+                  <div className="flex -space-x-2">
+                    {customizerData!.productImageBase64.slice(0, 3).map((b64, i) => (
+                      <img key={i} src={b64} alt={`produit ${i + 1}`} className="h-8 w-8 rounded-lg object-cover border-2 border-background" />
+                    ))}
+                    {customizerData!.productImageBase64.length > 3 && (
+                      <div className="h-8 w-8 rounded-lg bg-foreground/10 border-2 border-background flex items-center justify-center">
+                        <span className="text-[10px] font-medium">+{customizerData!.productImageBase64.length - 3}</span>
                       </div>
-                      <div className="flex gap-1.5 mt-auto w-full">
-                        <button
-                          onClick={() => { navigator.clipboard.writeText(icon.svg); toast.success("SVG copié !"); }}
-                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
-                          title="Copier le code SVG"
-                        >
-                          <Copy className="h-3 w-3" /> Copier
-                        </button>
-                        <button
-                          onClick={() => downloadSvg(icon.svg, icon.icon)}
-                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
-                          title="Télécharger fichier .svg"
-                        >
-                          <Download className="h-3 w-3" /> SVG
-                        </button>
-                        <button
-                          onClick={() => downloadAsPng(icon.svg, icon.icon)}
-                          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border px-1.5 py-1.5 text-xs hover:bg-muted transition-colors"
-                          title="Télécharger image .png (512×512)"
-                        >
-                          <Download className="h-3 w-3" /> PNG
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-center pt-2">
-                <button
-                  onClick={resetAll}
-                  className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-                >
-                  Nouvelle recherche
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ── STEP 4: Store picker ──────────────────────────────────────── */}
-          {step === "shopify" && (
-            <motion.div key="shopify" {...sv} className="space-y-6 max-w-lg mx-auto">
-              <div>
-                <button onClick={() => setStep("gallery")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-                  <ChevronLeft className="h-4 w-4" /> Retour à la galerie
-                </button>
-                <h2 className="text-xl font-semibold">Choisir une boutique</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {selected.size} image(s) à uploader
-                </p>
-              </div>
-
-              {/* Saved store cards */}
-              {savedStores.length > 0 && !showAddStore && (
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {savedStores.map(store => (
-                    <button
-                      key={store.id}
-                      onClick={() => setSelectedStoreId(store.id)}
-                      className={`group relative flex flex-col text-left rounded-xl border-2 p-4 transition-all ${
-                        selectedStoreId === store.id
-                          ? "border-foreground bg-foreground/[0.03]"
-                          : "border-border/60 hover:border-foreground/30"
-                      }`}
-                    >
-                      <Store className="h-4 w-4 mb-2 text-foreground/50" />
-                      <span className="font-semibold text-sm">{store.name}</span>
-                      <span className="text-xs text-muted-foreground mt-0.5 truncate">{store.domain}</span>
-                      {selectedStoreId === store.id && (
-                        <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground">
-                          <Check className="h-3 w-3 text-background" />
-                        </div>
-                      )}
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteStore(store.id); }}
-                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 rounded-full p-1 text-muted-foreground hover:text-red-500 transition-all"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => setShowAddStore(true)}
-                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 p-4 hover:border-foreground/30 text-muted-foreground hover:text-foreground transition-all min-h-[88px]"
-                  >
-                    <Plus className="h-5 w-5 mb-1" />
-                    <span className="text-sm">Ajouter une boutique</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Add store form */}
-              {(savedStores.length === 0 || showAddStore) && (
-                <div className="rounded-xl border border-border/60 bg-foreground/[0.01] p-5 space-y-4">
-                  <p className="text-sm font-medium">
-                    {savedStores.length === 0 ? "Ajoute ta première boutique" : "Nouvelle boutique"}
-                  </p>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1.5">Nom affiché</label>
-                    <input
-                      type="text"
-                      value={newStoreName}
-                      onChange={e => setNewStoreName(e.target.value)}
-                      placeholder="ex: CurmaParis"
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1.5">Domaine Shopify</label>
-                    <input
-                      type="text"
-                      value={newStoreDomain}
-                      onChange={e => setNewStoreDomain(e.target.value)}
-                      placeholder="ma-boutique.myshopify.com"
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1.5">Token Admin API</label>
-                    <input
-                      type="password"
-                      value={newStoreToken}
-                      onChange={e => setNewStoreToken(e.target.value)}
-                      placeholder="shpat_xxxxxxxxxxxxxxxxxxxx"
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={addStore}
-                      className="flex-1 rounded-xl bg-foreground py-2.5 text-sm font-semibold text-background hover:opacity-80 transition-opacity"
-                    >
-                      Sauvegarder
-                    </button>
-                    {showAddStore && savedStores.length > 0 && (
-                      <button
-                        onClick={() => setShowAddStore(false)}
-                        className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-                      >
-                        Annuler
-                      </button>
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* Upload button */}
-              {!showAddStore && selectedStoreId && (
+                )}
                 <button
-                  onClick={handleUpload}
-                  disabled={uploading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground py-3 text-sm font-semibold text-background transition hover:opacity-80 disabled:opacity-30"
+                  onClick={() => refreshCustomizerData.current()}
+                  title="Recharger les dernières données du Customizer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {uploading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Upload en cours…</>
-                  ) : (
-                    <><CloudUpload className="h-4 w-4" /> Uploader {selected.size} image(s)</>
-                  )}
+                  <RefreshCw className="h-3.5 w-3.5" />
                 </button>
-              )}
-            </motion.div>
-          )}
-
-          {/* ── STEP 5: Done ─────────────────────────────────────────────── */}
-          {step === "done" && uploadResults && (
-            <motion.div key="done" {...sv} className="flex flex-col items-center py-12 gap-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10 border border-green-500/30">
-                <CheckSquare className="h-8 w-8 text-green-500" />
-              </div>
-              <div className="text-center">
-                <h2 className="text-xl font-semibold">
-                  {uploadResults.uploaded}/{uploadResults.total} image(s) uploadée(s) !
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {uploadResults.uploaded > 0
-                    ? "Tes images sont disponibles dans la médiathèque de ta boutique Shopify."
-                    : "Aucune image uploadée — voir les erreurs ci-dessous."}
-                </p>
-              </div>
-
-              {uploadResults.errors.length > 0 && (
-                <div className="w-full max-w-lg space-y-1.5">
-                  <p className="text-xs font-medium text-destructive">Erreurs ({uploadResults.errors.length}) :</p>
-                  {uploadResults.errors.map((err, i) => (
-                    <div key={i} className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                      {err}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {uploadResults.urls.length > 0 && (
-                <div className="w-full max-w-lg space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">URLs Shopify :</p>
-                  {uploadResults.urls.map((url, i) => (
-                    <div key={i} className="flex items-center gap-2 rounded-lg border border-border/60 bg-foreground/[0.02] px-3 py-2">
-                      <span className="text-xs text-muted-foreground truncate flex-1">{url}</span>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="shrink-0 hover:text-foreground transition-colors">
-                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={resetAll}
-                  className="rounded-xl border border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                <Link
+                  href="/theme"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Nouvelle recherche
-                </button>
-                <Link href="/" className="rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-80 transition-opacity">
-                  Accueil
+                  Modifier →
                 </Link>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-border/60 bg-foreground/[0.01] p-8 text-center">
+            <AlertCircle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="font-semibold text-sm">Aucune donnée du Customizer</p>
+            <p className="text-xs text-muted-foreground mt-1.5 mb-5 max-w-sm mx-auto">
+              Lance d&apos;abord la génération dans l&apos;outil <strong>Shopify Customizer</strong> pour utiliser Image Finder.
+              Les informations produit, bénéfices et images seront récupérées automatiquement.
+            </p>
+            <Link
+              href="/theme"
+              className="inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:opacity-80 transition-opacity"
+            >
+              Aller au Customizer →
+            </Link>
+          </div>
+        )}
 
-        </AnimatePresence>
+        {/* Tabs + content (only shown when Customizer data available) */}
+        {hasData && (
+          <>
+            {/* Tab bar */}
+            <div className="flex gap-1 p-1 rounded-xl bg-foreground/[0.04] border border-border/40">
+              {(["search", "generate", "icons"] as ActiveTab[]).map(tab => {
+                const Icon = tab === "search" ? Search : tab === "generate" ? Sparkles : Shapes;
+                const disabled = tab === "generate" && !config?.together;
+                const labels: Record<ActiveTab, string> = {
+                  search: "Trouver des photos",
+                  generate: config?.together ? "Générer avec FLUX" : "FLUX (clé manquante)",
+                  icons: "Icônes",
+                };
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => !disabled && setActiveTab(tab)}
+                    disabled={disabled}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                      activeTab === tab
+                        ? "bg-background shadow-sm text-foreground"
+                        : disabled
+                          ? "opacity-30 cursor-not-allowed text-muted-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {labels[tab]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+
+              {/* ── Trouver des photos ── */}
+              {activeTab === "search" && (
+                <motion.div key="search" {...sv} className="space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-xs text-muted-foreground">
+                      L&apos;IA analyse ton produit et cherche <strong>3 photos landscape</strong> + <strong>12 portrait</strong> sur Pexels &amp; Unsplash.
+                    </p>
+                    <button
+                      onClick={handleSearch}
+                      disabled={searchLoading}
+                      className="shrink-0 flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+                    >
+                      {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      {searchResults.length > 0 ? "Actualiser" : "Rechercher des photos"}
+                    </button>
+                  </div>
+
+                  {searchLoading ? (
+                    <GallerySkeleton />
+                  ) : searchResults.length > 0 ? (
+                    <GalleryGrid
+                      images={searchResults}
+                      uploadingId={uploadingId}
+                      onDownload={downloadImage}
+                      onUpload={handleUploadSingle}
+                    />
+                  ) : (
+                    <EmptyState icon={Search} message="Clique sur « Rechercher des photos » pour démarrer" />
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── Générer avec FLUX ── */}
+              {activeTab === "generate" && (
+                <motion.div key="generate" {...sv} className="space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-xs text-muted-foreground">
+                      L&apos;IA génère <strong>3 images landscape</strong> + <strong>12 portrait</strong> via FLUX AI (Pollinations.ai, gratuit).
+                    </p>
+                    <button
+                      onClick={handleGenerate}
+                      disabled={generateLoading}
+                      className="shrink-0 flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+                    >
+                      {generateLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {generateResults.length > 0 ? "Régénérer" : "Générer avec FLUX"}
+                    </button>
+                  </div>
+
+                  {generateLoading ? (
+                    <GallerySkeleton />
+                  ) : generateResults.length > 0 ? (
+                    <GalleryGrid
+                      images={generateResults}
+                      uploadingId={uploadingId}
+                      onDownload={downloadImage}
+                      onUpload={handleUploadSingle}
+                    />
+                  ) : (
+                    <EmptyState icon={Sparkles} message="Clique sur « Générer avec FLUX » pour créer des images IA" />
+                  )}
+                </motion.div>
+              )}
+
+              {/* ── Icônes ── */}
+              {activeTab === "icons" && (
+                <motion.div key="icons" {...sv} className="space-y-5">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <p className="text-xs text-muted-foreground">
+                      Génère <strong>6 icônes</strong> basées sur les bénéfices du Customizer — 3 icônes visuelles + 3 avantages texte.
+                    </p>
+                    <button
+                      onClick={handleGenerateIcons}
+                      disabled={iconsLoading}
+                      className="shrink-0 flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+                    >
+                      {iconsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shapes className="h-4 w-4" />}
+                      {iconResults.length > 0 ? "Régénérer" : "Générer les icônes"}
+                    </button>
+                  </div>
+
+                  {iconsLoading ? (
+                    <div className="space-y-6">
+                      <div>
+                        <div className="h-3 w-48 rounded bg-foreground/[0.05] mb-3 animate-pulse" />
+                        <div className="grid grid-cols-3 gap-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-44 rounded-2xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="h-3 w-48 rounded bg-foreground/[0.05] mb-3 animate-pulse" />
+                        <div className="grid grid-cols-3 gap-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-44 rounded-2xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${(i + 3) * 0.1}s` }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : iconResults.length > 0 ? (
+                    <div className="space-y-6">
+                      {/* Group 1: icon-prominent (for the theme's icons section) */}
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+                          <Shapes className="h-3.5 w-3.5" />
+                          Icônes visuelles (3) — section icônes du thème
+                        </p>
+                        <div className="grid grid-cols-3 gap-4">
+                          {iconResults.slice(0, 3).map(icon => (
+                            <IconCard
+                              key={`ic-${icon.icon}`}
+                              icon={icon}
+                              mode="icon"
+                              uploadingId={uploadingId}
+                              onDownloadSvg={() => downloadSvg(icon.svg, icon.icon)}
+                              onDownloadPng={() => downloadAsPng(icon.svg, icon.icon)}
+                              onUpload={() => handleUploadIcon(icon)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Group 2: benefit-prominent (for the theme's advantages section) */}
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+                          <Award className="h-3.5 w-3.5" />
+                          Avantages texte (3) — section bénéfices du thème
+                        </p>
+                        <div className="grid grid-cols-3 gap-4">
+                          {iconResults.slice(3, 6).map(icon => (
+                            <IconCard
+                              key={`bn-${icon.icon}`}
+                              icon={icon}
+                              mode="benefit"
+                              uploadingId={uploadingId}
+                              onDownloadSvg={() => downloadSvg(icon.svg, icon.icon)}
+                              onDownloadPng={() => downloadAsPng(icon.svg, icon.icon)}
+                              onUpload={() => handleUploadIcon(icon)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <EmptyState icon={Shapes} message="Clique sur « Générer les icônes » pour créer 6 icônes produit" />
+                  )}
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function EmptyState({
+  icon: Icon,
+  message,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  message: string;
+}) {
+  return (
+    <div className="flex flex-col items-center py-16 gap-3 text-muted-foreground rounded-2xl border border-dashed border-border/60">
+      <Icon className="h-10 w-10 opacity-20" />
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+}
+
+function GallerySkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="h-3.5 w-36 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
+        <div className="grid grid-cols-3 gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="aspect-video rounded-xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${i * 0.08}s` }} />
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="h-3.5 w-36 rounded bg-foreground/[0.05] mb-2 animate-pulse" />
+        <div className="grid grid-cols-4 gap-3">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] rounded-xl bg-foreground/[0.04] animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GalleryGrid({
+  images,
+  uploadingId,
+  onDownload,
+  onUpload,
+}: {
+  images: ImageResult[];
+  uploadingId: string | null;
+  onDownload: (img: ImageResult) => void;
+  onUpload: (img: ImageResult) => Promise<void>;
+}) {
+  const landscape = images.filter(i => i.orientation === "landscape");
+  const portrait = images.filter(i => i.orientation === "portrait");
+
+  return (
+    <div className="space-y-6">
+      {landscape.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Landscape 16:9 · {landscape.length} image(s)
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {landscape.map(img => (
+              <ImageCard key={img.id} img={img} uploadingId={uploadingId} onDownload={onDownload} onUpload={onUpload} />
+            ))}
+          </div>
+        </div>
+      )}
+      {portrait.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Portrait 3:4 · {portrait.length} image(s)
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {portrait.map(img => (
+              <ImageCard key={img.id} img={img} uploadingId={uploadingId} onDownload={onDownload} onUpload={onUpload} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ImageCard({
+  img,
+  uploadingId,
+  onDownload,
+  onUpload,
+}: {
+  img: ImageResult;
+  uploadingId: string | null;
+  onDownload: (img: ImageResult) => void;
+  onUpload: (img: ImageResult) => Promise<void>;
+}) {
+  const isUploading = uploadingId === img.id;
+  const otherUploading = uploadingId !== null && uploadingId !== img.id;
+
+  return (
+    <div className="group relative rounded-xl overflow-hidden border border-border/40 bg-foreground/[0.02]">
+      <img
+        src={img.thumb}
+        alt={img.alt}
+        className={`w-full object-cover ${img.orientation === "landscape" ? "aspect-video" : "aspect-[3/4]"}`}
+        loading="lazy"
+      />
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/25 transition-colors duration-150" />
+      {/* Action buttons — visible on hover */}
+      <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <button
+          onClick={() => onDownload(img)}
+          title="Télécharger"
+          className="flex items-center justify-center rounded-full bg-background/95 shadow-md p-2.5 hover:scale-105 transition-transform"
+        >
+          <Download className="h-4 w-4 text-foreground" />
+        </button>
+        <button
+          onClick={() => onUpload(img)}
+          disabled={otherUploading}
+          title="Uploader sur Shopify"
+          className="flex items-center justify-center rounded-full bg-background/95 shadow-md p-2.5 hover:scale-105 disabled:opacity-40 transition-all"
+        >
+          {isUploading
+            ? <Loader2 className="h-4 w-4 text-foreground animate-spin" />
+            : <CloudUpload className="h-4 w-4 text-foreground" />
+          }
+        </button>
+      </div>
+      {/* Source badge */}
+      <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] text-white/90">
+        {img.photographer === "FLUX AI" ? "FLUX" : img.source}
+      </span>
+    </div>
+  );
+}
+
+function IconCard({
+  icon,
+  mode,
+  uploadingId,
+  onDownloadSvg,
+  onDownloadPng,
+  onUpload,
+}: {
+  icon: IconResult;
+  mode: "icon" | "benefit";
+  uploadingId: string | null;
+  onDownloadSvg: () => void;
+  onDownloadPng: () => void;
+  onUpload: () => Promise<void>;
+}) {
+  const LucideIcon = ICON_MAP[icon.icon] ?? Star;
+  const isUploading = uploadingId === `icon-${icon.icon}`;
+  const anyUploading = uploadingId !== null;
+
+  return (
+    <div className={`flex flex-col gap-3 rounded-2xl border border-border/60 p-4 ${
+      mode === "icon" ? "bg-foreground/[0.01]" : "bg-foreground/[0.025]"
+    }`}>
+      {mode === "icon" ? (
+        <div className="flex flex-col items-center gap-2.5 text-center flex-1">
+          <div className="w-14 h-14 rounded-2xl bg-foreground/[0.06] flex items-center justify-center">
+            <LucideIcon className="w-8 h-8 text-foreground" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className="font-semibold text-sm leading-snug">{icon.label}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground leading-snug">{icon.benefit}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-center gap-2">
+            <LucideIcon className="w-4 h-4 text-foreground/50 shrink-0" strokeWidth={1.5} />
+            <p className="font-semibold text-sm leading-snug">{icon.label}</p>
+          </div>
+          <p className="text-sm text-foreground/75 leading-snug">{icon.benefit}</p>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex gap-1 pt-1">
+        <button
+          onClick={() => { navigator.clipboard.writeText(icon.svg); toast.success("SVG copié !"); }}
+          title="Copier le code SVG"
+          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
+        >
+          <Copy className="h-3 w-3" />
+        </button>
+        <button
+          onClick={onDownloadSvg}
+          title="Télécharger .svg"
+          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
+        >
+          SVG
+        </button>
+        <button
+          onClick={onDownloadPng}
+          title="Télécharger .png (512×512)"
+          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted transition-colors"
+        >
+          PNG
+        </button>
+        <button
+          onClick={onUpload}
+          disabled={anyUploading}
+          title="Uploader sur Shopify"
+          className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border py-1.5 text-xs hover:bg-muted disabled:opacity-40 transition-colors"
+        >
+          {isUploading
+            ? <Loader2 className="h-3 w-3 animate-spin" />
+            : <CloudUpload className="h-3 w-3" />
+          }
+        </button>
       </div>
     </div>
   );

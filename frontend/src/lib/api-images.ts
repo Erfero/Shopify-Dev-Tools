@@ -55,7 +55,7 @@ export async function findProductIcons(
   productName: string,
   productDescription: string,
   marketingAngles: string,
-  n: number = 5,
+  n: number = 6,
 ): Promise<IconResult[]> {
   const r = await apiFetch(`${API_BASE}/api/images/icons`, {
     method: "POST",
@@ -98,8 +98,8 @@ export async function analyzeProductImage(
 
 export async function searchImages(
   queries: string[],
-  landscapeCount = 2,
-  portraitCount = 8,
+  landscapeCount = 3,
+  portraitCount = 12,
 ): Promise<ImageResult[]> {
   const r = await apiFetch(`${API_BASE}/api/images/search`, {
     method: "POST",
@@ -118,8 +118,8 @@ export async function searchImages(
 
 export async function generateImages(
   dallePrompt: string,
-  landscapeCount = 2,
-  portraitCount = 8,
+  landscapeCount = 3,
+  portraitCount = 12,
 ): Promise<ImageResult[]> {
   const r = await apiFetch(`${API_BASE}/api/images/generate`, {
     method: "POST",
@@ -133,6 +133,28 @@ export async function generateImages(
   const data = await r.json();
   if (!r.ok) throw new Error(data.detail || "Génération échouée");
   return data.images as ImageResult[];
+}
+
+export async function uploadIconBinaryToShopify(
+  pngBlob: Blob,
+  filename: string,
+  altText: string,
+  storeDomain: string,
+  apiToken: string,
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const fd = new FormData();
+  fd.append("file", pngBlob, filename);
+  fd.append("store_domain", storeDomain);
+  fd.append("api_token", apiToken);
+  fd.append("filename", filename);
+  fd.append("alt_text", altText);
+  const r = await apiFetch(`${API_BASE}/api/images/upload-shopify-binary`, {
+    method: "POST",
+    body: fd,
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.detail || "Upload Shopify échoué");
+  return data;
 }
 
 export async function uploadImagesToShopify(

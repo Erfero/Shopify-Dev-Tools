@@ -2,7 +2,8 @@
 Images router — product image analysis, stock photo search, Shopify upload.
 """
 import logging
-
+import uuid
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -24,8 +25,8 @@ router = APIRouter(prefix="/api/images", tags=["images"])
 class SearchRequest(BaseModel):
     queries: list[str]
     per_query: int = 10
-    landscape_count: int = 2
-    portrait_count: int = 8
+    landscape_count: int = 3
+    portrait_count: int = 12
 
 
 class ShopifyUploadRequest(BaseModel):
@@ -44,15 +45,15 @@ class BulkUploadRequest(BaseModel):
 
 class GenerateRequest(BaseModel):
     dalle_prompt: str
-    landscape_count: int = 2
-    portrait_count: int = 8
+    landscape_count: int = 3
+    portrait_count: int = 12
 
 
 class IconsRequest(BaseModel):
     product_name: str
     product_description: str = ""
     marketing_angles: str = ""
-    n: int = 5
+    n: int = 6
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -211,3 +212,52 @@ async def upload_bulk(req: BulkUploadRequest):
 
     ok = sum(1 for r in results if r.get("success"))
     return {"success": True, "uploaded": ok, "total": len(results), "results": results}
+
+
+@router.post("/upload-shopify-binary")
+async def upload_binary_to_shopify(
+    file: UploadFile = File(...),
+    store_domain: str = Form(...),
+    api_token: str = Form(...),
+    filename: str = Form("icon.png"),
+    alt_text: str = Form(""),
+):
+    """Upload a binary image (icon PNG) to Shopify Files via ImgBB or local temp URL."""
+    if not store_domain or not api_token:
+        raise HTTPException(status_code=400, detail="store_domain et api_token requis.")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 10 Mo).")
+
+    public_url: str | None = None
+
+    # Try ImgBB first — gives a stable public URL Shopify can download
+    if settings.imgbb_api_key:
+        try:
+            from app.services.reviews.image_uploader import upload_to_imgbb
+            public_url = await upload_to_imgbb(content, filename)
+        except Exception:
+            pass
+
+    if not public_url:
+        # Save locally and use backend_url to expose it
+        backend_url = settings.backend_url.rstrip("/")
+        if not backend_url or "localhost" in backend_url or "127.0.0.1" in backend_url:
+            raise HTTPException(
+                status_code=503,
+                detail="Configure IMGBB_API_KEY ou BACKEND_URL (URL Render) pour uploader des icônes sur Shopify.",
+            )
+        temp_name = f"icon_{uuid.uuid4().hex[:12]}_{filename}"
+        uploads_dir = Path("uploads")
+        uploads_dir.mkdir(exist_ok=True)
+        (uploads_dir / temp_name).write_bytes(content)
+        public_url = f"{backend_url}/uploads/{temp_name}"
+
+    try:
+        result = await upload_image_to_shopify(public_url, store_domain, api_token, filename, alt_text)
+    except Exception as e:
+        logger.error("Binary Shopify upload failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Upload Shopify échoué : {e}")
+
+    return result

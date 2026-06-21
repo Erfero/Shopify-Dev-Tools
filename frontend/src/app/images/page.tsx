@@ -5,27 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ImageIcon, Search, X, Check, Loader2, ArrowLeft,
   Sparkles, Store, Plus, Shapes, Copy, Download,
-  Droplets, Sun, Moon, Star, Eye, Smile, Heart, Activity,
-  ShieldCheck, Zap, Leaf, Award, Gem, Clock, Timer, TrendingUp,
-  RefreshCw, Target, Feather, Sprout, Atom, Wind, Snowflake,
-  Flame, ThumbsUp, Layers, Package, Gift, Crown, Dna, Microscope,
-  Hand, Rainbow, Shield, BadgeCheck, ScanLine, Flower2, CircleCheckBig,
-  CircleCheck, CloudUpload, AlertCircle, ChevronDown,
+  Award, RefreshCw, CloudUpload, AlertCircle, ChevronDown,
 } from "lucide-react";
-
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
-  droplets: Droplets, sun: Sun, moon: Moon, star: Star,
-  sparkles: Sparkles, eye: Eye, smile: Smile, heart: Heart,
-  activity: Activity, "shield-check": ShieldCheck, zap: Zap, leaf: Leaf,
-  award: Award, "check-circle-2": CircleCheck, gem: Gem, clock: Clock,
-  timer: Timer, "trending-up": TrendingUp, "refresh-cw": RefreshCw, target: Target,
-  feather: Feather, sprout: Sprout, atom: Atom, wind: Wind,
-  snowflake: Snowflake, flame: Flame, "thumbs-up": ThumbsUp, layers: Layers,
-  package: Package, gift: Gift, crown: Crown, dna: Dna,
-  microscope: Microscope, hand: Hand, "scan-line": ScanLine, "badge-check": BadgeCheck,
-  "circle-check-big": CircleCheckBig, "flower-2": Flower2, rainbow: Rainbow, shield: Shield,
-  "circle-check": CircleCheck,
-};
 
 import Link from "next/link";
 import {
@@ -90,8 +71,7 @@ async function svgToPngBlob(svgContent: string): Promise<Blob> {
   const inner = size - pad * 2;
   const fixed = svgContent
     .replace(/width="[^"]*"/g, `width="${inner}"`)
-    .replace(/height="[^"]*"/g, `height="${inner}"`)
-    .replace(/currentColor/g, "#000000");
+    .replace(/height="[^"]*"/g, `height="${inner}"`);
   const canvas = document.createElement("canvas");
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext("2d")!;
@@ -345,7 +325,6 @@ export default function ImagesPage() {
   const downloadSvg = (svgContent: string, iconName: string) => {
     if (!svgContent) { toast.error("SVG non disponible."); return; }
     const fixed = svgContent
-      .replace(/currentColor/g, "#000000")
       .replace(/width="[^"]*"/g, 'width="64"')
       .replace(/height="[^"]*"/g, 'height="64"');
     const blob = new Blob([fixed], { type: "image/svg+xml" });
@@ -917,7 +896,6 @@ function IconCard({
   onDownloadPng: () => void;
   onUpload: () => Promise<void>;
 }) {
-  const LucideIcon = ICON_MAP[icon.icon] ?? Star;
   const isUploading = uploadingId === `icon-${icon.icon}`;
   const anyUploading = uploadingId !== null;
 
@@ -927,8 +905,11 @@ function IconCard({
     }`}>
       {mode === "icon" ? (
         <div className="flex flex-col items-center gap-2.5 text-center flex-1">
-          <div className="w-14 h-14 rounded-2xl bg-foreground/[0.06] flex items-center justify-center">
-            <LucideIcon className="w-8 h-8 text-foreground" strokeWidth={1.5} />
+          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center p-2 shadow-sm border border-border/30">
+            <div
+              className="w-full h-full"
+              dangerouslySetInnerHTML={{ __html: icon.svg }}
+            />
           </div>
           <div>
             <p className="font-semibold text-sm leading-snug">{icon.label}</p>
@@ -938,7 +919,10 @@ function IconCard({
       ) : (
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
-            <LucideIcon className="w-4 h-4 text-foreground/50 shrink-0" strokeWidth={1.5} />
+            <div
+              className="w-5 h-5 shrink-0"
+              dangerouslySetInnerHTML={{ __html: icon.svg }}
+            />
             <p className="font-semibold text-sm leading-snug">{icon.label}</p>
           </div>
           <p className="text-sm text-foreground/75 leading-snug">{icon.benefit}</p>

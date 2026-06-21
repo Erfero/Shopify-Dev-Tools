@@ -910,8 +910,8 @@ def _mock_global_texts(
         "header": header,
         "footer": footer,
         "cart": {
-            "button_text": "JETZT BESTELLEN" if is_de else (
-                "ORDER NOW" if is_en else "COMMANDER MAINTENANT"
+            "button_text": "JETZT KAUFEN" if is_de else (
+                "BUY NOW" if is_en else "ACHETEZ MAINTENANT"
             ),
             "upsell_title": (
                 "Vervollständigen Sie Ihre Bestellung" if is_de else (
@@ -1202,7 +1202,7 @@ def _mock_product_page_en(store_name: str, product: str, target_gender: str) -> 
             "ugc": "Real results from our customers",
             "product_tagline": "Premium Quality. Free Delivery",
             "delivery_promo": "🚚 Free Delivery Today Only",
-            "buy_button": "ADD TO CART",
+            "buy_button": "BUY NOW",
         },
         "delivery_info": {
             "heading": "Delivery Information",
@@ -1791,7 +1791,7 @@ def _mock_product_page_de(store_name: str, product: str, target_gender: str) -> 
             "ugc": "Echte Ergebnisse unserer Kunden",
             "product_tagline": "Premiumqualität. Kostenlose Lieferung",
             "delivery_promo": "🚚 Kostenlose Lieferung nur heute",
-            "buy_button": "IN DEN WARENKORB",
+            "buy_button": "JETZT KAUFEN",
         },
         "delivery_info": {
             "heading": "Lieferinformationen",

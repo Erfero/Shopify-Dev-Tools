@@ -1563,11 +1563,11 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "ru": "🚚 Бесплатная Доставка Только Сегодня",
     }
     _btn_text = {
-        "fr": "AJOUTEZ AU PANIER", "en": "ADD TO CART", "de": "IN DEN WARENKORB",
-        "da": "LÆG I KURV", "sv": "LÄGG I KUNDVAGNEN", "no": "LEGG I HANDLEKURVEN",
-        "fi": "LISÄÄ OSTOSKORIIN", "es": "AGREGUE AL CARRITO", "pt": "ADICIONE AO CARRINHO",
-        "it": "AGGIUNGA AL CARRELLO", "nl": "IN WINKELWAGEN", "pl": "DODAJ DO KOSZYKA",
-        "ru": "ДОБАВЬТЕ В КОРЗИНУ",
+        "fr": "ACHETEZ MAINTENANT", "en": "BUY NOW", "de": "JETZT KAUFEN",
+        "da": "KØB NU", "sv": "KÖP NU", "no": "KJØP NÅ",
+        "fi": "OSTA NYT", "es": "COMPRE AHORA", "pt": "COMPRE AGORA",
+        "it": "ACQUISTI ORA", "nl": "KOOP NU", "pl": "KUP TERAZ",
+        "ru": "КУПИТЕ СЕЙЧАС",
     }
     for i, (_, blk) in enumerate(_blocks_by_type(msec, "text")):
         old_text = _s(blk, "text")
@@ -2095,19 +2095,19 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_
         "ru": "Добавьте в корзину",
     }
     _cart_button = {
-        "fr": "AJOUTEZ AU PANIER",
-        "en": "ADD TO CART",
-        "de": "IN DEN WARENKORB",
-        "da": "LÆG I KURV",
-        "sv": "LÄGG I KUNDVAGNEN",
-        "no": "LEGG I HANDLEKURVEN",
-        "fi": "LISÄÄ OSTOSKORIIN",
-        "es": "AGREGUE AL CARRITO",
-        "pt": "ADICIONE AO CARRINHO",
-        "it": "AGGIUNGA AL CARRELLO",
-        "nl": "IN WINKELWAGEN",
-        "pl": "DODAJ DO KOSZYKA",
-        "ru": "ДОБАВЬТЕ В КОРЗИНУ",
+        "fr": "ACHETEZ MAINTENANT",
+        "en": "BUY NOW",
+        "de": "JETZT KAUFEN",
+        "da": "KØB NU",
+        "sv": "KÖP NU",
+        "no": "KJØP NÅ",
+        "fi": "OSTA NYT",
+        "es": "COMPRE AHORA",
+        "pt": "COMPRE AGORA",
+        "it": "ACQUISTI ORA",
+        "nl": "KOOP NU",
+        "pl": "KUP TERAZ",
+        "ru": "КУПИТЕ СЕЙЧАС",
     }
 
     timer_text = _timer_texts.get(_lang2) or ai_ui.get("timer_text") or _timer_texts["en"]

@@ -1,7 +1,7 @@
 _STATIC_UI: dict[str, dict] = {
     "fr": {
         "cart": {
-            "button_text": "Commandez",
+            "button_text": "Achetez maintenant",
             "upsell_title": "Vous pourriez aussi aimer",
             "upsell_button_text": "Ajoutez",
             "protection_text": "Protection colis incluse",
@@ -21,7 +21,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "en": {
         "cart": {
-            "button_text": "Place Order",
+            "button_text": "Buy Now",
             "upsell_title": "You might also like",
             "upsell_button_text": "Add",
             "protection_text": "Package protection included",
@@ -41,7 +41,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "de": {
         "cart": {
-            "button_text": "Jetzt bestellen",
+            "button_text": "Jetzt kaufen",
             "upsell_title": "Das könnte Ihnen auch gefallen",
             "upsell_button_text": "Hinzufügen",
             "protection_text": "Paketschutz inklusive",
@@ -61,7 +61,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "es": {
         "cart": {
-            "button_text": "Realice su pedido",
+            "button_text": "Compre ahora",
             "upsell_title": "También le puede gustar",
             "upsell_button_text": "Agregue",
             "protection_text": "Protección del paquete incluida",
@@ -81,7 +81,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "it": {
         "cart": {
-            "button_text": "Effettui l'ordine",
+            "button_text": "Acquisti ora",
             "upsell_title": "Potrebbe piacerle anche",
             "upsell_button_text": "Aggiunga",
             "protection_text": "Protezione pacco inclusa",
@@ -101,7 +101,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "pt": {
         "cart": {
-            "button_text": "Faça seu pedido",
+            "button_text": "Compre agora",
             "upsell_title": "Você também pode gostar",
             "upsell_button_text": "Adicione",
             "protection_text": "Proteção do pacote incluída",
@@ -121,7 +121,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "nl": {
         "cart": {
-            "button_text": "Bestelling plaatsen",
+            "button_text": "Koop nu",
             "upsell_title": "Misschien vind je dit ook leuk",
             "upsell_button_text": "Toevoegen",
             "protection_text": "Pakketbescherming inbegrepen",
@@ -141,7 +141,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "da": {
         "cart": {
-            "button_text": "Afgiv ordre",
+            "button_text": "Køb nu",
             "upsell_title": "Du vil måske også kunne lide",
             "upsell_button_text": "Tilføj",
             "protection_text": "Pakkebeskyttelse inkluderet",
@@ -161,7 +161,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "sv": {
         "cart": {
-            "button_text": "Lägg beställning",
+            "button_text": "Köp nu",
             "upsell_title": "Du kanske också gillar",
             "upsell_button_text": "Lägg till",
             "protection_text": "Paketskydd ingår",
@@ -181,7 +181,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "no": {
         "cart": {
-            "button_text": "Legg inn ordre",
+            "button_text": "Kjøp nå",
             "upsell_title": "Du vil kanskje også like",
             "upsell_button_text": "Legg til",
             "protection_text": "Pakkebeskyttelse inkludert",
@@ -201,7 +201,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "pl": {
         "cart": {
-            "button_text": "Złóż zamówienie",
+            "button_text": "Kup teraz",
             "upsell_title": "Może ci się też spodobać",
             "upsell_button_text": "Dodaj",
             "protection_text": "Ochrona paczki w zestawie",
@@ -221,7 +221,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "fi": {
         "cart": {
-            "button_text": "Tee tilaus",
+            "button_text": "Osta nyt",
             "upsell_title": "Saatat myös pitää tästä",
             "upsell_button_text": "Lisää",
             "protection_text": "Pakettivakuutus sisältyy",
@@ -241,7 +241,7 @@ _STATIC_UI: dict[str, dict] = {
     },
     "ru": {
         "cart": {
-            "button_text": "Оформите заказ",
+            "button_text": "Купите сейчас",
             "upsell_title": "Вам также может понравиться",
             "upsell_button_text": "Добавьте",
             "protection_text": "Защита посылки включена",
@@ -406,8 +406,8 @@ IMPORTANT : Des images du produit sont jointes. Adapte les textes globaux au pro
         ui_constraint = '- Laisse "ui" vide : les libellés statiques sont gérés côté serveur pour cette langue.'
     else:
         ui_instruction = f"""  "ui": {{
-    "buy_button": "ADD TO CART",
-    "cart_button": "ADD TO CART",
+    "buy_button": "BUY NOW",
+    "cart_button": "BUY NOW",
     "product_card_button": "Add to cart",
     "product_tagline": "Superior Quality. Free Shipping",
     "delivery_promo": "🚚 Free Shipping Today Only",

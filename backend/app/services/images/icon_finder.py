@@ -1,4 +1,4 @@
-"""Product icon finder — maps product benefits to colorful flat SVG icons via Iconify."""
+"""Product icon finder — maps product benefits to clean stroke SVG icons via Iconify JSON API."""
 import asyncio
 import json
 import logging
@@ -10,8 +10,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Icon sets to try, in order of preference (clean stroke/outline icons — black on white)
-_ICON_SETS = ["tabler", "lucide", "phosphor"]
+# Stroke-based icon sets (clean line icons, no fills)
+_ICON_SETS = ["tabler", "lucide", "mdi-light"]
 
 _SYSTEM = (
     "Tu es un expert en design iconographique et en marketing e-commerce. "
@@ -23,15 +23,15 @@ Description / bénéfices : {desc}
 Angles marketing : {angles}
 
 Génère exactement {n} icônes représentant les principaux avantages et bénéfices de ce produit.
-Pour chaque icône, fournis :
-- label : titre court de l'avantage (2-4 mots, en français)
-- benefit : description du bénéfice (une phrase complète, en français)
-- keyword : mot-clé EN ANGLAIS simple pour chercher l'icône (1-2 mots, ex: "water", "shield", "leaf", "heart", "sun", "star", "clock", "gift", "rose", "spa", "drop", "smile", "trophy", "protect", "organic")
+Pour chaque icône :
+- label : titre court (2-4 mots, en français)
+- benefit : description du bénéfice (une phrase, en français)
+- keyword : mot-clé EN ANGLAIS simple pour chercher l'icône (1-2 mots, ex: "sun", "shield", "leaf", "heart", "drop", "star", "clock", "gift", "rose", "spa", "smile", "trophy", "protect", "organic", "sparkle")
 
-Retourne UNIQUEMENT ce JSON valide (pas de markdown, pas de texte autour) :
+Retourne UNIQUEMENT ce JSON valide :
 [
   {{"label": "Hydratation intense", "benefit": "Hydrate la peau en profondeur pendant 24h", "keyword": "drop"}},
-  {{"label": "Protection solaire", "benefit": "Protège des rayons UV toute la journée", "keyword": "protect"}}
+  {{"label": "Protection solaire", "benefit": "Protège des rayons UV toute la journée", "keyword": "shield"}}
 ]"""
 
 
@@ -41,7 +41,7 @@ async def find_product_icons(
     marketing_angles: str = "",
     n: int = 5,
 ) -> list[dict]:
-    """Generate n benefit icons with colorful flat SVGs from Iconify."""
+    """Generate n benefit icons with clean black stroke SVGs."""
     prompt = _PROMPT.format(
         name=product_name,
         desc=product_description or "Non renseignée",
@@ -76,53 +76,38 @@ async def find_product_icons(
 
     async with httpx.AsyncClient(timeout=15) as client:
         results = await asyncio.gather(*[
-            _fetch_flat_icon(client, item)
+            _fetch_icon(client, item)
             for item in icon_data[:n]
         ])
 
     return list(results)
 
 
-async def _fetch_flat_icon(client: httpx.AsyncClient, item: dict) -> dict:
-    """Search Iconify for a flat colorful icon, try multiple sets."""
+async def _fetch_icon(client: httpx.AsyncClient, item: dict) -> dict:
+    """Search Iconify and build a clean SVG from JSON data."""
     keyword = item.get("keyword", "star")
     label = item.get("label", "")
     benefit = item.get("benefit", "")
 
     for icon_set in _ICON_SETS:
-        result = await _try_search(client, keyword, icon_set, label, benefit)
+        result = await _try_fetch(client, keyword, icon_set, label, benefit)
         if result:
             return result
-
-        # Try first word only if keyword has multiple words
+        # Try single word if keyword has spaces
         if " " in keyword:
-            result = await _try_search(client, keyword.split()[0], icon_set, label, benefit)
+            result = await _try_fetch(client, keyword.split()[0], icon_set, label, benefit)
             if result:
                 return result
-
-    # Last resort: generic search across all stroke-based sets
-    try:
-        r = await client.get(
-            "https://api.iconify.design/search",
-            params={"query": keyword, "limit": 1, "prefixes": ",".join(_ICON_SETS)},
-        )
-        if r.status_code == 200:
-            icons = r.json().get("icons", [])
-            if icons:
-                svg = await _fetch_svg(client, icons[0])
-                if svg:
-                    prefix, name = icons[0].split(":", 1)
-                    return {"label": label, "icon": name, "benefit": benefit, "svg": svg, "icon_set": prefix}
-    except Exception as e:
-        logger.warning("Generic search failed for %r: %s", keyword, e)
 
     return _fallback_icon(item)
 
 
-async def _try_search(
+async def _try_fetch(
     client: httpx.AsyncClient, keyword: str, icon_set: str, label: str, benefit: str
 ) -> dict | None:
+    """Search for icon, then fetch its JSON data and build a clean SVG."""
     try:
+        # Step 1: Search for the icon name
         r = await client.get(
             "https://api.iconify.design/search",
             params={"query": keyword, "limit": 3, "prefixes": icon_set},
@@ -133,48 +118,57 @@ async def _try_search(
         if not icons:
             return None
 
-        icon_id = icons[0]
-        svg = await _fetch_svg(client, icon_id)
-        if not svg:
+        icon_id = icons[0]  # e.g. "tabler:sun"
+        prefix, name = icon_id.split(":", 1)
+
+        # Step 2: Fetch JSON data (reliable, gives us the raw path body)
+        r2 = await client.get(
+            f"https://api.iconify.design/{prefix}.json",
+            params={"icons": name},
+        )
+        if r2.status_code != 200:
             return None
 
-        prefix, name = icon_id.split(":", 1)
+        data = r2.json()
+        icon_info = data.get("icons", {}).get(name)
+        if not icon_info:
+            return None
+
+        width = data.get("width", 24)
+        height = data.get("height", 24)
+        body = icon_info.get("body", "")
+        if not body:
+            return None
+
+        # Step 3: Build clean SVG — we own the root, so fill/stroke are predictable
+        svg = (
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'viewBox="0 0 {width} {height}" width="100%" height="100%" '
+            f'fill="none" stroke="currentColor" '
+            f'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+            f'{body}'
+            f'</svg>'
+        )
+
         return {"label": label, "icon": name, "benefit": benefit, "svg": svg, "icon_set": prefix}
+
     except Exception as e:
-        logger.warning("Search failed for %r in %r: %s", keyword, icon_set, e)
+        logger.warning("Failed for %r in %r: %s", keyword, icon_set, e)
         return None
 
 
-async def _fetch_svg(client: httpx.AsyncClient, icon_id: str) -> str:
-    """Fetch SVG for an icon_id like 'flat-color-icons:drop'."""
-    try:
-        prefix, name = icon_id.split(":", 1)
-        r = await client.get(
-            f"https://api.iconify.design/{prefix}/{name}.svg",
-            follow_redirects=True,
-        )
-        if r.status_code != 200:
-            return ""
-        svg = r.text
-        svg = re.sub(r'width="\d+"', 'width="100%"', svg)
-        svg = re.sub(r'height="\d+"', 'height="100%"', svg)
-        return svg
-    except Exception:
-        return ""
-
-
 def _fallback_icon(item: dict) -> dict:
-    """Return a clean black circle outline as fallback."""
+    """Return a clean star outline as final fallback."""
     svg = (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%"'
-        ' fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
-        '<circle cx="12" cy="12" r="9"/>'
-        '<path d="M12 8v4M12 16h.01"/>'
+        ' fill="none" stroke="currentColor" stroke-width="1.5"'
+        ' stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>'
         '</svg>'
     )
     return {
         "label": item.get("label", ""),
-        "icon": "circle",
+        "icon": "star",
         "benefit": item.get("benefit", ""),
         "svg": svg,
         "icon_set": "fallback",

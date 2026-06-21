@@ -909,7 +909,8 @@ function IconCard({
         <div className="flex flex-col items-center gap-2.5 text-center flex-1">
           <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center p-3 shadow-sm border border-gray-200">
             <div
-              className="w-full h-full text-black [&_svg]:stroke-black"
+              className="w-full h-full text-black"
+              style={{ color: "#000000" }}
               dangerouslySetInnerHTML={{ __html: icon.svg }}
             />
           </div>
@@ -923,7 +924,8 @@ function IconCard({
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-white rounded-md border border-gray-200 flex items-center justify-center p-0.5 shrink-0">
               <div
-                className="w-full h-full text-black [&_svg]:stroke-black"
+                className="w-full h-full text-black"
+                style={{ color: "#000000" }}
                 dangerouslySetInnerHTML={{ __html: icon.svg }}
               />
             </div>

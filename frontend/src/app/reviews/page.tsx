@@ -592,7 +592,7 @@ export default function ReviewsPage() {
                   ))}
                 </div>
                 {mode === "single" ? (
-                  <ProductForm productName={form.productName} brandName={form.brandName} productDescription={form.productDescription} productHandle={form.productHandle} productImages={form.productImages} onChange={set} onProductImagesChange={(files) => setForm((p) => ({ ...p, productImages: files }))} />
+                  <ProductForm productName={form.productName} brandName={form.brandName} productDescription={form.productDescription} productHandle={form.productHandle} productImages={form.productImages} onChange={set} onProductImagesChange={(files) => setForm((p) => ({ ...p, productImages: files }))} hideAutoFilled={customizerLoaded} />
                 ) : (
                   <MultiProductForm products={multiProducts} onChange={setMultiProducts} />
                 )}
@@ -600,7 +600,7 @@ export default function ReviewsPage() {
             )}
             {step === 2 && mode === "single" && (
               <motion.div key="s2" {...sv}>
-                <SettingsForm targetGender={form.targetGender} language={form.language} reviewCount={form.reviewCount} onChange={set} />
+                <SettingsForm targetGender={form.targetGender} language={form.language} reviewCount={form.reviewCount} onChange={set} hideAutoFilled={customizerLoaded} />
               </motion.div>
             )}
             {step === 2 && mode === "multi" && (

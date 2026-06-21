@@ -1,5 +1,6 @@
 const TOKEN_KEY = "sdt_auth_token";
 const USER_KEY = "sdt_auth_user";
+export const REMEMBER_KEY = "sdt_remember_pref";
 
 export interface AuthUser {
   email: string;
@@ -9,20 +10,18 @@ export interface AuthUser {
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  // Always localStorage — session storage caused users to be logged out on every browser close
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token: string, remember = true): void {
-  if (remember) {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    sessionStorage.setItem(TOKEN_KEY, token);
-  }
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(REMEMBER_KEY, String(remember));
 }
 
 export function getUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(USER_KEY) ?? sessionStorage.getItem(USER_KEY);
+  const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as AuthUser;
@@ -32,17 +31,13 @@ export function getUser(): AuthUser | null {
 }
 
 export function setUser(user: AuthUser, remember = true): void {
-  const json = JSON.stringify(user);
-  if (remember) {
-    localStorage.setItem(USER_KEY, json);
-  } else {
-    sessionStorage.setItem(USER_KEY, json);
-  }
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  // Also clear sessionStorage for users who were logged in before this fix
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
 }
@@ -59,7 +54,8 @@ export function getAuthHeaders(): Record<string, string> {
 
 export function isRemembered(): boolean {
   if (typeof window === "undefined") return false;
-  return !!localStorage.getItem(TOKEN_KEY);
+  // Read from the preference key, not the token key
+  return localStorage.getItem(REMEMBER_KEY) !== "false";
 }
 
 export function logout(): void {
@@ -67,7 +63,7 @@ export function logout(): void {
   window.location.href = "/login";
 }
 
-// ── Session inactivity timeout (4 hours) ─────────────────────────────────────
+// ── Session inactivity timeout (4 hours, only when "Se souvenir de moi" is unchecked) ──
 
 const ACTIVITY_KEY = "sdt_last_activity";
 export const SESSION_TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -82,7 +78,6 @@ export function isSessionExpired(): boolean {
   if (!isAuthenticated()) return false;
   const raw = localStorage.getItem(ACTIVITY_KEY);
   if (!raw) {
-    // First access after login — initialise and don't expire yet
     updateActivity();
     return false;
   }

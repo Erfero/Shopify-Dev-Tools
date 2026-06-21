@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/login", "/register", "/splash"];
+const PUBLIC_PATHS = ["/login", "/register", "/splash", "/forgot-password", "/reset-password"];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();

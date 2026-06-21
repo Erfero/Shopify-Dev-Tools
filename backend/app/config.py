@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production-use-a-long-random-string"
     admin_email: str = ""             # This email is auto-approved as admin on registration
     cors_origins: str = ""            # Extra allowed CORS origins, comma-separated
+    google_client_id: str = ""        # Google OAuth 2.0 Client ID (from Google Cloud Console)
 
     # ── Email (SMTP) — optional, for approval notifications ─────────────────
     smtp_host: str = ""

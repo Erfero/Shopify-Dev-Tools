@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Layers, Loader2, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { API_BASE } from "@/lib/config";
 import { setToken, setUser } from "@/lib/auth";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 
 /** Auto-derive a display name from an email address. */
 function nameFromEmail(email: string): string {
@@ -28,7 +29,6 @@ export default function RegisterPage() {
 
   function handleEmailChange(val: string) {
     setEmail(val);
-    // Auto-fill name only if user hasn't manually typed one yet
     if (!displayName || displayName === nameFromEmail(email)) {
       setDisplayName(nameFromEmail(val));
     }
@@ -101,6 +101,21 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Créer un compte</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">Shopify Dev Tools</p>
+        </div>
+
+        {/* Google signup */}
+        <div className="mb-4">
+          <GoogleAuthButton text="signup_with" onError={setError} />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border/60" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-background px-3 text-muted-foreground">ou avec email</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

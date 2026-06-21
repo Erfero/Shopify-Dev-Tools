@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Layers, Loader2, Eye, EyeOff } from "lucide-react";
 import { API_BASE } from "@/lib/config";
-import { setToken, setUser, updateActivity } from "@/lib/auth";
-
-const REMEMBER_KEY = "sdt_remember_pref";
+import { setToken, setUser, updateActivity, REMEMBER_KEY } from "@/lib/auth";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,25 +14,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined") return true;
     return localStorage.getItem(REMEMBER_KEY) !== "false";
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingSeconds, setLoadingSeconds] = useState(0);
-  const [serverReady, setServerReady] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Wake up the backend and track when it's ready
-  useEffect(() => {
-    const ctrl = new AbortController();
-    fetch(`${API_BASE}/health`, { signal: ctrl.signal })
-      .then(r => { if (r.ok) setServerReady(true); })
-      .catch(() => {});
-    return () => ctrl.abort();
-  }, []);
-
-  // Count loading seconds for contextual message
   useEffect(() => {
     if (loading) {
       setLoadingSeconds(0);
@@ -70,7 +58,7 @@ export default function LoginPage() {
       updateActivity();
       router.replace("/");
     } catch {
-      setError("Impossible de contacter le serveur. Veuillez réessayer dans quelques secondes.");
+      setError("Impossible de contacter le serveur. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -92,13 +80,20 @@ export default function LoginPage() {
           <p className="mt-1.5 text-sm text-muted-foreground">Shopify Dev Tools</p>
         </div>
 
-        {/* Server warm-up banner */}
-        {!serverReady && (
-          <div className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-700">
-            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-            Connexion au serveur en cours… (première visite : ~30s)
+        {/* Google login */}
+        <div className="mb-4">
+          <GoogleAuthButton text="signin_with" onError={setError} />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border/60" />
           </div>
-        )}
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-background px-3 text-muted-foreground">ou avec email</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -113,7 +108,15 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Mot de passe</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-medium">Mot de passe</label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -142,7 +145,7 @@ export default function LoginPage() {
             />
             <span className="text-sm text-muted-foreground">
               Se souvenir de moi
-              <span className="ml-1 text-xs opacity-60">{remember ? "(30 jours)" : "(session uniquement)"}</span>
+              <span className="ml-1 text-xs opacity-60">{remember ? "(30 jours)" : "(4h d'inactivité)"}</span>
             </span>
           </label>
 

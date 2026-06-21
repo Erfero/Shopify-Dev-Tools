@@ -1,4 +1,6 @@
 import asyncio
+import random
+import string
 import uuid
 
 import bcrypt
@@ -20,8 +22,12 @@ from app.database import (
     set_last_login,
     _display_name_from_email,
     get_users_detailed,
+    create_reset_request,
+    get_reset_requests,
+    consume_reset_code,
+    delete_reset_request,
 )
-from app.email_utils import send_approval_email
+from app.email_utils import send_approval_email, send_reset_code_email
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -66,6 +72,16 @@ class AdminEditUserRequest(BaseModel):
     email: str | None = None
     display_name: str | None = None
     new_password: str | None = None
+
+
+class ResetRequestRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    new_password: str
 
 
 @router.post("/register")
@@ -265,3 +281,118 @@ async def remove_user(user_id: str, current_user: dict = Depends(_require_admin)
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas supprimer votre propre compte depuis l'admin.")
     await delete_user(user_id)
     return {"status": "deleted"}
+
+
+# ── Password reset endpoints ───────────────────────────────────────────────────
+
+@router.post("/request-reset")
+async def request_reset(req: ResetRequestRequest):
+    """Create a password reset request and send the code by email."""
+    user = await get_user_by_email(req.email.lower())
+    if user:
+        code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        await create_reset_request(req.email.lower(), code)
+        display_name = user.get("display_name") or _display_name_from_email(user["email"])
+        # Send code by email (silently skipped if SMTP not configured — code still visible in admin)
+        await send_reset_code_email(req.email.lower(), display_name, code)
+    return {"status": "ok"}
+
+
+@router.post("/reset-password")
+async def reset_password_endpoint(req: ResetPasswordRequest):
+    """Validate a reset code and update the user's password."""
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères.")
+    valid = await consume_reset_code(req.email.lower(), req.code.upper())
+    if not valid:
+        raise HTTPException(status_code=400, detail="Code invalide ou expiré. Refaites une demande.")
+    user = await get_user_by_email(req.email.lower())
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+    new_hash = await _hash_password_async(req.new_password)
+    await update_user_profile(user["id"], password_hash=new_hash)
+    return {"status": "ok", "message": "Mot de passe réinitialisé avec succès."}
+
+
+@router.get("/reset-requests")
+async def list_reset_requests(current_user: dict = Depends(_require_admin)):
+    """Admin: list all pending password reset requests with their codes."""
+    return await get_reset_requests()
+
+
+@router.delete("/reset-requests/{reset_id}")
+async def clear_reset_request(reset_id: str, current_user: dict = Depends(_require_admin)):
+    """Admin: delete a password reset request."""
+    await delete_reset_request(reset_id)
+    return {"status": "deleted"}
+
+
+# ── Google OAuth endpoint ──────────────────────────────────────────────────────
+
+import httpx as _httpx
+import os as _os
+
+class GoogleAuthRequest(BaseModel):
+    credential: str  # Google ID token returned by @react-oauth/google
+
+
+@router.post("/google")
+async def google_auth(req: GoogleAuthRequest):
+    """Verify a Google ID token and return a JWT for our app."""
+    # Call Google's tokeninfo endpoint to verify the token
+    async with _httpx.AsyncClient(timeout=10) as client:
+        r = await client.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={req.credential}")
+
+    if r.status_code != 200:
+        raise HTTPException(status_code=401, detail="Token Google invalide.")
+
+    token_data = r.json()
+
+    # Verify audience matches our client ID (if configured)
+    client_id = settings.google_client_id
+    if client_id and token_data.get("aud") != client_id:
+        raise HTTPException(status_code=401, detail="Token Google invalide (audience incorrecte).")
+
+    if token_data.get("email_verified") != "true":
+        raise HTTPException(status_code=401, detail="Email Google non vérifié.")
+
+    email = token_data.get("email", "").lower()
+    if not email:
+        raise HTTPException(status_code=401, detail="Email introuvable dans le token Google.")
+
+    google_name = token_data.get("name") or token_data.get("given_name") or _display_name_from_email(email)
+
+    # Find or create user
+    user = await get_user_by_email(email)
+    if not user:
+        # New user via Google — create with random password hash (can't login with password)
+        user_id = str(uuid.uuid4())
+        random_pw = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+        password_hash = await _hash_password_async(random_pw)
+        is_admin = bool(settings.admin_email and email == settings.admin_email.lower())
+        await create_user(user_id, email, password_hash, True, is_admin, google_name)
+        await log_activity(email, "register")
+        user = await get_user_by_email(email)
+
+    if not user["is_approved"]:
+        raise HTTPException(status_code=403, detail="Votre compte est en attente d'approbation.")
+
+    # Update last login
+    await asyncio.gather(
+        log_activity(email, "login"),
+        set_last_login(email),
+    )
+
+    token = create_access_token({
+        "sub": user["id"],
+        "email": user["email"],
+        "display_name": user.get("display_name") or google_name,
+        "is_admin": user["is_admin"],
+        "is_approved": True,
+    })
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "is_admin": user["is_admin"],
+        "display_name": user.get("display_name") or google_name,
+    }

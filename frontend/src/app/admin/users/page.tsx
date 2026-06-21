@@ -6,6 +6,7 @@ import {
   Loader2, ShieldCheck, ArrowLeft, RefreshCw, Search,
   Crown, UserCheck, Clock, Trash2, Pencil, Eye, EyeOff,
   Paintbrush, Star, Activity, LogOut, CheckCircle, XCircle,
+  ShieldPlus, ShieldMinus, KeyRound, Copy, Check,
 } from "lucide-react";
 import { API_BASE } from "@/lib/config";
 import { getUser, logout } from "@/lib/auth";
@@ -28,6 +29,14 @@ interface DetailedUser {
   csvs: number;
   csv_downloads: number;
   total_actions: number;
+}
+
+interface ResetRequest {
+  id: string;
+  email: string;
+  code: string;
+  expires_at: string;
+  created_at: string;
 }
 
 // ── EditModal ─────────────────────────────────────────────────────────────────
@@ -102,6 +111,28 @@ function EditUserModal({ user, onClose, onSave }: {
   );
 }
 
+// ── CopyCode button ───────────────────────────────────────────────────────────
+
+function CopyCodeButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-mono font-semibold transition hover:bg-muted"
+      title="Copier le code"
+    >
+      {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+      {code}
+    </button>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminUsersPage() {
@@ -117,6 +148,9 @@ export default function AdminUsersPage() {
     open: boolean; title: string; description?: string; variant?: "danger" | "warning"; onConfirm: () => void;
   }>({ open: false, title: "", onConfirm: () => {} });
 
+  const [resetRequests, setResetRequests] = useState<ResetRequest[]>([]);
+  const [loadingResets, setLoadingResets] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -129,10 +163,20 @@ export default function AdminUsersPage() {
     setLoading(false);
   }, []);
 
+  const fetchResetRequests = useCallback(async () => {
+    setLoadingResets(true);
+    try {
+      const r = await apiFetch(`${API_BASE}/api/auth/reset-requests`);
+      if (r.ok) setResetRequests(await r.json());
+    } catch {}
+    setLoadingResets(false);
+  }, []);
+
   useEffect(() => {
     if (!currentUser?.is_admin) { router.replace("/"); return; }
     fetchUsers();
-  }, [currentUser?.is_admin, fetchUsers, router]);
+    fetchResetRequests();
+  }, [currentUser?.is_admin, fetchUsers, fetchResetRequests, router]);
 
   const filtered = users.filter(u =>
     u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -153,6 +197,30 @@ export default function AdminUsersPage() {
     await fetchUsers(); setActionId(null);
   }
 
+  async function handlePromote(id: string) {
+    setActionId(id);
+    await apiFetch(`${API_BASE}/api/auth/users/${id}/promote`, { method: "PATCH" });
+    toast.success("Utilisateur promu administrateur.");
+    await fetchUsers(); setActionId(null);
+  }
+
+  async function handleDemote(id: string) {
+    const u = users.find(u => u.id === id);
+    setConfirmModal({
+      open: true,
+      title: "Rétrograder cet admin ?",
+      description: `"${u?.display_name || u?.email}" perdra les droits administrateur.`,
+      variant: "warning",
+      onConfirm: async () => {
+        setConfirmModal(m => ({ ...m, open: false }));
+        setActionId(id);
+        await apiFetch(`${API_BASE}/api/auth/users/${id}/demote`, { method: "PATCH" });
+        toast.success("Droits admin retirés.");
+        await fetchUsers(); setActionId(null);
+      },
+    });
+  }
+
   function handleDelete(id: string) {
     const u = users.find(u => u.id === id);
     setConfirmModal({
@@ -169,6 +237,12 @@ export default function AdminUsersPage() {
         await fetchUsers(); setActionId(null);
       },
     });
+  }
+
+  async function handleDeleteReset(resetId: string) {
+    await apiFetch(`${API_BASE}/api/auth/reset-requests/${resetId}`, { method: "DELETE" });
+    setResetRequests(prev => prev.filter(r => r.id !== resetId));
+    toast.success("Demande supprimée.");
   }
 
   async function submitEdit(userId: string, data: { email?: string; display_name?: string; new_password?: string }) {
@@ -235,7 +309,7 @@ export default function AdminUsersPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={fetchUsers} disabled={loading}
+              <button onClick={() => { fetchUsers(); fetchResetRequests(); }} disabled={loading}
                 className="flex items-center justify-center rounded-xl border border-border bg-background p-2 shadow-sm transition hover:bg-muted disabled:opacity-40">
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </button>
@@ -251,7 +325,50 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-6 space-y-4">
+        <div className="mx-auto max-w-7xl px-4 py-6 space-y-6">
+
+          {/* Reset requests section */}
+          {(resetRequests.length > 0 || loadingResets) && (
+            <div className="rounded-2xl border border-amber-200/60 bg-amber-50/50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <KeyRound className="h-4 w-4 text-amber-600" />
+                <h2 className="text-sm font-semibold text-amber-800">
+                  Demandes de réinitialisation de mot de passe
+                  {resetRequests.length > 0 && (
+                    <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                      {resetRequests.length}
+                    </span>
+                  )}
+                </h2>
+              </div>
+              {loadingResets ? (
+                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+              ) : (
+                <div className="space-y-2">
+                  {resetRequests.map(r => (
+                    <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200/80 bg-white px-3 py-2.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{r.email}</p>
+                        <p className="text-xs text-muted-foreground">Expire le {fmtDate(r.expires_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Code :</span>
+                        <CopyCodeButton code={r.code} />
+                        <button
+                          onClick={() => handleDeleteReset(r.id)}
+                          className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 p-1.5 text-red-500 transition hover:bg-red-100"
+                          title="Supprimer cette demande"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Search bar */}
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -376,6 +493,20 @@ export default function AdminUsersPage() {
                                     <button onClick={() => handleReject(u.id)}
                                       className="flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-500/15 whitespace-nowrap">
                                       <XCircle className="h-3.5 w-3.5" /><span className="hidden sm:inline">Révoquer</span>
+                                    </button>
+                                  )}
+
+                                  {/* Promote / Demote admin */}
+                                  {!isSelf && !u.is_admin && (
+                                    <button onClick={() => handlePromote(u.id)}
+                                      className="flex items-center justify-center rounded-lg border border-purple-500/20 bg-purple-500/5 p-1.5 text-purple-500 transition hover:bg-purple-500/15" title="Promouvoir admin">
+                                      <ShieldPlus className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                  {!isSelf && u.is_admin && (
+                                    <button onClick={() => handleDemote(u.id)}
+                                      className="flex items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/5 p-1.5 text-amber-500 transition hover:bg-amber-500/15" title="Retirer admin">
+                                      <ShieldMinus className="h-3.5 w-3.5" />
                                     </button>
                                   )}
 

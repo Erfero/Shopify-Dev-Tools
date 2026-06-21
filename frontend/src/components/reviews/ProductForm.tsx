@@ -11,6 +11,7 @@ interface ProductFormProps {
   productImages: File[];
   onChange: (field: string, value: string) => void;
   onProductImagesChange: (files: File[]) => void;
+  hideAutoFilled?: boolean;
 }
 
 export function ProductForm({
@@ -21,6 +22,7 @@ export function ProductForm({
   productImages,
   onChange,
   onProductImagesChange,
+  hideAutoFilled = false,
 }: ProductFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPhotos, setShowPhotos] = useState(false);
@@ -55,57 +57,63 @@ export function ProductForm({
         </div>
         <div>
           <h2 className="font-bold text-xl" style={{ color: "var(--text)" }}>
-            Informations du Produit
+            {hideAutoFilled ? "Handle du produit" : "Informations du Produit"}
           </h2>
           <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
-            Ces infos permettront à l&apos;IA de générer des avis précis et pertinents
+            {hideAutoFilled
+              ? "Entrez le handle Shopify — les autres infos viennent du Customizer"
+              : "Ces infos permettront à l'IA de générer des avis précis et pertinents"}
           </p>
         </div>
       </div>
 
       <div className="space-y-5">
-        {/* Row 1 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">
-              <Package size={13} style={{ color: "var(--primary)" }} />
-              Nom du produit <span style={{ color: "#EF4444" }}>*</span>
-            </label>
-            <input
-              className="input"
-              value={productName}
-              onChange={(e) => onChange("productName", e.target.value)}
-              placeholder="Ex: Mitaine de dentition"
-            />
+        {/* Row 1 — hidden when auto-filled */}
+        {!hideAutoFilled && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">
+                <Package size={13} style={{ color: "var(--primary)" }} />
+                Nom du produit <span style={{ color: "#EF4444" }}>*</span>
+              </label>
+              <input
+                className="input"
+                value={productName}
+                onChange={(e) => onChange("productName", e.target.value)}
+                placeholder="Ex: Mitaine de dentition"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <Store size={13} style={{ color: "var(--primary)" }} />
+                Nom de la boutique / marque <span style={{ color: "#EF4444" }}>*</span>
+              </label>
+              <input
+                className="input"
+                value={brandName}
+                onChange={(e) => onChange("brandName", e.target.value)}
+                placeholder="Ex: Bébé Zen"
+              />
+            </div>
           </div>
-          <div>
-            <label className="label">
-              <Store size={13} style={{ color: "var(--primary)" }} />
-              Nom de la boutique / marque <span style={{ color: "#EF4444" }}>*</span>
-            </label>
-            <input
-              className="input"
-              value={brandName}
-              onChange={(e) => onChange("brandName", e.target.value)}
-              placeholder="Ex: Bébé Zen"
-            />
-          </div>
-        </div>
+        )}
 
-        {/* Description */}
-        <div>
-          <label className="label">
-            <FileText size={13} style={{ color: "var(--primary)" }} />
-            Description du produit <span style={{ color: "#EF4444" }}>*</span>
-          </label>
-          <textarea
-            className="input textarea"
-            value={productDescription}
-            onChange={(e) => onChange("productDescription", e.target.value)}
-            placeholder="Décrivez votre produit en détail : matériaux, bénéfices, usage, public cible, caractéristiques uniques... Plus c'est précis, meilleurs seront vos avis."
-            rows={4}
-          />
-        </div>
+        {/* Description — hidden when auto-filled */}
+        {!hideAutoFilled && (
+          <div>
+            <label className="label">
+              <FileText size={13} style={{ color: "var(--primary)" }} />
+              Description du produit <span style={{ color: "#EF4444" }}>*</span>
+            </label>
+            <textarea
+              className="input textarea"
+              value={productDescription}
+              onChange={(e) => onChange("productDescription", e.target.value)}
+              placeholder="Décrivez votre produit en détail : matériaux, bénéfices, usage, public cible, caractéristiques uniques... Plus c'est précis, meilleurs seront vos avis."
+              rows={4}
+            />
+          </div>
+        )}
 
         {/* Handle */}
         <div>
@@ -124,7 +132,8 @@ export function ProductForm({
           </p>
         </div>
 
-        {/* Product images for AI analysis — collapsible optional section */}
+        {/* Product images — hidden when auto-filled (images already loaded from Customizer) */}
+        {!hideAutoFilled && (
         <div
           className="rounded-2xl"
           style={{ border: "1px solid oklch(0.922 0 0)", overflow: "hidden" }}
@@ -231,6 +240,7 @@ export function ProductForm({
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

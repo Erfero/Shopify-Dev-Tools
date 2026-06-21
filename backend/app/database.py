@@ -140,6 +140,14 @@ CREATE TABLE IF NOT EXISTS activity_log (
     ip_address TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id         TEXT PRIMARY KEY,
+    email      TEXT NOT NULL,
+    code       TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 _CREATE_TABLES_PG = """
@@ -211,6 +219,14 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin      BOOLEAN DEFAULT FALSE,
     display_name  TEXT DEFAULT '',
     created_at    TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id         TEXT PRIMARY KEY,
+    email      TEXT NOT NULL,
+    code       TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS activity_log (
@@ -777,6 +793,55 @@ async def update_user_status(id: str, is_approved: bool | None = None, is_admin:
 async def delete_user(id: str) -> None:
     async with _engine.begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": id})
+
+
+# ── Password reset functions ───────────────────────────────────────────────────
+
+async def create_reset_request(email: str, code: str) -> None:
+    import datetime, uuid as _uuid
+    request_id = str(_uuid.uuid4())
+    expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=24)).isoformat(timespec="seconds")
+    async with _engine.begin() as conn:
+        await conn.execute(text("DELETE FROM password_resets WHERE email = :email"), {"email": email})
+        await conn.execute(
+            text("INSERT INTO password_resets (id, email, code, expires_at) VALUES (:id, :email, :code, :expires)"),
+            {"id": request_id, "email": email, "code": code, "expires": expires_at},
+        )
+
+
+async def get_reset_requests() -> list[dict]:
+    async with _engine.connect() as conn:
+        rows = (await conn.execute(
+            text("SELECT id, email, code, expires_at, created_at FROM password_resets ORDER BY created_at DESC")
+        )).fetchall()
+    return [{"id": r[0], "email": r[1], "code": r[2], "expires_at": str(r[3]), "created_at": str(r[4])} for r in rows]
+
+
+async def consume_reset_code(email: str, code: str) -> bool:
+    """Validate and consume a reset code. Returns True if valid and not expired."""
+    import datetime
+    async with _engine.connect() as conn:
+        row = (await conn.execute(
+            text("SELECT id, expires_at FROM password_resets WHERE email = :email AND code = :code"),
+            {"email": email, "code": code},
+        )).fetchone()
+    if not row:
+        return False
+    expires_raw = row[1]
+    try:
+        expires_dt = datetime.datetime.fromisoformat(str(expires_raw)) if isinstance(expires_raw, str) else expires_raw
+        if datetime.datetime.utcnow() > expires_dt:
+            return False
+    except Exception:
+        return False
+    async with _engine.begin() as conn:
+        await conn.execute(text("DELETE FROM password_resets WHERE id = :id"), {"id": row[0]})
+    return True
+
+
+async def delete_reset_request(reset_id: str) -> None:
+    async with _engine.begin() as conn:
+        await conn.execute(text("DELETE FROM password_resets WHERE id = :id"), {"id": reset_id})
 
 
 async def update_user_profile(user_id: str, display_name: str | None = None, password_hash: str | None = None) -> None:

@@ -300,19 +300,55 @@ def _rebuild_to_story_structure(ed: Path) -> bool:
             if sec.get("type", "") in existing_liquid:
                 filtered_sections[sid] = sec
 
-        # For product.json: replace the reference main-product section with the
-        # uploaded theme's own (preserves correct block types for that theme's liquid).
+        # For product.json: merge reference main-product blocks with the theme's
+        # own description block type (description-faq / description-text / description).
+        # This gives us the full reference block set (custom_liquid, social_proof,
+        # review, delivery_estimation, timer, variant_image…) while keeping the
+        # correct block schema for the theme's main-product.liquid.
         if tmpl_name == "product.json":
             target_path = templates_dir / tmpl_name
             if target_path.exists():
                 try:
                     existing_data = json.loads(target_path.read_text(encoding="utf-8"))
+                    theme_main_sec = None
                     for sid, sec in existing_data.get("sections", {}).items():
                         if sec.get("type") == "main-product":
-                            # The reference always uses key "main" for main-product
-                            if "main" in filtered_sections:
-                                filtered_sections["main"] = sec
+                            theme_main_sec = sec
                             break
+
+                    if theme_main_sec and "main" in filtered_sections:
+                        ref_main = filtered_sections["main"]
+                        merged_blocks = dict(ref_main.get("blocks", {}))
+                        merged_block_order = list(ref_main.get("block_order", list(merged_blocks.keys())))
+
+                        # Block types that differ between themes (description block)
+                        _DESC_TYPES = {"description-faq", "description-text", "description"}
+
+                        # Find what description block the theme uses
+                        theme_desc_bid: str | None = None
+                        theme_desc_blk: dict | None = None
+                        theme_desc_type: str | None = None
+                        for bid, blk in theme_main_sec.get("blocks", {}).items():
+                            if blk.get("type") in _DESC_TYPES:
+                                theme_desc_bid = bid
+                                theme_desc_blk = blk
+                                theme_desc_type = blk.get("type")
+                                break
+
+                        # If theme uses a non-reference description type, swap it in
+                        if theme_desc_type and theme_desc_type != "description-faq":
+                            for bid in list(merged_blocks.keys()):
+                                if merged_blocks[bid].get("type") == "description-faq":
+                                    del merged_blocks[bid]
+                                    merged_blocks[theme_desc_bid] = theme_desc_blk  # type: ignore[assignment]
+                                    merged_block_order = [theme_desc_bid if x == bid else x for x in merged_block_order]
+                                    break
+
+                        filtered_sections["main"] = {
+                            **ref_main,
+                            "blocks": merged_blocks,
+                            "block_order": merged_block_order,
+                        }
                 except Exception:
                     pass
 
@@ -1527,11 +1563,11 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
         "ru": "🚚 Бесплатная Доставка Только Сегодня",
     }
     _btn_text = {
-        "fr": "AJOUTER AU PANIER", "en": "ADD TO CART", "de": "IN DEN WARENKORB",
-        "da": "TILFØJ TIL KURV", "sv": "LÄGG I VARUKORG", "no": "LEGG I HANDLEKURV",
-        "fi": "LISÄÄ OSTOSKORIIN", "es": "AÑADIR AL CARRITO", "pt": "ADICIONAR AO CARRINHO",
-        "it": "AGGIUNGI AL CARRELLO", "nl": "IN WINKELWAGEN", "pl": "DODAJ DO KOSZYKA",
-        "ru": "ДОБАВИТЬ В КОРЗИНУ",
+        "fr": "AJOUTEZ AU PANIER", "en": "ADD TO CART", "de": "IN DEN WARENKORB",
+        "da": "LÆG I KURV", "sv": "LÄGG I KUNDVAGNEN", "no": "LEGG I HANDLEKURVEN",
+        "fi": "LISÄÄ OSTOSKORIIN", "es": "AGREGUE AL CARRITO", "pt": "ADICIONE AO CARRINHO",
+        "it": "AGGIUNGA AL CARRELLO", "nl": "IN WINKELWAGEN", "pl": "DODAJ DO KOSZYKA",
+        "ru": "ДОБАВЬТЕ В КОРЗИНУ",
     }
     for i, (_, blk) in enumerate(_blocks_by_type(msec, "text")):
         old_text = _s(blk, "text")
@@ -1541,7 +1577,6 @@ def _apply_product_page(ed: Path, pf: dict, pp: dict, hp: dict, language: str = 
             _rep(reps, "text", old_text, _promo.get(_lang) or ai_ui.get("delivery_promo") or _promo["en"])
     for _, blk in _blocks_by_type(msec, "buy_buttons"):
         _rep(reps, "button_text", _s(blk, "button_text"), _btn_text.get(_lang) or ai_ui.get("buy_button") or _btn_text["en"])
-        break
 
     return apply_replacements(ed / rel, reps) > 0
 

@@ -99,7 +99,15 @@ RÈGLE INGRÉDIENTS : Si le produit est un produit naturel (savon, huile essenti
 
 RÈGLE LONGUEUR STRICTE : Tous les champs "text" sont COURTS. Maximum 2 phrases par paragraphe, maximum 2 paragraphes. Chaque phrase fait 10-15 mots MAX. PAS de longs textes.
 
-RÈGLE AVANTAGES CONCRETS OBLIGATOIRE : TOUS les textes de la page produit doivent être CENTRÉS SUR CE QUE LE PRODUIT APPORTE AU CLIENT. Chaque champ doit exprimer un bénéfice concret, un résultat mesurable ou une transformation vécue. INTERDITS : descriptions techniques pures sans bénéfice, généralités vagues, promesses sans ancrage ("excellent", "de qualité"). OBLIGATOIRES pour product_benefits et product_specs : résultats chiffrés (ex: "-80% de douleur", "résultats en 14 jours", "+90% de satisfaction"), problèmes résolus (formulation avant/après), avantages exclusifs du produit. Chaque short_title et title de spec doit être un bénéfice direct pour le client, pas une caractéristique technique."""
+RÈGLE AVANTAGES CONCRETS OBLIGATOIRE : TOUS les textes de la page produit doivent être CENTRÉS SUR CE QUE LE PRODUIT APPORTE AU CLIENT. Chaque champ doit exprimer un bénéfice concret, un résultat mesurable ou une transformation vécue. INTERDITS : descriptions techniques pures sans bénéfice, généralités vagues, promesses sans ancrage ("excellent", "de qualité"). OBLIGATOIRES pour product_benefits et product_specs : résultats chiffrés (ex: "-80% de douleur", "résultats en 14 jours", "+90% de satisfaction"), problèmes résolus (formulation avant/après), avantages exclusifs du produit. Chaque short_title et title de spec doit être un bénéfice direct pour le client, pas une caractéristique technique.
+
+RÈGLE BÉNÉFICES PERCUTANTS OBLIGATOIRE : Les short_titles des product_benefits sont les accrocheurs les plus importants de la page — ils doivent CONVAINCRE et CONVERTIR. Chaque short_title doit :
+- Être une phrase d'impact complète de 6 à 10 mots (PAS 3-4 mots, c'est trop court pour convaincre)
+- Exprimer une transformation ou un résultat concret que le client va vivre
+- Utiliser des formulations percutantes : "Résultats visibles en", "Peau lumineuse dès la", "Fini les problèmes de", "+90% des utilisateurs constatent"
+- Être spécifique au domaine d'action réel du produit (beauté, santé, bien-être, etc.)
+- INTERDITS : expressions trop courtes ("Éclat naturel", "Peau douce") — elles ne convainquent pas
+- OBLIGATOIRES : formulations longues et précises qui donnent envie d'acheter immédiatement"""
 
     store = context["store_name"]
     product = context["product_names"][0] if context["product_names"] else "Produit"
@@ -121,11 +129,11 @@ Génère les textes de la page produit. Réponds en JSON avec ce schéma EXACT :
 
 {{
   "product_benefits": [
-    {{"short_title": "Résultat ou bénéfice direct (3-4 mots max, texte simple, ex: Résultats en 14 jours)", "description": "1 phrase courte exprimant le bénéfice CONCRET pour le client (pas une caractéristique, un résultat)"}},
-    {{"short_title": "Bénéfice 2 (problème résolu ou transformation)", "description": "1 phrase avec chiffre ou preuve si possible"}},
-    {{"short_title": "Bénéfice 3 (avantage exclusif du produit)", "description": "1 phrase courte"}},
-    {{"short_title": "Bénéfice 4 (facilité ou praticité)", "description": "1 phrase courte"}},
-    {{"short_title": "Bénéfice 5 (bénéfice émotionnel ou social)", "description": "1 phrase courte"}}
+    {{"short_title": "Phrase d'impact percutante 6-10 mots (résultat concret, ex: Résultats visibles dès la première utilisation)", "description": "1 phrase convaincante exprimant le bénéfice CONCRET pour le client — résultat, transformation ou chiffre clé"}},
+    {{"short_title": "Bénéfice 2 : problème résolu ou transformation vécue (6-10 mots, formulation avant/après ou chiffre)", "description": "1 phrase avec chiffre ou preuve tangible"}},
+    {{"short_title": "Bénéfice 3 : avantage exclusif du produit (6-10 mots, spécifique et différenciant)", "description": "1 phrase courte mais percutante"}},
+    {{"short_title": "Bénéfice 4 : facilité, rapidité ou praticité (6-10 mots, ancré dans l'usage réel)", "description": "1 phrase courte qui rassure et donne envie"}},
+    {{"short_title": "Bénéfice 5 : transformation émotionnelle ou sociale (6-10 mots, impact sur la vie du client)", "description": "1 phrase courte qui touche l'émotion"}}
   ],
   "product_description": {{
     "heading": "Description heading (plain text)",
@@ -158,7 +166,7 @@ Génère les textes de la page produit. Réponds en JSON avec ce schéma EXACT :
 CONTRAINTES :
 - Exactement 5 product_benefits, 3 mini_reviews, 4 product_specs.items
 - adoption.heading : '{ingredients_heading}' si produit naturel/ingrédient, sinon '+XXXX {plural_label} [adopted/ont adopté/…]' IN THE TARGET LANGUAGE
-- Les short_titles doivent être courts (3-5 mots maximum)
+- Les short_titles doivent être PERCUTANTS et COMPLETS : 6 à 10 mots, résultat concret ou transformation — JAMAIS des expressions de 3-4 mots
 - Les mini_reviews.text sont en texte simple (AUCUN HTML)
 - Les champs HTML DOIVENT contenir plusieurs <strong> sur des expressions et mots d'impact
 - product_specs.items[].title : EXACTEMENT 2 mots, representing a product advantage or benefit

@@ -188,12 +188,12 @@ export default function ImagesPage() {
     readFromCustomizer();
 
     // Re-read every time the user comes back to this tab or window
+    const onVisibility = () => { if (document.visibilityState === "visible") readFromCustomizer(); };
     window.addEventListener("focus", readFromCustomizer);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") readFromCustomizer();
-    });
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("focus", readFromCustomizer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -17,6 +17,7 @@ import {
   downloadTheme,
   type UploadResponse,
   type GenerationStep,
+  type PageToCreate,
 } from "@/lib/api-theme";
 import Link from "next/link";
 import { getUser } from "@/lib/auth";
@@ -53,6 +54,7 @@ export default function ThemePage() {
   const [previewData, setPreviewData] = useState<Record<string, unknown> | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [pagesToCreate, setPagesToCreate] = useState<PageToCreate[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const lastConfigRef = useRef<StoreConfig | null>(null);
@@ -241,7 +243,8 @@ export default function ThemePage() {
     setIsApplying(true);
     setApplyError(null);
     try {
-      await applyTheme(uploadData.session_id, editedData);
+      const result = await applyTheme(uploadData.session_id, editedData);
+      setPagesToCreate(result.pages_to_create ?? []);
       setAppStep("done");
     } catch (err) {
       setApplyError(err instanceof Error ? err.message : "Erreur lors de l'application");
@@ -260,6 +263,7 @@ export default function ThemePage() {
     setGenerationError(null);
     setPreviewData(null);
     setApplyError(null);
+    setPagesToCreate([]);
     setUploadError(null);
     setHistoryStack([]);
     setHistoryIndex(-1);
@@ -596,6 +600,37 @@ export default function ThemePage() {
                   <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 28, maxWidth: 360, margin: "0 auto 28px" }}>
                     Téléchargez le fichier ZIP et importez-le dans votre boutique Shopify
                   </p>
+
+                  {pagesToCreate.length > 0 && (
+                    <div
+                      style={{
+                        textAlign: "left",
+                        maxWidth: 420,
+                        margin: "0 auto 28px",
+                        padding: "16px 18px",
+                        borderRadius: 12,
+                        background: "#FFFBEB",
+                        border: "1px solid #FDE68A",
+                      }}
+                    >
+                      <p style={{ fontWeight: 700, fontSize: 13, color: "#92400E", marginBottom: 6 }}>
+                        ⚠️ Étape obligatoire après l&apos;import du thème
+                      </p>
+                      <p style={{ fontSize: 12.5, color: "#92400E", marginBottom: 10, lineHeight: 1.5 }}>
+                        Ce thème contient des pages personnalisées. Shopify ne les affichera
+                        pas tant que vous n&apos;avez pas créé, pour chacune, une page dans{" "}
+                        <strong>Boutique en ligne → Pages → Ajouter une page</strong>, puis
+                        sélectionné le bon modèle dans le panneau de droite (&quot;Modèle de thème&quot;) :
+                      </p>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#92400E", lineHeight: 1.7 }}>
+                        {pagesToCreate.map((p) => (
+                          <li key={p.template_suffix}>
+                            {p.suggested_title} → modèle <code>page.{p.template_suffix}</code>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
                     <button

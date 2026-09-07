@@ -16,6 +16,49 @@ EXCLUDED_DIRS = {"_product_images"}
 EXCLUDED_FILES = {"_session_meta.json"}
 
 
+# Friendly French titles for known page templates. Any page.*.json not listed here
+# still gets reported (with a title guessed from its suffix) so new templates added
+# by a future base-theme update are never silently dropped from the checklist.
+_PAGE_TEMPLATE_LABELS = {
+    "contact": "Contact",
+    "faq": "FAQ",
+    "help": "Aide",
+    "story": "Notre histoire",
+    "tracking": "Suivi de commande",
+    "wishlist": "Liste de souhaits",
+}
+
+
+def required_pages(theme_root: Path) -> list[dict]:
+    """List custom page templates that need a matching Shopify Page created manually.
+
+    Shipping templates/page.story.json (etc.) inside the theme ZIP is not enough on
+    its own: Shopify only renders that template for a Page resource that a merchant
+    creates in Admin → Online Store → Pages and explicitly assigns "page.story" to
+    via the Theme template dropdown. Skipping that step is the single most common
+    reason a freshly generated theme "seems to be missing pages" or 404s when you
+    look for them in the theme editor's page picker — the theme isn't broken, the
+    Page resource simply doesn't exist yet.
+
+    Derived dynamically from whichever templates/page.*.json files are present at
+    export time, so this stays correct for any current or future base theme version
+    without needing an update here.
+    """
+    templates_dir = theme_root / "templates"
+    if not templates_dir.exists():
+        return []
+    pages = []
+    for f in sorted(templates_dir.glob("page.*.json")):
+        suffix = f.stem[len("page."):]  # "page.story.json" → stem "page.story" → "story"
+        if not suffix:
+            continue
+        pages.append({
+            "template_suffix": suffix,
+            "suggested_title": _PAGE_TEMPLATE_LABELS.get(suffix, suffix.replace("-", " ").replace("_", " ").title()),
+        })
+    return pages
+
+
 def export_theme(session_id: str, theme_root: Path, modified_files: set[str], store_name: str = "") -> Path:
     """Create a ZIP from the theme directory.
 
@@ -106,6 +149,54 @@ def create_legal_page_template(theme_root: Path, page_handle: str, title: str, c
     write_theme_json(file_path, template, compact=False)
 
 
+def _repair_dangling_block_order(source_dir: Path) -> int:
+    """Final safety net: prune block_order entries with no matching block.
+
+    Shopify rejects a template/section-group whose block_order array references a
+    block id absent from its blocks object (this is how a missing product image
+    with-text block, a dropped 'social_proof' block, or any other block deleted
+    without updating block_order turns into a 404 on the storefront). Earlier
+    pipeline steps are expected to keep these in sync, but this check runs
+    unconditionally right before zipping so that ANY current or future code path
+    that edits blocks — in this app or in an upstream base-theme update — can never
+    ship a broken reference. Pure data-integrity fix: removing a dangling id from
+    block_order never changes what a shopper sees, it only removes something that
+    would otherwise fail to render.
+    """
+    repaired = 0
+    candidates = list(source_dir.glob("templates/**/*.json")) + list(source_dir.glob("sections/*.json"))
+    for f in candidates:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8-sig"))
+        except Exception:
+            continue
+        sections = data.get("sections") if isinstance(data, dict) else None
+        if not isinstance(sections, dict):
+            continue
+        changed = False
+        for sec in sections.values():
+            if not isinstance(sec, dict):
+                continue
+            block_order = sec.get("block_order")
+            blocks = sec.get("blocks")
+            if not block_order or not isinstance(blocks, dict):
+                continue
+            new_order = [b for b in block_order if b in blocks]
+            if new_order != block_order:
+                sec["block_order"] = new_order
+                changed = True
+                repaired += len(block_order) - len(new_order)
+        if changed:
+            json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+            f.write_text(json_str.replace("/", "\\/"), encoding="utf-8")
+    if repaired:
+        logger.warning(
+            f"_repair_dangling_block_order: pruned {repaired} dangling block_order "
+            f"reference(s) before export — check upstream generation logic"
+        )
+    return repaired
+
+
 def _create_zip(source_dir: Path, zip_path: Path):
     """Create a ZIP file from a directory, excluding internal temp directories."""
     # Verify required files exist before starting
@@ -114,6 +205,8 @@ def _create_zip(source_dir: Path, zip_path: Path):
             raise FileNotFoundError(
                 f"{required} manquant dans le répertoire theme: {source_dir}"
             )
+
+    _repair_dangling_block_order(source_dir)
 
     # Guard: Shopify allows only ONE *.default.json and ONE *.default.schema.json.
     # If _switch_locale_files() left duplicates, abort before producing a broken ZIP.

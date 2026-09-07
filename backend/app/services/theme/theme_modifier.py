@@ -179,13 +179,18 @@ def _apply_colors(ed: Path, pf: dict, colors_data: dict) -> bool:
 
 
 def _remove_invalid_template_blocks(ed: Path) -> int:
-    """Remove blocks from template JSONs that reference block types undefined in their section schema.
+    """Remove blocks from template/section-group JSONs that reference block types
+    undefined in their section schema, and prune any now-dangling block_order entries.
 
     Story Theme 3.5.0 ships with product.json containing a 'social_proof' block in
     the main-product section, but the 3.5.0 main-product.liquid no longer defines that
     block type. Shopify rejects the product template when an unknown block type is present,
     causing a 404 on the product page. This function fixes that inconsistency for any
     base theme version.
+
+    Also covers sections/*-group.json (header-group.json, footer-group.json), which use
+    the same {sections: {id: {type, blocks, block_order}}} shape and render on every page,
+    so a stale reference there breaks the whole storefront rather than just one template.
     """
     sections_dir = ed / "sections"
     templates_dir = ed / "templates"
@@ -207,13 +212,16 @@ def _remove_invalid_template_blocks(ed: Path) -> int:
             continue
 
     total_removed = 0
-    for template_file in templates_dir.glob("*.json"):
+    json_files = list(templates_dir.glob("*.json")) + list(templates_dir.glob("**/*.json")) + list(sections_dir.glob("*-group.json"))
+    for template_file in dict.fromkeys(json_files):  # de-dupe while preserving order
         try:
             raw = template_file.read_text(encoding="utf-8")
             data = json.loads(raw)
             changed = False
 
             for _sec_key, sec_data in data.get("sections", {}).items():
+                if not isinstance(sec_data, dict):
+                    continue
                 section_type = sec_data.get("type", "")
                 if section_type not in valid_block_types:
                     continue
@@ -223,11 +231,17 @@ def _remove_invalid_template_blocks(ed: Path) -> int:
                 if bad_keys:
                     for k in bad_keys:
                         del blocks[k]
-                    # Also prune blocks_order if present
-                    if "blocks_order" in sec_data:
-                        sec_data["blocks_order"] = [o for o in sec_data["blocks_order"] if o not in bad_keys]
                     total_removed += len(bad_keys)
                     changed = True
+                # Prune block_order regardless of whether bad_keys were found this pass —
+                # catches stale ids left behind by any other code path that deletes blocks
+                # without keeping block_order in sync.
+                if "block_order" in sec_data:
+                    valid_ids = set(blocks.keys())
+                    new_order = [o for o in sec_data["block_order"] if o in valid_ids]
+                    if new_order != sec_data["block_order"]:
+                        sec_data["block_order"] = new_order
+                        changed = True
 
             if changed:
                 json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
@@ -246,20 +260,30 @@ _REFERENCE_DIR = Path(__file__).parent.parent.parent / "theme_reference"
 
 
 def _is_story_structure(ed: Path) -> bool:
-    """Return True if this theme already has Story-compatible product.json structure.
+    """Return True if this theme ships the Story-family section files natively.
 
-    A theme is considered Story-compatible when its product.json contains all four
-    signature section types used by the Story Theme family.
+    Checks for the presence of the signature .liquid files under sections/, NOT
+    whether the theme's default index.json/product.json happen to already use
+    them. A theme fully supports the Story feature set as soon as the section
+    files exist — a base theme update can freely reorganize which sections its
+    own default templates use without losing that support. Checking default
+    usage instead of file existence was the actual bug behind a real production
+    incident: Story Theme 3.6.1 ships comparaison-list.liquid, specs.liquid,
+    icons.liquid and ugc.liquid same as always, but its own default product.json
+    doesn't reference all four out of the box. That made this function return
+    False for an up-to-date, fully working theme, which triggered
+    _rebuild_to_story_structure() and overwrote its current, compatible
+    index.json/product.json with the stale 3.5.0 snapshot bundled in
+    theme_reference/ — producing broken templates (dangling block references,
+    settings for a different theme version) that Shopify silently 404s. Basing
+    the check on file existence instead keeps it correct for any current or
+    future Story Theme release without needing another manual fix here.
     """
-    product_json = ed / "templates" / "product.json"
-    if not product_json.exists():
+    sections_dir = ed / "sections"
+    if not sections_dir.exists():
         return False
-    try:
-        data = json.loads(product_json.read_text(encoding="utf-8"))
-        section_types = {s.get("type", "") for s in data.get("sections", {}).values()}
-        return _STORY_SIGNATURE_SECTIONS.issubset(section_types)
-    except Exception:
-        return False
+    existing = {f.stem for f in sections_dir.glob("*.liquid")}
+    return _STORY_SIGNATURE_SECTIONS.issubset(existing)
 
 
 def _rebuild_to_story_structure(ed: Path) -> bool:

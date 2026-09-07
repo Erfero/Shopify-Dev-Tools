@@ -34,7 +34,7 @@ from app.services.theme.ai_generator import generate_all_texts, generate_single_
 from app.services.theme.mock_generator import generate_mock_texts
 from app.services.theme.theme_modifier import apply_generated_texts, _is_story_structure, _rebuild_to_story_structure
 from app.services.theme.theme_translator import translate_remaining_texts
-from app.services.theme.theme_exporter import export_theme
+from app.services.theme.theme_exporter import export_theme, required_pages
 from app.utils.json_handler import read_theme_json, detect_json_format
 
 router = APIRouter(prefix="/api/theme", tags=["theme"], dependencies=[Depends(verify_token)])
@@ -153,8 +153,11 @@ async def _restore_session(session_id: str) -> dict | None:
         finally:
             tmp_zip.unlink(missing_ok=True)
 
-        # Rebuild non-Story themes (Basic, Sylys…) to Story structure on restore too,
-        # since the DB ZIP holds the original unmodified theme.
+        # Rebuild only themes that truly lack the Story section files (e.g. a bare
+        # custom theme) to Story structure on restore too, since the DB ZIP holds
+        # the original unmodified theme. Detection is file-existence based (see
+        # _is_story_structure) so an up-to-date Story Theme release is never
+        # wrongly rebuilt from the stale bundled reference.
         if not _is_story_structure(structure.extract_dir):
             try:
                 _rebuild_to_story_structure(structure.extract_dir)
@@ -307,8 +310,12 @@ async def upload_theme(theme_file: UploadFile = File(...)):
     finally:
         temp_zip.unlink(missing_ok=True)
 
-    # If this is not already a Story-compatible theme (Basic, Sylys, etc.), rebuild the
-    # template JSONs from the Story reference so all sections/features are available.
+    # Only rebuild themes that truly lack the Story section files (a bare custom
+    # theme with none of comparaison-list/specs/icons/ugc). Detection is based on
+    # the section .liquid files actually existing (see _is_story_structure), not
+    # on whether the theme's own default templates happen to use them yet — so an
+    # up-to-date Story Theme release is never wrongly rebuilt from the stale
+    # bundled reference in theme_reference/.
     if not _is_story_structure(structure.extract_dir):
         _rebuild_to_story_structure(structure.extract_dir)
         # Refresh parsed_files so extract_text_slots sees the rebuilt templates
@@ -632,7 +639,10 @@ async def apply_theme(
             "products": session.get("product_names", []),
         }))
 
-        return {"download_url": f"/api/theme/download/{structure.session_id}"}
+        return {
+            "download_url": f"/api/theme/download/{structure.session_id}",
+            "pages_to_create": required_pages(structure.extract_dir),
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'application: {str(e)}")

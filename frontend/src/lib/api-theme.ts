@@ -238,10 +238,15 @@ export async function previewTexts(sessionId: string): Promise<Record<string, Re
   return data.texts;
 }
 
+export interface PageToCreate {
+  template_suffix: string;
+  suggested_title: string;
+}
+
 export async function applyTheme(
   sessionId: string,
   generatedData: Record<string, unknown>,
-): Promise<{ download_url: string }> {
+): Promise<{ download_url: string; pages_to_create?: PageToCreate[] }> {
   const formData = new FormData();
   formData.append("session_id", sessionId);
   formData.append("generated_data", JSON.stringify(generatedData));

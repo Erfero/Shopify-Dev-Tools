@@ -2236,18 +2236,30 @@ def _apply_settings_data(ed: Path, pf: dict, gt: dict, language: str = "fr", ai_
 # ── Locale file switching ─────────────────────────────────────────────────────
 
 def _switch_locale_files(ed: Path, language: str) -> None:
-    """Switch the theme's default storefront locale to the chosen language.
+    """Ensure the chosen language's locale files exist and are complete, WITHOUT
+    changing which locale is the theme's default (*.default.json).
 
-    Storefront locale files (*.json):
-      1. Demote ALL existing *.default.json → *.json  (Shopify allows only one)
-      2. Promote {lang}.json → {lang}.default.json
+    IMPORTANT: this used to promote the target language to *.default.json (and
+    demote whatever was default before) so the storefront's system/UI strings
+    (cart, checkout-adjacent labels, etc.) would show in the target language by
+    default. That renaming is what a Shopify shop's "default language" is
+    supposed to be driven from at the shop level (Settings → Languages), which
+    this app has no way to configure — it only ships a theme ZIP. Promoting a
+    locale to default inside the ZIP without that shop-level setting matching
+    produced a mismatch that reliably correlated with a real production incident:
+    every theme export with a non-English *.default.json (Theme_Story_Alura,
+    Sylys-2, …) failed to render on the live storefront, while otherwise-identical
+    exports that kept the original default worked. We stopped being able to prove
+    the exact Shopify-side mechanism, but the fix costs nothing: the customer-
+    visible headings/descriptions are already hardcoded per-section-setting values
+    (translated in place, elsewhere in this pipeline) — they render in the target
+    language regardless of which locale file is "default". Only a handful of
+    generic theme UI strings would've benefited from the promotion, which isn't
+    worth reintroducing a class of bug that can 404 the entire storefront.
 
-    Schema locale files (*.schema.json — theme EDITOR admin labels):
-      The target language schema file is often incomplete (not all keys translated).
-      To avoid "missing translation: t:..." errors in the Shopify theme editor,
-      we create {lang}.default.schema.json as a COPY of en.default.schema.json.
-      This guarantees every admin label key exists (in English as fallback).
-      No JSON parsing needed — raw bytes copy preserves the original format.
+    So: fill the target locale content + schema files with any missing keys
+    (falling back to English so nothing shows "translation missing: t:...") and
+    leave them as plain, non-default, available languages.
 
     No-op for English or if the target locale file doesn't exist in the theme.
     """
@@ -2314,69 +2326,42 @@ def _switch_locale_files(ed: Path, language: str) -> None:
     if not target_code:
         return
 
-    # Demote any existing storefront default (e.g. fr.default.json or en.default.json)
-    # — Shopify allows only ONE *.default.json AND only ONE *.default.schema.json.
-    # We must demote BOTH the content file AND the schema file together.
-    for existing_def in locales_dir.glob("*.default.json"):
-        stem = existing_def.stem  # e.g. "fr.default"
-        if stem.endswith(".schema"):
-            continue
-        lang_code = stem.replace(".default", "")  # e.g. "fr"
-        if lang_code == target_code:
-            continue  # already the target → keep as-is
-        # Demote storefront content file: fr.default.json → fr.json
-        demoted = locales_dir / f"{lang_code}.json"
-        if demoted.exists():
-            existing_def.unlink()   # fr.json already exists → remove the stale default
-        else:
-            existing_def.rename(demoted)
-        # CRITICAL: also demote schema file: fr.default.schema.json → fr.schema.json
-        # Without this, Shopify sees two "default" markers and invalidates the theme.
-        old_schema = locales_dir / f"{lang_code}.default.schema.json"
-        demoted_schema = locales_dir / f"{lang_code}.schema.json"
-        if old_schema.exists():
-            if demoted_schema.exists():
-                old_schema.unlink()  # fr.schema.json already exists → remove orphan
-            else:
-                old_schema.rename(demoted_schema)
-
-    # Promote target storefront locale to default (if not already done)
+    # The theme's original *.default.json / *.default.schema.json are left
+    # completely untouched — whichever locale the base theme shipped as default
+    # stays default. We only make sure the TARGET language's own files exist and
+    # are complete, as a normal secondary/available locale.
+    en_is_default = (locales_dir / "en.default.json").exists()
     t_json = locales_dir / f"{target_code}.json"
     t_def  = locales_dir / f"{target_code}.default.json"
-    if t_json.exists() and not t_def.exists():
-        t_json.rename(t_def)
+    # If the target happens to already BE the theme's shipped default, there's
+    # nothing to add — just fall through to the fill/merge steps below using
+    # whichever file actually exists.
+    target_content = t_def if t_def.exists() else t_json
 
     # Fill missing storefront keys from EN into the target locale.
     # Many Story-theme locale files (da, de, sv, etc.) are missing keys that only
-    # exist in en.default.json (custom keys added by Story theme, e.g. general.timer.*).
-    # Missing keys cause "translation missing: da.key" errors in the storefront.
-    # Strategy: deep-merge EN keys into target, keeping existing target translations.
-    en_locale_def = locales_dir / "en.default.json"
-    en_locale_src = locales_dir / "en.json"   # if en was demoted earlier
-    _en_locale = en_locale_def if en_locale_def.exists() else (en_locale_src if en_locale_src.exists() else None)
-    if _en_locale and t_def.exists():
-        _fill_missing_locale_keys(_en_locale, t_def)
+    # exist in the theme's EN file (custom keys added by Story theme, e.g.
+    # general.timer.*). Missing keys cause "translation missing: da.key" errors
+    # in the storefront. Strategy: deep-merge EN keys into target, keeping
+    # existing target translations.
+    en_locale = locales_dir / "en.default.json" if en_is_default else locales_dir / "en.json"
+    if en_locale.exists() and target_content.exists() and target_content != en_locale:
+        _fill_missing_locale_keys(en_locale, target_content)
 
-    # Promote target schema file: da.schema.json → da.default.schema.json
-    # This keeps the schema filename consistent with the content file.
+    # Ensure the target schema file (admin/editor labels) has ALL keys from EN
+    # (fill gaps so nothing shows "missing translation: t:..." in the editor).
+    # If it doesn't exist yet → copy EN. If it exists → merge EN into it.
     t_def_schema = locales_dir / f"{target_code}.default.schema.json"
     t_schema_src = locales_dir / f"{target_code}.schema.json"
-    if t_schema_src.exists() and not t_def_schema.exists():
-        t_schema_src.rename(t_def_schema)
+    target_schema = t_def_schema if t_def_schema.exists() else t_schema_src
 
-    # Ensure {target}.default.schema.json has ALL keys from EN schema (fill gaps).
-    # If it doesn't exist yet (no schema file in theme for this lang) → copy EN.
-    # If it exists → merge EN into it so no "missing translation: t:..." in admin.
-    en_schema_path = locales_dir / "en.default.schema.json"
-    en_schema_src  = locales_dir / "en.schema.json"   # if en was demoted earlier
-    _en_src = en_schema_path if en_schema_path.exists() else en_schema_src
-
-    if _en_src.exists():
-        if not t_def_schema.exists():
+    en_schema = locales_dir / "en.default.schema.json" if en_is_default else locales_dir / "en.schema.json"
+    if en_schema.exists() and target_schema != en_schema:
+        if not target_schema.exists():
             import shutil as _shutil
-            _shutil.copy2(_en_src, t_def_schema)
+            _shutil.copy2(en_schema, target_schema)
         else:
-            _merge_schema_with_en(t_def_schema, _en_src, t_def_schema)
+            _merge_schema_with_en(target_schema, en_schema, target_schema)
 
 
 def _fill_missing_locale_keys(en_path: Path, target_path: Path) -> None:

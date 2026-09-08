@@ -3,6 +3,12 @@ def build_story_page_prompt(context: dict) -> tuple[str, str]:
 
     Schema : {"page_heading", "page_subheading", "timeline_events": [{year, heading, text}]} x5
     """
+    from datetime import date
+
+    current_year = date.today().year
+    # 5 events ending on the current year, so the timeline never looks stale
+    # no matter when the theme is actually generated (2024, 2026, 2031, ...).
+    timeline_years = [current_year - 4 + i for i in range(5)]
 
     products = ", ".join(context["product_names"])
     lang = context.get("language", "fr")
@@ -49,27 +55,27 @@ Réponds en JSON avec ce schéma EXACT :
   "page_subheading": "Sous-titre inspirant (texte simple, 1-2 phrases)",
   "timeline_events": [
     {{
-      "year": "2019",
+      "year": "{timeline_years[0]}",
       "heading": "Titre événement 1 (texte simple, ex: La naissance d'une idée)",
       "text": "2 phrases courtes max. Raconte le début de l'aventure."
     }},
     {{
-      "year": "2020",
+      "year": "{timeline_years[1]}",
       "heading": "Titre événement 2 (texte simple)",
       "text": "2 phrases courtes max. Premier succès ou pivot important."
     }},
     {{
-      "year": "2021",
+      "year": "{timeline_years[2]}",
       "heading": "Titre événement 3 (texte simple)",
       "text": "2 phrases courtes max. Croissance ou innovation clé."
     }},
     {{
-      "year": "2022",
+      "year": "{timeline_years[3]}",
       "heading": "Titre événement 4 (texte simple)",
       "text": "2 phrases courtes max. Expansion ou reconnaissance."
     }},
     {{
-      "year": "2023",
+      "year": "{timeline_years[4]}",
       "heading": "Titre événement 5 (texte simple)",
       "text": "2 phrases courtes max. Vision actuelle et engagement."
     }}
@@ -78,6 +84,7 @@ Réponds en JSON avec ce schéma EXACT :
 
 CONTRAINTES :
 - Exactement 5 événements dans timeline_events
+- Utilise EXACTEMENT les années {timeline_years[0]} à {timeline_years[4]} indiquées ci-dessus, dans cet ordre — ce sont les 5 années menant à l'année en cours ({current_year}). N'invente pas d'autres années.
 - Les textes (heading et text) sont du texte simple (AUCUN HTML)
 - Chaque "text" : MAX 2 phrases courtes (10-15 mots chacune)
 - Raconte une vraie histoire : passion, défis, succès, mission

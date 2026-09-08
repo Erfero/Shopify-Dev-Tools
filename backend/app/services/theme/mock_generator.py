@@ -21,6 +21,7 @@ ANNOUNCEMENT BAR POLICY:
 """
 import asyncio
 import logging
+from datetime import date
 from typing import AsyncGenerator
 
 logger = logging.getLogger(__name__)
@@ -758,7 +759,15 @@ def _mock_legal_pages(
     }
 
 
+def _timeline_years() -> list[str]:
+    """5 years ending on the current year, so mock story timelines never look
+    stale regardless of when USE_MOCK content is generated."""
+    current_year = date.today().year
+    return [str(current_year - 4 + i) for i in range(5)]
+
+
 def _mock_story_page(store_name: str, product: str) -> dict:
+    _y = _timeline_years()
     return {
         "page_heading": f"L'Histoire de {store_name}",
         "page_subheading": (
@@ -767,7 +776,7 @@ def _mock_story_page(store_name: str, product: str) -> dict:
         ),
         "timeline_events": [
             {
-                "year": "2020",
+                "year": _y[0],
                 "heading": "La naissance d'une idée",
                 "text": (
                     f"L'aventure {store_name} commence avec une idée simple : "
@@ -776,7 +785,7 @@ def _mock_story_page(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2021",
+                "year": _y[1],
                 "heading": "Le développement du produit",
                 "text": (
                     f"Après des mois de recherche avec des dermatologues, "
@@ -786,7 +795,7 @@ def _mock_story_page(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2022",
+                "year": _y[2],
                 "heading": "Le lancement officiel",
                 "text": (
                     f"Nous lançons officiellement {store_name}. L'accueil est "
@@ -795,7 +804,7 @@ def _mock_story_page(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2023",
+                "year": _y[3],
                 "heading": "La communauté grandissante",
                 "text": (
                     "Notre communauté dépasse les 10 000 clients satisfaits. "
@@ -803,7 +812,7 @@ def _mock_story_page(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2024",
+                "year": _y[4],
                 "heading": "L'avenir et l'innovation",
                 "text": (
                     "Forts de notre expérience et des retours de notre communauté, "
@@ -1507,6 +1516,7 @@ def _mock_legal_pages_en(
 
 
 def _mock_story_page_en(store_name: str, product: str) -> dict:
+    _y = _timeline_years()
     return {
         "page_heading": f"The Story of {store_name}",
         "page_subheading": (
@@ -1515,7 +1525,7 @@ def _mock_story_page_en(store_name: str, product: str) -> dict:
         ),
         "timeline_events": [
             {
-                "year": "2020",
+                "year": _y[0],
                 "heading": "The birth of an idea",
                 "text": (
                     f"The {store_name} adventure begins with a simple idea: "
@@ -1524,7 +1534,7 @@ def _mock_story_page_en(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2021",
+                "year": _y[1],
                 "heading": "Product development",
                 "text": (
                     f"After months of research with dermatologists, our {product} is perfected. "
@@ -1533,7 +1543,7 @@ def _mock_story_page_en(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2022",
+                "year": _y[2],
                 "heading": "Official launch",
                 "text": (
                     f"We officially launch {store_name} and our first product. "
@@ -1542,7 +1552,7 @@ def _mock_story_page_en(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2023",
+                "year": _y[3],
                 "heading": "A growing community",
                 "text": (
                     "Our community surpasses 10,000 satisfied customers. "
@@ -1551,7 +1561,7 @@ def _mock_story_page_en(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2024",
+                "year": _y[4],
                 "heading": "The future and innovation",
                 "text": (
                     "Driven by our experience and our community's feedback, "
@@ -2098,6 +2108,7 @@ def _mock_legal_pages_de(
 
 
 def _mock_story_page_de(store_name: str, product: str) -> dict:
+    _y = _timeline_years()
     return {
         "page_heading": f"Die Geschichte von {store_name}",
         "page_subheading": (
@@ -2106,7 +2117,7 @@ def _mock_story_page_de(store_name: str, product: str) -> dict:
         ),
         "timeline_events": [
             {
-                "year": "2020",
+                "year": _y[0],
                 "heading": "Die Geburt einer Idee",
                 "text": (
                     f"Das Abenteuer {store_name} beginnt mit einer einfachen Idee: "
@@ -2115,7 +2126,7 @@ def _mock_story_page_de(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2021",
+                "year": _y[1],
                 "heading": "Produktentwicklung",
                 "text": (
                     f"Nach monatelanger Forschung mit Dermatologen wird unser {product} perfektioniert. "
@@ -2124,7 +2135,7 @@ def _mock_story_page_de(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2022",
+                "year": _y[2],
                 "heading": "Offizieller Launch",
                 "text": (
                     f"Wir starten {store_name} offiziell. Der Empfang übertrifft alle Erwartungen: "
@@ -2132,7 +2143,7 @@ def _mock_story_page_de(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2023",
+                "year": _y[3],
                 "heading": "Eine wachsende Gemeinschaft",
                 "text": (
                     "Unsere Gemeinschaft überschreitet 10.000 zufriedene Kunden. "
@@ -2141,7 +2152,7 @@ def _mock_story_page_de(store_name: str, product: str) -> dict:
                 ),
             },
             {
-                "year": "2024",
+                "year": _y[4],
                 "heading": "Zukunft und Innovation",
                 "text": (
                     "Gestärkt durch unsere Erfahrung und das Feedback unserer Gemeinschaft "
